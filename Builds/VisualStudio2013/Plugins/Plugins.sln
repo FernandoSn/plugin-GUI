@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KWIKFormat", "KWIKFormat\KWIKFormat.vcxproj", "{554C8744-32CD-427C-A9E5-BF9A44440CED}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -65,6 +65,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntanRecordingController", "IntanRecordingController\IntanRecordingController.vcxproj", "{6BA7767C-DBDA-44DF-8095-220FD1E2D91A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LFP_Viewer_Beta", "LFP_Viewer_Beta\LFP_Viewer_Beta.vcxproj", "{A6E2C4F0-63A3-496B-8929-1B2785FDBBFD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NIDAQmx", "NIDAQmx\NIDAQmx.vcxproj", "{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -364,6 +366,18 @@ Global
 		{A6E2C4F0-63A3-496B-8929-1B2785FDBBFD}.Release|Win32.Build.0 = Release|Win32
 		{A6E2C4F0-63A3-496B-8929-1B2785FDBBFD}.Release|x64.ActiveCfg = Release|x64
 		{A6E2C4F0-63A3-496B-8929-1B2785FDBBFD}.Release|x64.Build.0 = Release|x64
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Debug|Win32.Build.0 = Debug|Win32
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Debug|x64.ActiveCfg = Debug|x64
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Debug|x64.Build.0 = Debug|x64
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Release|Win32.ActiveCfg = Release|Win32
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Release|Win32.Build.0 = Release|Win32
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Release|x64.ActiveCfg = Release|x64
+		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -371,5 +385,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{F250DB70-6E3E-408C-BD9E-1483D574499D} = {B49D0C12-70A8-4762-A4FE-74FA3D16FFDD}
 		{1DD9DB7A-A9D8-4982-9FA3-1AEAFEC5FC1B} = {B49D0C12-70A8-4762-A4FE-74FA3D16FFDD}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2DAB4860-1BB9-4645-8336-9671515E6301}
 	EndGlobalSection
 EndGlobal
