@@ -68,6 +68,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LFP_Viewer_Beta", "LFP_View
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NIDAQmx", "NIDAQmx\NIDAQmx.vcxproj", "{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NeuropixelsPXI", "NeuropixelsPXI\NeuropixelsPXI.vcxproj", "{D5F755CD-4E5B-4132-A625-6D6FCB89461D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -378,6 +380,18 @@ Global
 		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Release|Win32.Build.0 = Release|Win32
 		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Release|x64.ActiveCfg = Release|x64
 		{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}.Release|x64.Build.0 = Release|x64
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Debug|Win32.Build.0 = Debug|Win32
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Debug|x64.ActiveCfg = Debug|x64
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Debug|x64.Build.0 = Debug|x64
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Release|Win32.ActiveCfg = Release|Win32
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Release|Win32.Build.0 = Release|Win32
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Release|x64.ActiveCfg = Release|x64
+		{D5F755CD-4E5B-4132-A625-6D6FCB89461D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

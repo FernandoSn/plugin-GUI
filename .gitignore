@@ -4,6 +4,9 @@
 *.o
 *.d
 *.opendb
+*.VC.db
+*.VC
+*.VC.VC.opendb
 
 # 2. binaries
 Builds/Linux/build/open-ephys
