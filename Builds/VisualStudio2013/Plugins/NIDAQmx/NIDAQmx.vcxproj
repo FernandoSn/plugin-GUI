@@ -18,6 +18,18 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx\nidaq-api\NIDAQmx.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQComponents.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQEditor.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQThread.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQComponents.cpp" />
+    <ClCompile Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQEditor.cpp" />
+    <ClCompile Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQThread.cpp" />
+    <ClCompile Include="..\..\..\..\Source\Plugins\NIDAQmx\OpenEphysLib.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{44E1F5AD-47D2-4B10-B32A-DA5B5DC5663E}</ProjectGuid>
     <RootNamespace>ExampleProcessor</RootNamespace>
@@ -77,6 +89,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(GUIDir);$(OutDir);../../../../Source/Plugins/NIDAQmx/nidaq-api/lib32/msvc</AdditionalLibraryDirectories>
+      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);NIDAQmx.lib;nisyscfg.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -86,6 +100,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(GUIDir);$(OutDir);../../../../Source/Plugins/NIDAQmx/nidaq-api/lib64/msvc</AdditionalLibraryDirectories>
+      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);NIDAQmx.lib;nisyscfg.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -99,6 +115,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(GUIDir);$(OutDir);../../../../Source/Plugins/NIDAQmx/nidaq-api/lib32/msvc</AdditionalLibraryDirectories>
+      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);NIDAQmx.lib;nisyscfg.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -112,17 +130,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(GUIDir);$(OutDir);../../../../Source/Plugins/NIDAQmx/nidaq-api/lib64/msvc</AdditionalLibraryDirectories>
+      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);NIDAQmx.lib;nisyscfg.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleEditor.cpp" />
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleProcessor.cpp" />
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\OpenEphysLib.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleEditor.h" />
-    <ClInclude Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleProcessor.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

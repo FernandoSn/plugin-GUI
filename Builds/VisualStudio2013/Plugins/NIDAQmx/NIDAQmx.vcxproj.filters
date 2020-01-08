@@ -13,24 +13,36 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\nidaq-api">
+      <UniqueIdentifier>{4cd00151-5448-4d87-be89-be11be4a0bcb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleProcessor.cpp">
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx\nidaq-api\NIDAQmx.h">
+      <Filter>Source Files\nidaq-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQComponents.h">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\OpenEphysLib.cpp">
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQEditor.h">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleEditor.cpp">
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQThread.h">
       <Filter>Source Files</Filter>
-    </ClCompile>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleProcessor.h">
+    <ClCompile Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQComponents.cpp">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleEditor.h">
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQEditor.cpp">
       <Filter>Source Files</Filter>
-    </ClInclude>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Source\Plugins\NIDAQmx\NIDAQThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Source\Plugins\NIDAQmx\OpenEphysLib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
