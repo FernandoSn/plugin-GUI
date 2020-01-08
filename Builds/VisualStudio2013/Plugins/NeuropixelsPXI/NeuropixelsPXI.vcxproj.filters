@@ -13,24 +13,39 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\neuropix-api">
+      <UniqueIdentifier>{08abc3e1-f4b4-4a3b-9330-4b8e975911dd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleProcessor.cpp">
+    <ClCompile Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixComponents.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\OpenEphysLib.cpp">
+    <ClCompile Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleEditor.cpp">
+    <ClCompile Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\OpenEphysLib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleProcessor.h">
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixComponents.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleEditor.h">
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixEditor.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixThread.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\neuropix-api\NeuropixAPI.h">
+      <Filter>Source Files\neuropix-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\neuropix-api\NeuropixAPI_private.h">
+      <Filter>Source Files\neuropix-api</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

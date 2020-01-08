@@ -18,6 +18,19 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixComponents.cpp" />
+    <ClCompile Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixEditor.cpp" />
+    <ClCompile Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixThread.cpp" />
+    <ClCompile Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\OpenEphysLib.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\neuropix-api\NeuropixAPI.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\neuropix-api\NeuropixAPI_private.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixComponents.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixEditor.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\NeuropixelsPXI\NeuropixThread.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D5F755CD-4E5B-4132-A625-6D6FCB89461D}</ProjectGuid>
     <RootNamespace>ExampleProcessor</RootNamespace>
@@ -114,15 +127,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleEditor.cpp" />
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleProcessor.cpp" />
-    <ClCompile Include="..\..\..\..\Source\Plugins\ExampleProcessor\OpenEphysLib.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleEditor.h" />
-    <ClInclude Include="..\..\..\..\Source\Plugins\ExampleProcessor\ExampleProcessor.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

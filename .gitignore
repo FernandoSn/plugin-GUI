@@ -7,6 +7,8 @@
 *.VC.db
 *.VC
 *.VC.VC.opendb
+*.ipch
+*.pch
 
 # 2. binaries
 Builds/Linux/build/open-ephys
