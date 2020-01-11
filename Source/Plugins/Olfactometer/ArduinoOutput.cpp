@@ -28,7 +28,7 @@
 
 
 ArduinoOutput::ArduinoOutput()
-    : GenericProcessor      ("Arduino Output")
+    : GenericProcessor      ("Olfactometer")
     , outputChannel         (13)
     , inputChannel          (-1)
     , gateChannel           (-1)
