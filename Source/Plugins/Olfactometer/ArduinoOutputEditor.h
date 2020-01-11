@@ -60,10 +60,10 @@ public:
 private:
 
    // ScopedPointer<UtilityButton> triggerButton;
-    ScopedPointer<ComboBox> inputChannelSelector;
-    ScopedPointer<ComboBox> outputChannelSelector;
-    ScopedPointer<ComboBox> gateChannelSelector;
-    ScopedPointer<ComboBox> deviceSelector;
+    std::unique_ptr<ComboBox> inputChannelSelector;
+    std::unique_ptr<ComboBox> outputChannelSelector;
+    std::unique_ptr<ComboBox> gateChannelSelector;
+    std::unique_ptr<ComboBox> deviceSelector;
 
     void timerCallback();
 

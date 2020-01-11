@@ -48,7 +48,8 @@ ArduinoOutputEditor::ArduinoOutputEditor(GenericProcessor* parentNode, bool useD
 
     // icon->setOpacity(0.3f);
 
-    deviceSelector = new ComboBox();
+    //deviceSelector = new ComboBox(); 
+    deviceSelector = std::make_unique<ComboBox>();
     deviceSelector->setBounds(10,105,125,20);
     deviceSelector->addListener(this);
     deviceSelector->addItem("Device",1);
@@ -59,9 +60,10 @@ ArduinoOutputEditor::ArduinoOutputEditor(GenericProcessor* parentNode, bool useD
     }
 
     deviceSelector->setSelectedId(1, dontSendNotification);
-    addAndMakeVisible(deviceSelector);
+    addAndMakeVisible(deviceSelector.get());
 
-    inputChannelSelector = new ComboBox();
+    //inputChannelSelector = new ComboBox();
+    inputChannelSelector = std::make_unique<ComboBox>();
     inputChannelSelector->setBounds(10,30,55,20);
     inputChannelSelector->addListener(this);
     inputChannelSelector->addItem("Trig",1);
@@ -71,9 +73,10 @@ ArduinoOutputEditor::ArduinoOutputEditor(GenericProcessor* parentNode, bool useD
     // user-visible channels
 
     inputChannelSelector->setSelectedId(1, dontSendNotification);
-    addAndMakeVisible(inputChannelSelector);
+    addAndMakeVisible(inputChannelSelector.get());
 
-    outputChannelSelector = new ComboBox();
+    //outputChannelSelector = new ComboBox();
+    outputChannelSelector = std::make_unique<ComboBox>();
     outputChannelSelector->setBounds(10,80,80,20);
     outputChannelSelector->addListener(this);
     outputChannelSelector->addItem("Output CH",1);
@@ -82,9 +85,10 @@ ArduinoOutputEditor::ArduinoOutputEditor(GenericProcessor* parentNode, bool useD
         outputChannelSelector->addItem(String(i+1),i+2);
 
     outputChannelSelector->setSelectedId(14, dontSendNotification);
-    addAndMakeVisible(outputChannelSelector);
+    addAndMakeVisible(outputChannelSelector.get());
 
-    gateChannelSelector = new ComboBox();
+    //gateChannelSelector = new ComboBox();
+    gateChannelSelector = std::make_unique<ComboBox>();
     gateChannelSelector->setBounds(10,55,55,20);
     gateChannelSelector->addListener(this);
     gateChannelSelector->addItem("Gate",1);
@@ -94,7 +98,7 @@ ArduinoOutputEditor::ArduinoOutputEditor(GenericProcessor* parentNode, bool useD
     // user-visible channels
 
     gateChannelSelector->setSelectedId(1, dontSendNotification);
-    addAndMakeVisible(gateChannelSelector);
+    addAndMakeVisible(gateChannelSelector.get());
 
 }
 
@@ -112,16 +116,16 @@ void ArduinoOutputEditor::receivedEvent()
 
 void ArduinoOutputEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
-    if (comboBoxThatHasChanged == deviceSelector)
+    if (comboBoxThatHasChanged == deviceSelector.get())
     {
         arduino->setDevice(deviceSelector->getText());
-    } else if (comboBoxThatHasChanged == outputChannelSelector)
+    } else if (comboBoxThatHasChanged == outputChannelSelector.get())
     {
         arduino->setOutputChannel(outputChannelSelector->getSelectedId()-1);
-    } else if (comboBoxThatHasChanged == inputChannelSelector)
+    } else if (comboBoxThatHasChanged == inputChannelSelector.get())
     {
         arduino->setInputChannel(inputChannelSelector->getSelectedId()-1);
-    } else if (comboBoxThatHasChanged == gateChannelSelector)
+    } else if (comboBoxThatHasChanged == gateChannelSelector.get())
     {
         arduino->setGateChannel(gateChannelSelector->getSelectedId()-1);
     }
