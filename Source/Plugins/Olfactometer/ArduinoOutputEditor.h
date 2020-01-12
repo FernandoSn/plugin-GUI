@@ -53,6 +53,8 @@ public:
 
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
 
+    void buttonEvent(Button* button); //FER
+
     ArduinoOutput* arduino;
 
     ofSerial serial;
@@ -64,6 +66,9 @@ private:
     std::unique_ptr<ComboBox> outputChannelSelector;
     std::unique_ptr<ComboBox> gateChannelSelector;
     std::unique_ptr<ComboBox> deviceSelector;
+
+    //Buttons
+    std::unique_ptr<UtilityButton> WriteDigButton;
 
     void timerCallback();
 

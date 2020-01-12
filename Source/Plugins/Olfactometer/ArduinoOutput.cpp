@@ -180,6 +180,11 @@ void ArduinoOutput::setGateChannel (int chan)
     setParameter (2, chan - 1);
 }
 
+void ArduinoOutput::WriteDigital()
+{
+    arduino.sendDigital(13, 1);
+}
+
 
 bool ArduinoOutput::enable()
 {

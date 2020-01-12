@@ -100,6 +100,13 @@ ArduinoOutputEditor::ArduinoOutputEditor(GenericProcessor* parentNode, bool useD
     gateChannelSelector->setSelectedId(1, dontSendNotification);
     addAndMakeVisible(gateChannelSelector.get());
 
+    WriteDigButton = std::make_unique<UtilityButton>("W", Font("Small Text", 13, Font::bold));
+    WriteDigButton->setRadius(3.0f);
+    WriteDigButton->setBounds(95, 60, 65, 25);
+    WriteDigButton->addListener(this);
+
+    addAndMakeVisible(WriteDigButton.get());
+
 }
 
 ArduinoOutputEditor::~ArduinoOutputEditor()
@@ -129,6 +136,13 @@ void ArduinoOutputEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     {
         arduino->setGateChannel(gateChannelSelector->getSelectedId()-1);
     }
+}
+
+void ArduinoOutputEditor::buttonEvent(Button* button)
+{
+
+    arduino->WriteDigital();
+
 }
 
 void ArduinoOutputEditor::timerCallback()

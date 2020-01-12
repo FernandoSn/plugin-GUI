@@ -67,6 +67,7 @@ public:
     void setOutputChannel (int);
     void setInputChannel  (int);
     void setGateChannel   (int);
+    void WriteDigital();
 
     void setDevice (String deviceString);
 
