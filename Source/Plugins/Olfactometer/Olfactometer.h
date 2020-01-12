@@ -26,7 +26,7 @@
 
 #include <SerialLib.h>
 #include <ProcessorHeaders.h>
-#include "serial/ofArduino.h"
+#include "ArduinoOutput.h"
 
 
 
@@ -64,21 +64,14 @@ public:
     /** Creates the OlfactometerEditor. */
     AudioProcessorEditor* createEditor() override;
 
-    void setOutputChannel (int);
-    void setInputChannel  (int);
-    void setGateChannel   (int);
-    void WriteDigital();
+    void setOlfactometer(const String& OlfactometerString);
 
-    void setDevice (String deviceString);
-
-    int outputChannel;
-    int inputChannel;
-    int gateChannel;
+    void StartOdorPres();
 
 
 private:
     /** An open-frameworks Arduino object. */
-    ofArduino arduino;
+    ArduinoOutput ArdOut;
 
     bool state;
     bool acquisitionIsActive;

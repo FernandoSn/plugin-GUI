@@ -55,7 +55,7 @@ public:
 
     void buttonClicked(Button* button) override; //FER
 
-    Olfactometer* arduino;
+    Olfactometer* Olfac;
 
     ofSerial serial;
 

@@ -29,9 +29,6 @@
 
 Olfactometer::Olfactometer()
     : GenericProcessor      ("Olfactometer")
-    , outputChannel         (13)
-    , inputChannel          (-1)
-    , gateChannel           (-1)
     , state                 (true)
     , acquisitionIsActive   (false)
     , deviceSelected        (false)
@@ -42,8 +39,6 @@ Olfactometer::Olfactometer()
 
 Olfactometer::~Olfactometer()
 {
-    if (arduino.isInitialized())
-        arduino.disconnect();
 }
 
 
@@ -53,95 +48,61 @@ AudioProcessorEditor* Olfactometer::createEditor()
     return editor;
 }
 
-
-void Olfactometer::setDevice (String devName)
+void Olfactometer::setOlfactometer(const String& OlfactometerString)
 {
-    if (! acquisitionIsActive)
-    {
-        Time timer;
+    ArdOut.setDevice(OlfactometerString);
+}
 
-        arduino.connect (devName.toStdString());
-
-        if (arduino.isArduinoReady())
-        {
-            uint32 currentTime = timer.getMillisecondCounter();
-
-            arduino.sendProtocolVersionRequest();
-            timer.waitForMillisecondCounter (currentTime + 2000);
-            arduino.update();
-            arduino.sendFirmwareVersionRequest();
-
-            timer.waitForMillisecondCounter (currentTime + 4000);
-            arduino.update();
-
-            std::cout << "firmata v" << arduino.getMajorFirmwareVersion()
-                      << "." << arduino.getMinorFirmwareVersion() << std::endl;
-        }
-
-        if (arduino.isInitialized())
-        {
-            std::cout << "Arduino is initialized." << std::endl;
-            arduino.sendDigitalPinMode (outputChannel, ARD_OUTPUT);
-            CoreServices::sendStatusMessage (("Arduino initialized at" + devName));
-            deviceSelected = true;
-        }
-        else
-        {
-            std::cout << "Arduino is NOT initialized." << std::endl;
-            CoreServices::sendStatusMessage (("Arduino could not be initialized at" + devName));
-        }
-    }
-    else
-    {
-        CoreServices::sendStatusMessage ("Cannot change device while acquisition is active.");
-    }
+void Olfactometer::StartOdorPres()
+{
+    ArdOut.WriteDigital();
 }
 
 
 void Olfactometer::handleEvent (const EventChannel* eventInfo, const MidiMessage& event, int sampleNum)
 {
-    if (Event::getEventType(event) == EventChannel::TTL)
-    {
-		TTLEventPtr ttl = TTLEvent::deserializeFromMessage(event, eventInfo);
+  //  if (Event::getEventType(event) == EventChannel::TTL)
+  //  {
+		//TTLEventPtr ttl = TTLEvent::deserializeFromMessage(event, eventInfo);
 
-        //int eventNodeId = *(dataptr+1);
-        const int eventId         = ttl->getState() ? 1: 0;
-        const int eventChannel    = ttl->getChannel();
+  //      //int eventNodeId = *(dataptr+1);
+  //      const int eventId         = ttl->getState() ? 1: 0;
+  //      const int eventChannel    = ttl->getChannel();
 
-        // std::cout << "Received event from " << eventNodeId
-        //           << " on channel " << eventChannel
-        //           << " with value " << eventId << std::endl;
+  //      // std::cout << "Received event from " << eventNodeId
+  //      //           << " on channel " << eventChannel
+  //      //           << " with value " << eventId << std::endl;
 
-        if (eventChannel == gateChannel)
-        {
-            if (eventId == 1)
-                state = true;
-            else
-                state = false;
-        }
+  //      if (eventChannel == gateChannel)
+  //      {
+  //          if (eventId == 1)
+  //              state = true;
+  //          else
+  //              state = false;
+  //      }
 
-        if (state)
-        {
-            if (inputChannel == -1 || eventChannel == inputChannel)
-            {
-                if (eventId == 0)
-                {
-                    arduino.sendDigital (outputChannel, ARD_LOW);
-                }
-                else
-                {
-                    arduino.sendDigital (outputChannel, ARD_HIGH);
-                }
-            }
-        }
-    }
+  //      if (state)
+  //      {
+  //          if (inputChannel == -1 || eventChannel == inputChannel)
+  //          {
+  //              if (eventId == 0)
+  //              {
+  //                  arduino.sendDigital (outputChannel, ARD_LOW);
+  //              }
+  //              else
+  //              {
+  //                  arduino.sendDigital (outputChannel, ARD_HIGH);
+  //              }
+  //          }
+  //      }
+  //  }
 }
 
 
 void Olfactometer::setParameter (int parameterIndex, float newValue)
 {
     // make sure current output channel is off:
-    arduino.sendDigital(outputChannel, ARD_LOW);
+    /*arduino.sendDigital(outputChannel, ARD_LOW);
 
     if (parameterIndex == 0)
     {
@@ -159,31 +120,7 @@ void Olfactometer::setParameter (int parameterIndex, float newValue)
             state = true;
         else
             state = false;
-    }
-}
-
-
-void Olfactometer::setOutputChannel (int chan)
-{
-    setParameter (0, chan);
-}
-
-
-void Olfactometer::setInputChannel (int chan)
-{
-    setParameter (1, chan - 1);
-}
-
-
-void Olfactometer::setGateChannel (int chan)
-{
-    setParameter (2, chan - 1);
-}
-
-void Olfactometer::WriteDigital()
-{
-    arduino.sendDigital(12, ARD_HIGH);
-    //arduino.sendDigital(13, ARD_LOW);
+    }*/
 }
 
 
@@ -197,7 +134,7 @@ bool Olfactometer::enable()
 
 bool Olfactometer::disable()
 {
-    arduino.sendDigital (outputChannel, ARD_LOW);
+    //arduino.sendDigital (outputChannel, ARD_LOW);
     acquisitionIsActive = false;
 
     return true;

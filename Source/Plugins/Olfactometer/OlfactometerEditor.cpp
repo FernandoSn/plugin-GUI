@@ -34,7 +34,7 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
 
     desiredWidth = 150;
 
-    arduino = (Olfactometer*) parentNode;
+    Olfac = (Olfactometer*) parentNode;
 
     vector <ofSerialDeviceInfo> devices = serial.getDeviceList();
 
@@ -125,8 +125,8 @@ void OlfactometerEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
     if (comboBoxThatHasChanged == deviceSelector.get())
     {
-        arduino->setDevice(deviceSelector->getText());
-    } else if (comboBoxThatHasChanged == outputChannelSelector.get())
+        Olfac->setOlfactometer(deviceSelector->getText());
+    }/* else if (comboBoxThatHasChanged == outputChannelSelector.get())
     {
         arduino->setOutputChannel(outputChannelSelector->getSelectedId()-1);
     } else if (comboBoxThatHasChanged == inputChannelSelector.get())
@@ -135,13 +135,13 @@ void OlfactometerEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     } else if (comboBoxThatHasChanged == gateChannelSelector.get())
     {
         arduino->setGateChannel(gateChannelSelector->getSelectedId()-1);
-    }
+    }*/
 }
 
 void OlfactometerEditor::buttonClicked(Button* button)
 {
 
-    arduino->WriteDigital();
+    Olfac->StartOdorPres();
 
 }
 
