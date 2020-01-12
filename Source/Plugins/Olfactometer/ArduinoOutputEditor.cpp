@@ -138,7 +138,7 @@ void ArduinoOutputEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     }
 }
 
-void ArduinoOutputEditor::buttonEvent(Button* button)
+void ArduinoOutputEditor::buttonClicked(Button* button)
 {
 
     arduino->WriteDigital();

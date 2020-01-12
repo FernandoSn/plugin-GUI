@@ -53,7 +53,7 @@ public:
 
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
 
-    void buttonEvent(Button* button); //FER
+    void buttonClicked(Button* button) override; //FER
 
     ArduinoOutput* arduino;
 

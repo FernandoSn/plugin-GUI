@@ -182,7 +182,8 @@ void ArduinoOutput::setGateChannel (int chan)
 
 void ArduinoOutput::WriteDigital()
 {
-    arduino.sendDigital(13, 1);
+    arduino.sendDigital(12, ARD_HIGH);
+    //arduino.sendDigital(13, ARD_LOW);
 }
 
 
