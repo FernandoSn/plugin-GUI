@@ -21,31 +21,31 @@
 
 */
 
-#ifndef __ARDUINOOUTPUTEDITOR_H_28EB4CC9__
-#define __ARDUINOOUTPUTEDITOR_H_28EB4CC9__
+#ifndef __OlfactometerEDITOR_H_28EB4CC9__
+#define __OlfactometerEDITOR_H_28EB4CC9__
 
 
 #include <EditorHeaders.h>
-#include "ArduinoOutput.h"
+#include "Olfactometer.h"
 #include <SerialLib.h>
 
 class ImageIcon;
 
 /**
 
-  User interface for the ArduinoOutput processor.
+  User interface for the Olfactometer processor.
 
-  @see ArduinoOutput
+  @see Olfactometer
 
 */
 
-class ArduinoOutputEditor : public GenericEditor,
+class OlfactometerEditor : public GenericEditor,
                             public ComboBox::Listener
 
 {
 public:
-    ArduinoOutputEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors);
-    virtual ~ArduinoOutputEditor();
+    OlfactometerEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors);
+    virtual ~OlfactometerEditor();
 
     void receivedEvent();
 
@@ -55,7 +55,7 @@ public:
 
     void buttonClicked(Button* button) override; //FER
 
-    ArduinoOutput* arduino;
+    Olfactometer* arduino;
 
     ofSerial serial;
 
@@ -72,11 +72,11 @@ private:
 
     void timerCallback();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ArduinoOutputEditor);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OlfactometerEditor);
 
 };
 
 
 
 
-#endif  // __ARDUINOOUTPUTEDITOR_H_28EB4CC9__
+#endif  // __OlfactometerEDITOR_H_28EB4CC9__

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <PluginInfo.h>
-#include "ArduinoOutput.h"
+#include "Olfactometer.h"
 #include <string>
 #ifdef WIN32
 #include <Windows.h>
@@ -50,7 +50,7 @@ extern "C" EXPORT int getPluginInfo(int index, Plugin::PluginInfo* info)
 		info->type = Plugin::PLUGIN_TYPE_PROCESSOR;
 		info->processor.name = "Olfactometer";
 		info->processor.type = Plugin::SinkProcessor;
-		info->processor.creator = &(Plugin::createProcessor<ArduinoOutput>);
+		info->processor.creator = &(Plugin::createProcessor<Olfactometer>);
 		break;
 	default:
 		return -1;

@@ -21,13 +21,13 @@
 
 */
 
-#include "ArduinoOutput.h"
-#include "ArduinoOutputEditor.h"
+#include "Olfactometer.h"
+#include "OlfactometerEditor.h"
 
 #include <stdio.h>
 
 
-ArduinoOutput::ArduinoOutput()
+Olfactometer::Olfactometer()
     : GenericProcessor      ("Olfactometer")
     , outputChannel         (13)
     , inputChannel          (-1)
@@ -40,21 +40,21 @@ ArduinoOutput::ArduinoOutput()
 }
 
 
-ArduinoOutput::~ArduinoOutput()
+Olfactometer::~Olfactometer()
 {
     if (arduino.isInitialized())
         arduino.disconnect();
 }
 
 
-AudioProcessorEditor* ArduinoOutput::createEditor()
+AudioProcessorEditor* Olfactometer::createEditor()
 {
-    editor = new ArduinoOutputEditor (this, true);
+    editor = new OlfactometerEditor (this, true);
     return editor;
 }
 
 
-void ArduinoOutput::setDevice (String devName)
+void Olfactometer::setDevice (String devName)
 {
     if (! acquisitionIsActive)
     {
@@ -98,7 +98,7 @@ void ArduinoOutput::setDevice (String devName)
 }
 
 
-void ArduinoOutput::handleEvent (const EventChannel* eventInfo, const MidiMessage& event, int sampleNum)
+void Olfactometer::handleEvent (const EventChannel* eventInfo, const MidiMessage& event, int sampleNum)
 {
     if (Event::getEventType(event) == EventChannel::TTL)
     {
@@ -138,7 +138,7 @@ void ArduinoOutput::handleEvent (const EventChannel* eventInfo, const MidiMessag
 }
 
 
-void ArduinoOutput::setParameter (int parameterIndex, float newValue)
+void Olfactometer::setParameter (int parameterIndex, float newValue)
 {
     // make sure current output channel is off:
     arduino.sendDigital(outputChannel, ARD_LOW);
@@ -163,31 +163,31 @@ void ArduinoOutput::setParameter (int parameterIndex, float newValue)
 }
 
 
-void ArduinoOutput::setOutputChannel (int chan)
+void Olfactometer::setOutputChannel (int chan)
 {
     setParameter (0, chan);
 }
 
 
-void ArduinoOutput::setInputChannel (int chan)
+void Olfactometer::setInputChannel (int chan)
 {
     setParameter (1, chan - 1);
 }
 
 
-void ArduinoOutput::setGateChannel (int chan)
+void Olfactometer::setGateChannel (int chan)
 {
     setParameter (2, chan - 1);
 }
 
-void ArduinoOutput::WriteDigital()
+void Olfactometer::WriteDigital()
 {
     arduino.sendDigital(12, ARD_HIGH);
     //arduino.sendDigital(13, ARD_LOW);
 }
 
 
-bool ArduinoOutput::enable()
+bool Olfactometer::enable()
 {
     acquisitionIsActive = true;
 
@@ -195,7 +195,7 @@ bool ArduinoOutput::enable()
 }
 
 
-bool ArduinoOutput::disable()
+bool Olfactometer::disable()
 {
     arduino.sendDigital (outputChannel, ARD_LOW);
     acquisitionIsActive = false;
@@ -204,7 +204,7 @@ bool ArduinoOutput::disable()
 }
 
 
-void ArduinoOutput::process (AudioSampleBuffer& buffer)
+void Olfactometer::process (AudioSampleBuffer& buffer)
 {
     checkForEvents ();
 }

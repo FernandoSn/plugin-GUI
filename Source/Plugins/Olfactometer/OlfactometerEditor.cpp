@@ -21,11 +21,11 @@
 
 */
 
-#include "ArduinoOutputEditor.h"
+#include "OlfactometerEditor.h"
 #include <stdio.h>
 
 
-ArduinoOutputEditor::ArduinoOutputEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors=true)
+OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors=true)
     : GenericEditor(parentNode, useDefaultParameterEditors)
 
 {
@@ -34,7 +34,7 @@ ArduinoOutputEditor::ArduinoOutputEditor(GenericProcessor* parentNode, bool useD
 
     desiredWidth = 150;
 
-    arduino = (ArduinoOutput*) parentNode;
+    arduino = (Olfactometer*) parentNode;
 
     vector <ofSerialDeviceInfo> devices = serial.getDeviceList();
 
@@ -109,11 +109,11 @@ ArduinoOutputEditor::ArduinoOutputEditor(GenericProcessor* parentNode, bool useD
 
 }
 
-ArduinoOutputEditor::~ArduinoOutputEditor()
+OlfactometerEditor::~OlfactometerEditor()
 {
 }
 
-void ArduinoOutputEditor::receivedEvent()
+void OlfactometerEditor::receivedEvent()
 {
 
     icon->setOpacity(0.8f);
@@ -121,7 +121,7 @@ void ArduinoOutputEditor::receivedEvent()
 
 }
 
-void ArduinoOutputEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
+void OlfactometerEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
     if (comboBoxThatHasChanged == deviceSelector.get())
     {
@@ -138,14 +138,14 @@ void ArduinoOutputEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     }
 }
 
-void ArduinoOutputEditor::buttonClicked(Button* button)
+void OlfactometerEditor::buttonClicked(Button* button)
 {
 
     arduino->WriteDigital();
 
 }
 
-void ArduinoOutputEditor::timerCallback()
+void OlfactometerEditor::timerCallback()
 {
 
     repaint();

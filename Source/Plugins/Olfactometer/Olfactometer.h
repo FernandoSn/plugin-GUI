@@ -21,8 +21,8 @@
 
 */
 
-#ifndef __ARDUINOOUTPUT_H_F7BDA585__
-#define __ARDUINOOUTPUT_H_F7BDA585__
+#ifndef __Olfactometer_H_F7BDA585__
+#define __Olfactometer_H_F7BDA585__
 
 #include <SerialLib.h>
 #include <ProcessorHeaders.h>
@@ -39,11 +39,11 @@
 
     @see GenericProcessor
  */
-class ArduinoOutput : public GenericProcessor
+class Olfactometer : public GenericProcessor
 {
 public:
-    ArduinoOutput();
-    ~ArduinoOutput();
+    Olfactometer();
+    ~Olfactometer();
 
     /** Searches for events and triggers the Arduino output when appropriate. */
     void process (AudioSampleBuffer& buffer) override;
@@ -61,7 +61,7 @@ public:
     /** Called immediately after the end of data acquisition. */
     bool disable() override;
 
-    /** Creates the ArduinoOutputEditor. */
+    /** Creates the OlfactometerEditor. */
     AudioProcessorEditor* createEditor() override;
 
     void setOutputChannel (int);
@@ -84,10 +84,10 @@ private:
     bool acquisitionIsActive;
     bool deviceSelected;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ArduinoOutput);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
 };
 
 
 
 
-#endif  // __ARDUINOOUTPUT_H_F7BDA585__
+#endif  // __Olfactometer_H_F7BDA585__

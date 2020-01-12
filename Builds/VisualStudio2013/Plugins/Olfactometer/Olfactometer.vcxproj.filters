@@ -18,28 +18,28 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\ArduinoOutput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\ArduinoOutputEditor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\OpenEphysLib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\serial\ofArduino.cpp">
       <Filter>Source Files\serial</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\OlfactometerEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\Olfactometer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\ArduinoOutput.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\ArduinoOutputEditor.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\serial\ofArduino.h">
       <Filter>Source Files\serial</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\OlfactometerEditor.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\Olfactometer.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
