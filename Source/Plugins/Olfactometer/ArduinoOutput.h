@@ -54,6 +54,8 @@ public:
 
     void WriteDigital();
 
+    const ofArduino& Arduino();
+
     int outputChannel;
     int inputChannel;
     int gateChannel;

@@ -31,6 +31,30 @@
 
 class ImageIcon;
 
+//Odor Channel Button class
+
+class OdorChButton : public ToggleButton, public Timer
+{
+    friend class OlfactometerEditor;
+
+public:
+    
+    
+    OdorChButton(int id);
+    void setId(int id);
+    int getId();
+    void setEnabled(bool);
+    void timerCallback();
+
+
+private:
+    void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown);
+
+    int id;
+    bool enabled;
+
+};
+
 /**
 
   User interface for the Olfactometer processor.
@@ -40,7 +64,7 @@ class ImageIcon;
 */
 
 class OlfactometerEditor : public GenericEditor,
-                            public ComboBox::Listener
+                             public ComboBox::Listener,public Label::Listener
 
 {
 public:
@@ -51,9 +75,14 @@ public:
 
     ImageIcon* icon;
 
-    void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
+    void comboBoxChanged(ComboBox* comboBoxThatHasChanged) override;
 
     void buttonClicked(Button* button) override; //FER
+
+    void labelTextChanged(Label* label) override;
+
+    void saveCustomParameters(XmlElement* xml) override;
+    void loadCustomParameters(XmlElement* xml) override;
 
     Olfactometer* Olfac;
 
@@ -66,6 +95,22 @@ private:
     std::unique_ptr<ComboBox> outputChannelSelector;
     std::unique_ptr<ComboBox> gateChannelSelector;
     std::unique_ptr<ComboBox> deviceSelector;
+
+    //Text boxes
+    String LastSeriesNoStr;
+    String LastTrialLengthStr;
+    String LastOpenTimeStr;
+    String LastOdorConcStr;
+
+    std::unique_ptr<Label> SeriesNoLabel;
+    std::unique_ptr<Label> TrialLengthLabel;
+    std::unique_ptr<Label> OpenTimeLabel;
+    std::unique_ptr<Label> OdorConcLabel;
+
+    std::unique_ptr<Label> SeriesNoValue;
+    std::unique_ptr<Label> TrialLengthValue;
+    std::unique_ptr<Label> OpenTimeValue;
+    std::unique_ptr<Label> OdorConcValue;
 
     //Buttons
     std::unique_ptr<UtilityButton> WriteDigButton;

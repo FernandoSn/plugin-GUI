@@ -44,11 +44,11 @@ public:
     FilterEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors);
     virtual ~FilterEditor();
 
-    void buttonEvent(Button* button);
-    void labelTextChanged(Label* label);
+    void buttonEvent(Button* button) override;
+    void labelTextChanged(Label* label) override;
 
-    void saveCustomParameters(XmlElement* xml);
-    void loadCustomParameters(XmlElement* xml);
+    void saveCustomParameters(XmlElement* xml) override;
+    void loadCustomParameters(XmlElement* xml) override;
 
     void setDefaults(double lowCut, double highCut);
     void resetToSavedText();

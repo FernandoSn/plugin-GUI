@@ -93,6 +93,11 @@ void ArduinoOutput::WriteDigital()
     arduino.sendDigital(13, ARD_LOW);
 }
 
+const ofArduino& ArduinoOutput::Arduino()
+{    
+    return arduino;
+}
+
 
 void ArduinoOutput::setOutputChannel (int chan)
 {

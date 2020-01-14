@@ -32,7 +32,20 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
 
     // accumulator = 0;
 
-    desiredWidth = 150;
+    desiredWidth = 350;
+
+    LastSeriesNoStr = " ";
+    LastTrialLengthStr = " ";
+    LastOpenTimeStr = " ";
+    LastOdorConcStr = " ";
+
+    SeriesNoLabel = std::make_unique<Label>("Series No Label", "No. of Series:");
+    SeriesNoLabel->setBounds(10, 65, 80, 20);
+    SeriesNoLabel->setFont(Font("Small Text", 12, Font::plain));
+    SeriesNoLabel->setColour(Label::textColourId, Colours::darkgrey);
+    addAndMakeVisible(SeriesNoLabel.get());
+
+
 
     Olfac = (Olfactometer*) parentNode;
 

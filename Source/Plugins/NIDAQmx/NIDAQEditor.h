@@ -86,14 +86,14 @@ public:
 	void setId(int id);
 	int getId();
 	void setEnabled(bool);
-	void timerCallback();
+	void timerCallback() override;
 
 	NIDAQThread* thread;
 
 	friend class NIDAQEditor;
 
 private:
-	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown);
+	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
 
 	int id;
 	bool enabled;

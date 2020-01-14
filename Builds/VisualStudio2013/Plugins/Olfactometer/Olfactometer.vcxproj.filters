@@ -30,9 +30,6 @@
     <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\Olfactometer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\ArduinoOutput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\serial\ofArduino.h">
@@ -42,9 +39,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\Olfactometer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\ArduinoOutput.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

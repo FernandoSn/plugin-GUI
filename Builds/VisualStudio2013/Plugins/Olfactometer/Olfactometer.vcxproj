@@ -19,14 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\ArduinoOutput.cpp" />
     <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\Olfactometer.cpp" />
     <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\OlfactometerEditor.cpp" />
     <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\OpenEphysLib.cpp" />
     <ClCompile Include="..\..\..\..\Source\Plugins\Olfactometer\serial\ofArduino.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\ArduinoOutput.h" />
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\Olfactometer.h" />
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\OlfactometerEditor.h" />
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\serial\ofArduino.h" />

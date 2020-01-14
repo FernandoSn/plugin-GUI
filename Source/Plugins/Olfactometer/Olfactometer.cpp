@@ -39,6 +39,8 @@ Olfactometer::Olfactometer()
 
 Olfactometer::~Olfactometer()
 {
+    if (arduino.isInitialized())
+        arduino.disconnect();
 }
 
 
@@ -48,14 +50,53 @@ AudioProcessorEditor* Olfactometer::createEditor()
     return editor;
 }
 
-void Olfactometer::setOlfactometer(const String& OlfactometerString)
+void Olfactometer::setOlfactometer(const String& OlfactometerName)
 {
-    ArdOut.setDevice(OlfactometerString);
-}
+    if (!acquisitionIsActive)
+    {
+        Time timer;
 
+        arduino.connect(OlfactometerName.toStdString());
+
+        if (arduino.isArduinoReady())
+        {
+            uint32 currentTime = timer.getMillisecondCounter();
+
+            arduino.sendProtocolVersionRequest();
+            timer.waitForMillisecondCounter(currentTime + 2000);
+            arduino.update();
+            arduino.sendFirmwareVersionRequest();
+
+            timer.waitForMillisecondCounter(currentTime + 4000);
+            arduino.update();
+
+            std::cout << "firmata v" << arduino.getMajorFirmwareVersion()
+                << "." << arduino.getMinorFirmwareVersion() << std::endl;
+        }
+
+        if (arduino.isInitialized())
+        {
+            std::cout << "Arduino is initialized." << std::endl;
+            //arduino.sendDigitalPinMode(13, ARD_OUTPUT);
+            CoreServices::sendStatusMessage(("Arduino initialized at" + OlfactometerName));
+            deviceSelected = true;
+        }
+        else
+        {
+            std::cout << "Arduino is NOT initialized." << std::endl;
+            CoreServices::sendStatusMessage(("Arduino could not be initialized at" + OlfactometerName));
+        }
+    }
+    else
+    {
+        CoreServices::sendStatusMessage("Cannot change device while acquisition is active.");
+    }
+}
+//#include <fstream>
 void Olfactometer::StartOdorPres()
 {
-    ArdOut.WriteDigital();
+    arduino.sendDigital(13, ARD_HIGH);
+    arduino.sendDigital(13, ARD_LOW);
 }
 
 
