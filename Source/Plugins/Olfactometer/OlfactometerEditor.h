@@ -20,7 +20,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
-
+//#pragma once
 #ifndef __OlfactometerEDITOR_H_28EB4CC9__
 #define __OlfactometerEDITOR_H_28EB4CC9__
 
@@ -28,6 +28,7 @@
 #include <EditorHeaders.h>
 #include "Olfactometer.h"
 #include <SerialLib.h>
+#include "../../../JuceLibraryCode/modules/juce_graphics/contexts/juce_GraphicsContext.h"
 
 class ImageIcon;
 
@@ -35,7 +36,6 @@ class ImageIcon;
 
 class OdorChButton : public ToggleButton, public Timer
 {
-    friend class OlfactometerEditor;
 
 public:
     
@@ -44,14 +44,20 @@ public:
     void setId(int id);
     int getId();
     void setEnabled(bool);
-    void timerCallback();
+    void timerCallback() override;
 
+
+
+
+    friend class OlfactometerEditor;
 
 private:
-    void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown);
+    void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
 
     int id;
     bool enabled;
+
+    //JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OdorChButton)
 
 };
 
@@ -64,7 +70,7 @@ private:
 */
 
 class OlfactometerEditor : public GenericEditor,
-                             public ComboBox::Listener,public Label::Listener
+                             public ComboBox::Listener//,public Label::Listener
 
 {
 public:
@@ -77,12 +83,22 @@ public:
 
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged) override;
 
-    void buttonClicked(Button* button) override; //FER
+    void buttonEvent(Button* button) override; //FER
 
-    void labelTextChanged(Label* label) override;
+    //void labelTextChanged(Label* label) override;
 
-    void saveCustomParameters(XmlElement* xml) override;
-    void loadCustomParameters(XmlElement* xml) override;
+    //void saveCustomParameters(XmlElement* xml) override;
+    //void loadCustomParameters(XmlElement* xml) override;
+
+private:
+
+    void timerCallback();
+
+    void DrawOdorChans(uint8_t ChNo, uint8_t FirstCh);
+
+public:
+
+
 
     Olfactometer* Olfac;
 
@@ -115,7 +131,16 @@ private:
     //Buttons
     std::unique_ptr<UtilityButton> WriteDigButton;
 
-    void timerCallback();
+    OwnedArray<OdorChButton> OdorChButtons;
+    std::unique_ptr<Label> OdorChLabel;
+
+
+
+    static const uint8_t BruceChNo = 11;
+    static const uint8_t BruceFirstChan = 2;
+
+
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OlfactometerEditor);
 
