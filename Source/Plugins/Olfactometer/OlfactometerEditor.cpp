@@ -121,7 +121,6 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
     LastSeriesNoStr = " ";
     LastTrialLengthStr = " ";
     LastOpenTimeStr = " ";
-    LastOdorConcStr = " ";
 
     SeriesNoLabel = std::make_unique<Label>("Series No Label", "No. of Series:");
     SeriesNoLabel->setBounds(5, 77, 80, 20);
@@ -146,7 +145,7 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
     SeriesNoValue->setFont(Font("Default", 15, Font::plain));
     SeriesNoValue->setColour(Label::textColourId, Colours::white);
     SeriesNoValue->setColour(Label::backgroundColourId, Colours::grey);
-    SeriesNoValue->setEditable(true);
+    SeriesNoValue->setEditable(false);
     //SeriesNoValue->addListener(this);
     SeriesNoValue->setTooltip("Set the low cut for the selected channels");
     addAndMakeVisible(SeriesNoValue.get());
@@ -156,7 +155,7 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
     TrialLengthValue->setFont(Font("Default", 15, Font::plain));
     TrialLengthValue->setColour(Label::textColourId, Colours::white);
     TrialLengthValue->setColour(Label::backgroundColourId, Colours::grey);
-    TrialLengthValue->setEditable(true);
+    TrialLengthValue->setEditable(false);
     //TrialLengthValue->addListener(this);
     TrialLengthValue->setTooltip("Set the high cut for the selected channels");
     addAndMakeVisible(TrialLengthValue.get());
@@ -166,7 +165,7 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
     OpenTimeValue->setFont(Font("Default", 15, Font::plain));
     OpenTimeValue->setColour(Label::textColourId, Colours::white);
     OpenTimeValue->setColour(Label::backgroundColourId, Colours::grey);
-    OpenTimeValue->setEditable(true);
+    OpenTimeValue->setEditable(false);
     //SeriesNoValue->addListener(this);
     OpenTimeValue->setTooltip("sdfsdfsd");
     addAndMakeVisible(OpenTimeValue.get());
@@ -260,17 +259,20 @@ void OlfactometerEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
     if (comboBoxThatHasChanged == deviceSelector.get())
     {
-        Olfac->setOlfactometer(deviceSelector->getText());
-    }/* else if (comboBoxThatHasChanged == outputChannelSelector.get())
-    {
-        arduino->setOutputChannel(outputChannelSelector->getSelectedId()-1);
-    } else if (comboBoxThatHasChanged == inputChannelSelector.get())
-    {
-        arduino->setInputChannel(inputChannelSelector->getSelectedId()-1);
-    } else if (comboBoxThatHasChanged == gateChannelSelector.get())
-    {
-        arduino->setGateChannel(gateChannelSelector->getSelectedId()-1);
-    }*/
+        if ((juce::String)"Device" != deviceSelector->getText())
+        {
+            Olfac->setOlfactometer(deviceSelector->getText());
+            SeriesNoValue->setEditable(true);
+            TrialLengthValue->setEditable(true);
+            OpenTimeValue->setEditable(true);
+        }
+        else
+        {
+            SeriesNoValue->setEditable(false);
+            TrialLengthValue->setEditable(false);
+            OpenTimeValue->setEditable(false);
+        }
+    }
 }
 
 void OlfactometerEditor::buttonEvent(Button* button)
@@ -284,6 +286,21 @@ void OlfactometerEditor::buttonEvent(Button* button)
     //thread->toggleDIChannel(((DIButton*)button)->getId());
     repaint();
     }
+
+}
+
+void OlfactometerEditor::labelTextChanged(Label* label)
+{
+    
+    Value val = label->getTextValue();
+
+    if(label == SeriesNoValue.get())
+        int requestedValue = int(val.getValue());
+    else
+        double requestedValue = double(val.getValue());
+
+
+
 
 }
 

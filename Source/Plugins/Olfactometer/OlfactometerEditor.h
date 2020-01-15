@@ -70,7 +70,7 @@ private:
 */
 
 class OlfactometerEditor : public GenericEditor,
-                             public ComboBox::Listener//,public Label::Listener
+                             public ComboBox::Listener,public Label::Listener
 
 {
 public:
@@ -84,6 +84,7 @@ public:
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged) override;
 
     void buttonEvent(Button* button) override; //FER
+    void labelTextChanged(Label* label) override;
 
     //void labelTextChanged(Label* label) override;
 
@@ -106,7 +107,6 @@ public:
 
 private:
 
-   // ScopedPointer<UtilityButton> triggerButton;
     std::unique_ptr<ComboBox> inputChannelSelector;
     std::unique_ptr<ComboBox> outputChannelSelector;
     std::unique_ptr<ComboBox> gateChannelSelector;
@@ -116,17 +116,14 @@ private:
     String LastSeriesNoStr;
     String LastTrialLengthStr;
     String LastOpenTimeStr;
-    String LastOdorConcStr;
 
     std::unique_ptr<Label> SeriesNoLabel;
     std::unique_ptr<Label> TrialLengthLabel;
     std::unique_ptr<Label> OpenTimeLabel;
-    std::unique_ptr<Label> OdorConcLabel;
 
     std::unique_ptr<Label> SeriesNoValue;
     std::unique_ptr<Label> TrialLengthValue;
     std::unique_ptr<Label> OpenTimeValue;
-    std::unique_ptr<Label> OdorConcValue;
 
     //Buttons
     std::unique_ptr<UtilityButton> WriteDigButton;

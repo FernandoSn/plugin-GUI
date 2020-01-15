@@ -80,6 +80,10 @@ private:
     bool acquisitionIsActive;
     bool deviceSelected;
 
+    int SeriesNo;
+    double TrialLength;
+    double OpenTime;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
 };
 
