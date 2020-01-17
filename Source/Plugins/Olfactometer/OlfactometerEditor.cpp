@@ -22,6 +22,7 @@
 */
 
 #include "OlfactometerEditor.h"
+#include "OlfactometersSN.h"
 //#include "Olfactometer.h"
 //#include <SerialLib.h>
 #include <stdio.h>
@@ -88,9 +89,12 @@ void OdorChButton::paintButton(Graphics& g, bool isMouseOver, bool isButtonDown)
         20, 10, Justification::centredLeft);
 }
 
-OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors=true)
-    : GenericEditor(parentNode, useDefaultParameterEditors)
 
+
+OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors=true)
+    : 
+    GenericEditor(parentNode, useDefaultParameterEditors),
+    OlfactometerParams("OlfactometerParams.txt")
 {
 
     // accumulator = 0;
@@ -99,18 +103,28 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
 
     Olfac = (Olfactometer*) parentNode;
 
-    vector <ofSerialDeviceInfo> devices = serial.getDeviceList();
+
+    std::vector<ofSerialDeviceInfo> devices = serial.getDeviceList();
 
 
+    //OlfactometerParams.open("OlfactometerParams.dat");
+
+    std::cout << "antesfind "; 
+    FindLabOlfactometers(devices);
 
     deviceSelector = std::make_unique<ComboBox>();
     deviceSelector->setBounds(10,47,70,20);
     deviceSelector->addListener(this);
     deviceSelector->addItem("Device",1);
     
-    for (int i = 0; i < devices.size(); i++)
+    //for (int i = 0; i < devices.size(); i++)
+    //{
+    //    deviceSelector->addItem(devices[i].getDevicePath(),i+2);
+    //}
+    int ComboBoxIdx = 0;
+    for (auto iter = OlfactometerCOMS.begin(); iter != OlfactometerCOMS.end(); ++iter, ComboBoxIdx++) 
     {
-        deviceSelector->addItem(devices[i].getDevicePath(),i+2);
+        deviceSelector->addItem(iter->first, ComboBoxIdx + 2);
     }
 
     deviceSelector->setSelectedId(1, dontSendNotification);
@@ -294,14 +308,32 @@ void OlfactometerEditor::labelTextChanged(Label* label)
     
     Value val = label->getTextValue();
 
-    if(label == SeriesNoValue.get())
-        int requestedValue = int(val.getValue());
-    else
+    if (label == SeriesNoValue.get())
+    {
+        Olfac->SetSeriesNo(int(val.getValue()));
+        LastSeriesNoStr = label->getText();
+    }
+    else if (label == TrialLengthValue.get())
+    {
+        //double requestedValue = double(val.getValue());
+        Olfac->SetTrialLength(double(val.getValue()));
+        LastTrialLengthStr = label->getText();
+    }
+    else if (label == OpenTimeValue.get())
+    {
         double requestedValue = double(val.getValue());
-
-
-
-
+        if (requestedValue > Olfac->GetTrialLength())
+        {
+            CoreServices::sendStatusMessage("Open time should be less than trial length");
+            label->setText(LastOpenTimeStr, dontSendNotification);
+            LastOpenTimeStr = label->getText();
+        }
+        else
+        {
+            Olfac->SetOpenTime(requestedValue);
+            LastOpenTimeStr = label->getText();
+        }
+    }
 }
 
 void OlfactometerEditor::timerCallback()
@@ -408,4 +440,44 @@ void OlfactometerEditor::DrawOdorChans(uint8_t ChNo, uint8_t FirstCh)
 
     //}
 
+}
+
+void OlfactometerEditor::FindLabOlfactometers(std::vector<ofSerialDeviceInfo>& Devices)
+{
+    std::cout << "si ";
+    std::string file_name = "TempOlfac.dat";
+
+    for (auto it = Devices.begin(); it < Devices.end(); ++it) //Iterate over all COM Devices.
+    {
+        // Get the Serial Numbers of COM devices and store them in TempOlfac.
+        std::system(("wmic path Win32_PnPEntity where \"Name like '%" + 
+            it->getDevicePath() + "%'\" get DeviceID > " + file_name).c_str());
+
+        //Create obj of TempOlfac
+        std::ifstream file(file_name);
+
+        //Get the String in the File.
+        std::string DevicesSN =  { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
+
+        //Search for Olfactometers/Arduinos associated with a particular COM port.
+        for (std::string* ptrOlfacArd = OlfacArd, *ptrOlfacNames = OlfacNames;
+            ptrOlfacArd < ptrOlfacArd + MAX_OLFACTOMETERS; ++ptrOlfacArd, ++ptrOlfacNames)
+        {
+            //If an arduino/olfactometer is found put it in the map
+            size_t found = DevicesSN.find(*ptrOlfacArd);
+            if (found != string::npos)
+            {
+                OlfactometerCOMS.emplace(*ptrOlfacNames, it->getDevicePath());
+            }
+        }
+
+        //Close the file.
+        file.close();
+
+        //Delete the file. This will allow to write only the data of one COM port each time.
+        if (remove("result.txt") == 0)
+            std::cout << "Deleted successfully \n";
+        else
+            std::cout << "Unable to delete the file \n";
+    }
 }

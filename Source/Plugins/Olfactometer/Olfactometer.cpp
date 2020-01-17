@@ -32,6 +32,9 @@ Olfactometer::Olfactometer()
     , state                 (true)
     , acquisitionIsActive   (false)
     , deviceSelected        (false)
+    , SeriesNo              (0)
+    , TrialLength           (0)
+    , OpenTime              (0)
 {
     setProcessorType (PROCESSOR_TYPE_SINK);
 }
@@ -97,6 +100,36 @@ void Olfactometer::StartOdorPres()
 {
     arduino.sendDigital(13, ARD_HIGH);
     arduino.sendDigital(13, ARD_LOW);
+}
+
+void Olfactometer::SetSeriesNo(int SN)
+{
+    SeriesNo = SN;
+}
+
+void Olfactometer::SetTrialLength(double TL)
+{
+    TrialLength = TL;
+}
+
+void Olfactometer::SetOpenTime(double OT)
+{
+    OpenTime = OT;
+}
+
+int Olfactometer::GetSeriesNo() const
+{
+    return SeriesNo;
+}
+
+double Olfactometer::GetTrialLength() const
+{
+    return TrialLength;
+}
+
+double Olfactometer::GetOpenTime() const
+{
+    return OpenTime;
 }
 
 

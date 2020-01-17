@@ -27,6 +27,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\Olfactometer.h" />
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\OlfactometerEditor.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\OlfactometersSN.h" />
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\serial\ofArduino.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

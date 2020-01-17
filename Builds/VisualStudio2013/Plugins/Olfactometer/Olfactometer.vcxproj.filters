@@ -41,5 +41,8 @@
     <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\Olfactometer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\Olfactometer\OlfactometersSN.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

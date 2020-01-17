@@ -71,6 +71,28 @@ public:
 
     void StartOdorPres();
 
+    void SetSeriesNo(int SN);
+    void SetTrialLength(double TL);
+    void SetOpenTime(double OT);
+
+    int GetSeriesNo() const;
+    double GetTrialLength() const;
+    double GetOpenTime() const;
+
+private:
+
+public:
+
+
+    enum class OlfactometersID : uint8_t
+    {
+        BRUCE = 1,
+        CHANCE,
+        PETEY,
+        SHADOW,
+        BEAST
+    };
+
 
 private:
     /** An open-frameworks Arduino object. */
@@ -80,9 +102,11 @@ private:
     bool acquisitionIsActive;
     bool deviceSelected;
 
+    uint8_t OlfacName;
     int SeriesNo;
     double TrialLength;
     double OpenTime;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
 };

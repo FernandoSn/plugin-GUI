@@ -86,8 +86,6 @@ public:
     void buttonEvent(Button* button) override; //FER
     void labelTextChanged(Label* label) override;
 
-    //void labelTextChanged(Label* label) override;
-
     //void saveCustomParameters(XmlElement* xml) override;
     //void loadCustomParameters(XmlElement* xml) override;
 
@@ -96,6 +94,8 @@ private:
     void timerCallback();
 
     void DrawOdorChans(uint8_t ChNo, uint8_t FirstCh);
+
+    void FindLabOlfactometers(std::vector<ofSerialDeviceInfo>& Devices);
 
 public:
 
@@ -130,20 +130,14 @@ private:
 
     OwnedArray<OdorChButton> OdorChButtons;
     std::unique_ptr<Label> OdorChLabel;
-
-
+    std::fstream OlfactometerParams;
+    std::map<std::string, std::string> OlfactometerCOMS;
 
     static const uint8_t BruceChNo = 11;
     static const uint8_t BruceFirstChan = 2;
 
 
-
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OlfactometerEditor);
 
 };
-
-
-
-
 #endif  // __OlfactometerEDITOR_H_28EB4CC9__
