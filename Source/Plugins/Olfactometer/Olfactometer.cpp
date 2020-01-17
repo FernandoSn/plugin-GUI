@@ -42,8 +42,8 @@ Olfactometer::Olfactometer()
 
 Olfactometer::~Olfactometer()
 {
-    if (arduino.isInitialized())
-        arduino.disconnect();
+    if (OlfacArduino.isInitialized())
+        OlfacArduino.disconnect();
 }
 
 
@@ -53,41 +53,43 @@ AudioProcessorEditor* Olfactometer::createEditor()
     return editor;
 }
 
-void Olfactometer::setOlfactometer(const String& OlfactometerName)
+void Olfactometer::setOlfactometer(const std::pair<std::string, std::string>& COMPair)
 {
     if (!acquisitionIsActive)
     {
         Time timer;
 
-        arduino.connect(OlfactometerName.toStdString());
+        OlfacArduino.connect(COMPair.first);
 
-        if (arduino.isArduinoReady())
+        //TODO SERIAL of COMPair.second;
+
+        if (OlfacArduino.isArduinoReady())
         {
             uint32 currentTime = timer.getMillisecondCounter();
 
-            arduino.sendProtocolVersionRequest();
+            OlfacArduino.sendProtocolVersionRequest();
             timer.waitForMillisecondCounter(currentTime + 2000);
-            arduino.update();
-            arduino.sendFirmwareVersionRequest();
+            OlfacArduino.update();
+            OlfacArduino.sendFirmwareVersionRequest();
 
             timer.waitForMillisecondCounter(currentTime + 4000);
-            arduino.update();
+            OlfacArduino.update();
 
-            std::cout << "firmata v" << arduino.getMajorFirmwareVersion()
-                << "." << arduino.getMinorFirmwareVersion() << std::endl;
+            std::cout << "firmata v" << OlfacArduino.getMajorFirmwareVersion()
+                << "." << OlfacArduino.getMinorFirmwareVersion() << std::endl;
         }
 
-        if (arduino.isInitialized())
+        if (OlfacArduino.isInitialized())
         {
-            std::cout << "Arduino is initialized." << std::endl;
-            //arduino.sendDigitalPinMode(13, ARD_OUTPUT);
-            CoreServices::sendStatusMessage(("Arduino initialized at" + OlfactometerName));
+            std::cout << "OlfacArduino is initialized." << std::endl;
+            //OlfacArduino.sendDigitalPinMode(13, ARD_OUTPUT);
+            CoreServices::sendStatusMessage(("OlfacArduino initialized at" + COMPair.first));
             deviceSelected = true;
         }
         else
         {
-            std::cout << "Arduino is NOT initialized." << std::endl;
-            CoreServices::sendStatusMessage(("Arduino could not be initialized at" + OlfactometerName));
+            std::cout << "OlfacArduino is NOT initialized." << std::endl;
+            CoreServices::sendStatusMessage(("OlfacArduino could not be initialized at" + COMPair.first));
         }
     }
     else
@@ -95,11 +97,11 @@ void Olfactometer::setOlfactometer(const String& OlfactometerName)
         CoreServices::sendStatusMessage("Cannot change device while acquisition is active.");
     }
 }
-//#include <fstream>
+
 void Olfactometer::StartOdorPres()
 {
-    arduino.sendDigital(13, ARD_HIGH);
-    arduino.sendDigital(13, ARD_LOW);
+    OlfacArduino.sendDigital(13, ARD_HIGH);
+    OlfacArduino.sendDigital(13, ARD_LOW);
 }
 
 void Olfactometer::SetSeriesNo(int SN)
@@ -161,11 +163,11 @@ void Olfactometer::handleEvent (const EventChannel* eventInfo, const MidiMessage
   //          {
   //              if (eventId == 0)
   //              {
-  //                  arduino.sendDigital (outputChannel, ARD_LOW);
+  //                  OlfacArduino.sendDigital (outputChannel, ARD_LOW);
   //              }
   //              else
   //              {
-  //                  arduino.sendDigital (outputChannel, ARD_HIGH);
+  //                  OlfacArduino.sendDigital (outputChannel, ARD_HIGH);
   //              }
   //          }
   //      }
@@ -176,7 +178,7 @@ void Olfactometer::handleEvent (const EventChannel* eventInfo, const MidiMessage
 void Olfactometer::setParameter (int parameterIndex, float newValue)
 {
     // make sure current output channel is off:
-    /*arduino.sendDigital(outputChannel, ARD_LOW);
+    /*OlfacArduino.sendDigital(outputChannel, ARD_LOW);
 
     if (parameterIndex == 0)
     {
@@ -208,7 +210,7 @@ bool Olfactometer::enable()
 
 bool Olfactometer::disable()
 {
-    //arduino.sendDigital (outputChannel, ARD_LOW);
+    //OlfacArduino.sendDigital (outputChannel, ARD_LOW);
     acquisitionIsActive = false;
 
     return true;

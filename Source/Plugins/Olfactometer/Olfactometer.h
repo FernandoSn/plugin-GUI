@@ -67,7 +67,7 @@ public:
 
 
 
-    void setOlfactometer(const String& OlfactometerString);
+    void setOlfactometer(const std::pair<std::string,std::string>& COMPair);
 
     void StartOdorPres();
 
@@ -96,7 +96,8 @@ public:
 
 private:
     /** An open-frameworks Arduino object. */
-    ofArduino arduino;
+    ofArduino OlfacArduino;
+    ofSerial OlfacSerial;
 
     bool state;
     bool acquisitionIsActive;

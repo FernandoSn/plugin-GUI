@@ -274,7 +274,11 @@ void OlfactometerEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     {
         if ((juce::String)"Device" != deviceSelector->getText())
         {
-            Olfac->setOlfactometer(deviceSelector->getText());
+            std::string tempstr = deviceSelector->getText().toStdString();
+
+            Olfac->setOlfactometer(
+                OlfactometerCOMS.find(tempstr)->second
+            );
             SeriesNoValue->setEditable(true);
             TrialLengthValue->setEditable(true);
             OpenTimeValue->setEditable(true);
@@ -469,18 +473,44 @@ void OlfactometerEditor::FindLabOlfactometers(std::vector<ofSerialDeviceInfo>& D
             *GoodIt = *BadIt;
         }
         
+       
         //Search for Olfactometers/Arduinos associated with a particular COM port.
-        for (std::string* ptrOlfacArd = OlfacArd, *ptrOlfacNames = OlfacNames;
-            ptrOlfacArd < OlfacArd + MAX_OLFACTOMETERS; ++ptrOlfacArd, ++ptrOlfacNames)
+        for (std::string* ptrOlfacArd = OlfacArd, *ptrOlfacSer = OlfacSer, *ptrOlfacNames = OlfacNames;
+            ptrOlfacArd < OlfacArd + MAX_OLFACTOMETERS; ++ptrOlfacArd, ++ptrOlfacSer,++ptrOlfacNames)
         {
             //If an arduino/olfactometer is found put it in the map
             size_t found = DevicesSN.find(*ptrOlfacArd);
             if (found != string::npos)
             {
-                OlfactometerCOMS.emplace(*ptrOlfacNames, it->getDevicePath());
+                auto MapIt = OlfactometerCOMS.find(*ptrOlfacNames);
+                if (MapIt != OlfactometerCOMS.end())
+                {
+                    MapIt->second.first = it->getDevicePath();
+                }
+                else
+                {
+                    std::pair<std::string, std::string> ComPair;
+                    ComPair.first = it->getDevicePath();
+                    OlfactometerCOMS.emplace(*ptrOlfacNames, ComPair);
+                }
                 //DebFil << "Encontr" << "\n";
             }
-        }
 
+            size_t found = DevicesSN.find(*ptrOlfacSer);
+            if (found != string::npos)
+            {
+                auto MapIt = OlfactometerCOMS.find(*ptrOlfacNames);
+                if (MapIt != OlfactometerCOMS.end())
+                {
+                    MapIt->second.second = it->getDevicePath();
+                }
+                else
+                {
+                    std::pair<std::string, std::string> ComPair;
+                    ComPair.second = it->getDevicePath();
+                    OlfactometerCOMS.emplace(*ptrOlfacNames, ComPair);
+                }
+            }
+        }
     }
 }

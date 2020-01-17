@@ -131,7 +131,7 @@ private:
     OwnedArray<OdorChButton> OdorChButtons;
     std::unique_ptr<Label> OdorChLabel;
     std::fstream OlfactometerParams;
-    std::map<std::string, std::string> OlfactometerCOMS;
+    std::map<std::string,std::pair<std::string, std::string>> OlfactometerCOMS;
 
     static const uint8_t BruceChNo = 11;
     static const uint8_t BruceFirstChan = 2;
