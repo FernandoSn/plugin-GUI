@@ -109,7 +109,6 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
 
     //OlfactometerParams.open("OlfactometerParams.dat");
 
-    std::cout << "antesfind "; 
     FindLabOlfactometers(devices);
 
     deviceSelector = std::make_unique<ComboBox>();
@@ -248,12 +247,12 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
     //gateChannelSelector->setSelectedId(1, dontSendNotification);
     //addAndMakeVisible(gateChannelSelector.get());
 
-    //WriteDigButton = std::make_unique<UtilityButton>("W", Font("Small Text", 13, Font::bold));
-    //WriteDigButton->setRadius(3.0f);
-    //WriteDigButton->setBounds(95, 60, 65, 25);
-    //WriteDigButton->addListener(this);
+    WriteDigButton = std::make_unique<UtilityButton>("W", Font("Small Text", 13, Font::bold));
+    WriteDigButton->setRadius(3.0f);
+    WriteDigButton->setBounds(95, 60, 65, 25);
+    WriteDigButton->addListener(this);
 
-    //addAndMakeVisible(WriteDigButton.get());
+    addAndMakeVisible(WriteDigButton.get());
 
 }
 
@@ -291,16 +290,12 @@ void OlfactometerEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 
 void OlfactometerEditor::buttonEvent(Button* button)
 {
-
-    //Olfac->StartOdorPres();
-
     if(OdorChButtons.contains((OdorChButton*)button))
     {
     ((OdorChButton*)button)->setEnabled(!((OdorChButton*)button)->enabled);
     //thread->toggleDIChannel(((DIButton*)button)->getId());
     repaint();
     }
-
 }
 
 void OlfactometerEditor::labelTextChanged(Label* label)
@@ -444,40 +439,48 @@ void OlfactometerEditor::DrawOdorChans(uint8_t ChNo, uint8_t FirstCh)
 
 void OlfactometerEditor::FindLabOlfactometers(std::vector<ofSerialDeviceInfo>& Devices)
 {
-    std::cout << "si ";
-    std::string file_name = "TempOlfac.dat";
+    //This code is slow and makes the GUI crash. I need to 
+    //std::ofstream DebFil("debpr.txt");
+
+
+    //std::cout << "si entro func "<< "\n";
+    std::string file_name = "TempOlfac.txt";
 
     for (auto it = Devices.begin(); it < Devices.end(); ++it) //Iterate over all COM Devices.
     {
         // Get the Serial Numbers of COM devices and store them in TempOlfac.
-        std::system(("wmic path Win32_PnPEntity where \"Name like '%" + 
+        std::system(("wmic path Win32_PnPEntity where \"Name like '%" +
             it->getDevicePath() + "%'\" get DeviceID > " + file_name).c_str());
-
-        //Create obj of TempOlfac
+        
+        
         std::ifstream file(file_name);
+        //Get the trash string in the File.
+        std::string DevicesSNBad = { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
 
-        //Get the String in the File.
-        std::string DevicesSN =  { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
+        //New string to get every other character. 
+        std::string DevicesSN;
+        DevicesSN.resize(DevicesSNBad.size() / 2);
 
+        
+        //Getting every other character.
+        for (auto BadIt = DevicesSNBad.begin(), GoodIt = DevicesSN.begin(); 
+            BadIt < DevicesSNBad.end(); BadIt += 2, ++GoodIt)
+        {
+            *GoodIt = *BadIt;
+        }
+        
         //Search for Olfactometers/Arduinos associated with a particular COM port.
         for (std::string* ptrOlfacArd = OlfacArd, *ptrOlfacNames = OlfacNames;
-            ptrOlfacArd < ptrOlfacArd + MAX_OLFACTOMETERS; ++ptrOlfacArd, ++ptrOlfacNames)
+            ptrOlfacArd < OlfacArd + MAX_OLFACTOMETERS; ++ptrOlfacArd, ++ptrOlfacNames)
         {
             //If an arduino/olfactometer is found put it in the map
             size_t found = DevicesSN.find(*ptrOlfacArd);
             if (found != string::npos)
             {
                 OlfactometerCOMS.emplace(*ptrOlfacNames, it->getDevicePath());
+                //DebFil << "Encontr" << "\n";
             }
         }
 
-        //Close the file.
-        file.close();
-
-        //Delete the file. This will allow to write only the data of one COM port each time.
-        if (remove("result.txt") == 0)
-            std::cout << "Deleted successfully \n";
-        else
-            std::cout << "Unable to delete the file \n";
     }
 }
