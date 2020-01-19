@@ -276,7 +276,7 @@ void OlfactometerEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
         {
             std::string tempstr = deviceSelector->getText().toStdString();
 
-            Olfac->setOlfactometer(
+            Olfac->InitOlfactometer(
                 OlfactometerCOMS.find(tempstr)->second
             );
             SeriesNoValue->setEditable(true);
@@ -496,7 +496,7 @@ void OlfactometerEditor::FindLabOlfactometers(std::vector<ofSerialDeviceInfo>& D
                 //DebFil << "Encontr" << "\n";
             }
 
-            size_t found = DevicesSN.find(*ptrOlfacSer);
+            found = DevicesSN.find(*ptrOlfacSer);
             if (found != string::npos)
             {
                 auto MapIt = OlfactometerCOMS.find(*ptrOlfacNames);

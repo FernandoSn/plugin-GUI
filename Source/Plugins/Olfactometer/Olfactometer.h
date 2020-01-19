@@ -67,7 +67,7 @@ public:
 
 
 
-    void setOlfactometer(const std::pair<std::string,std::string>& COMPair);
+    void InitOlfactometer(const std::pair<std::string,std::string>& COMPair);
 
     void StartOdorPres();
 

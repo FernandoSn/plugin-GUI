@@ -25,7 +25,12 @@
 #include "OlfactometerEditor.h"
 
 #include <stdio.h>
+#include <chrono>
+#include <thread>
+#include <array>
 
+#include <fstream>
+std::ofstream DebugFile("Debugfile.txt");
 
 Olfactometer::Olfactometer()
     : GenericProcessor      ("Olfactometer")
@@ -53,15 +58,15 @@ AudioProcessorEditor* Olfactometer::createEditor()
     return editor;
 }
 
-void Olfactometer::setOlfactometer(const std::pair<std::string, std::string>& COMPair)
+void Olfactometer::InitOlfactometer(const std::pair<std::string, std::string>& COMPair)
 {
     if (!acquisitionIsActive)
     {
         Time timer;
 
         OlfacArduino.connect(COMPair.first);
+        OlfacSerial.setup(COMPair.second.c_str(),9600);
 
-        //TODO SERIAL of COMPair.second;
 
         if (OlfacArduino.isArduinoReady())
         {
@@ -77,19 +82,62 @@ void Olfactometer::setOlfactometer(const std::pair<std::string, std::string>& CO
 
             std::cout << "firmata v" << OlfacArduino.getMajorFirmwareVersion()
                 << "." << OlfacArduino.getMinorFirmwareVersion() << std::endl;
+
+
+            //Set all pins to zero.
+            for (int i = 5; i < 13; i++)
+            {
+                OlfacArduino.sendDigital(i, ARD_LOW);
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                //timer.waitForMillisecondCounter(currentTime + 4000);
+            }
+
+            OlfacArduino.sendDigital(2, ARD_HIGH);
+            OlfacArduino.sendDigital(3, ARD_HIGH);
+            std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+
+
+            for (int IntTest = 1; IntTest < 6; IntTest++)
+            {
+                OlfacArduino.sendDigital(13, ARD_HIGH);
+                OlfacArduino.sendDigital(13, ARD_LOW);
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+                int AvailableInts = (OlfacSerial.available()/4);
+                std::vector<uint32_t> TempBuff(AvailableInts,0);
+                int BytesRead = OlfacSerial.readBytes((uint8_t*)TempBuff.data(), AvailableInts *4);
+
+                uint32_t TimeTag = TempBuff[0] % 1000;
+
+                std::array<uint32_t, 4> TempArr = { 1,2,3,4 };
+
+                DebugFile << AvailableInts << " " << BytesRead << "\n";
+
+                if (!(std::find(TempArr.begin(), TempArr.end(), TimeTag) != TempArr.end())) 
+                {
+                    DebugFile << "init testing " << IntTest << "\n";
+                }
+                else 
+                {
+                    DebugFile << "Good data.\n";
+                    break;
+                }
+
+            }
+
+
         }
 
         if (OlfacArduino.isInitialized())
         {
             std::cout << "OlfacArduino is initialized." << std::endl;
-            //OlfacArduino.sendDigitalPinMode(13, ARD_OUTPUT);
-            CoreServices::sendStatusMessage(("OlfacArduino initialized at" + COMPair.first));
+            CoreServices::sendStatusMessage(("OlfacArduino initialized at " + COMPair.first));
             deviceSelected = true;
         }
         else
         {
             std::cout << "OlfacArduino is NOT initialized." << std::endl;
-            CoreServices::sendStatusMessage(("OlfacArduino could not be initialized at" + COMPair.first));
+            CoreServices::sendStatusMessage(("OlfacArduino could not be initialized at " + COMPair.first));
         }
     }
     else
