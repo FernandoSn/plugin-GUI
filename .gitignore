@@ -10,6 +10,18 @@
 *.ipch
 *.pch
 
+
+
+.vs\plugin-GUI\v16\Browse.VC
+.vs/plugin-GUI/v16/Browse.VC
+
+Builds\VisualStudio2013\.vs\open-ephys\v16\Browse.VC
+Builds/VisualStudio2013/.vs/open-ephys/v16/Browse.VC
+
+Builds\VisualStudio2013\Plugins\.vs\Plugins\v16\Browse.VC
+Builds/VisualStudio2013/Plugins/.vs/Plugins/v16/Browse.VC
+
+
 # 2. binaries
 Builds/Linux/build/open-ephys
 Builds/Linux/build/open-ephys-release
