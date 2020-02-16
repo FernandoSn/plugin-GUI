@@ -72,6 +72,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NeuropixelsPXI", "Neuropixe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Olfactometer", "Olfactometer\Olfactometer.vcxproj", "{9155CAFB-0243-4D19-996F-A2FEC43F0866}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StreamMuxer", "StreamMuxer\StreamMuxer.vcxproj", "{5FA1B967-B140-43E0-8E3E-EDA697FDC199}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProbeViewer", "ProbeViewer\ProbeViewer.vcxproj", "{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -406,6 +410,30 @@ Global
 		{9155CAFB-0243-4D19-996F-A2FEC43F0866}.Release|Win32.Build.0 = Release|Win32
 		{9155CAFB-0243-4D19-996F-A2FEC43F0866}.Release|x64.ActiveCfg = Release|x64
 		{9155CAFB-0243-4D19-996F-A2FEC43F0866}.Release|x64.Build.0 = Release|x64
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Debug|Win32.Build.0 = Debug|Win32
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Debug|x64.ActiveCfg = Debug|x64
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Debug|x64.Build.0 = Debug|x64
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Release|Win32.ActiveCfg = Release|Win32
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Release|Win32.Build.0 = Release|Win32
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Release|x64.ActiveCfg = Release|x64
+		{5FA1B967-B140-43E0-8E3E-EDA697FDC199}.Release|x64.Build.0 = Release|x64
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Debug|Win32.Build.0 = Debug|Win32
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Debug|x64.ActiveCfg = Debug|x64
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Debug|x64.Build.0 = Debug|x64
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Release|Win32.ActiveCfg = Release|Win32
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Release|Win32.Build.0 = Release|Win32
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Release|x64.ActiveCfg = Release|x64
+		{1F9E5B2B-4418-4E6A-BF87-BD0AD34225FE}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

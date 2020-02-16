@@ -89,6 +89,8 @@ public:
     //void saveCustomParameters(XmlElement* xml) override;
     //void loadCustomParameters(XmlElement* xml) override;
 
+    void updateSettings() override; //Bad coding, fix later.
+
 private:
 
     void timerCallback();
@@ -96,6 +98,10 @@ private:
     void DrawOdorChans(uint8_t ChNo, uint8_t FirstCh);
 
     void FindLabOlfactometers(std::vector<ofSerialDeviceInfo>& Devices);
+
+    void LoadOlfacParams();
+
+    void SaveOlfacParams();
 
 public:
 
@@ -107,9 +113,7 @@ public:
 
 private:
 
-    std::unique_ptr<ComboBox> inputChannelSelector;
-    std::unique_ptr<ComboBox> outputChannelSelector;
-    std::unique_ptr<ComboBox> gateChannelSelector;
+    //Olfac List
     std::unique_ptr<ComboBox> deviceSelector;
 
     //Text boxes
@@ -130,11 +134,24 @@ private:
 
     OwnedArray<OdorChButton> OdorChButtons;
     std::unique_ptr<Label> OdorChLabel;
-    std::fstream OlfactometerParams;
+
+    //MAP COM PORTs and Olfac names.
     std::map<std::string,std::pair<std::string, std::string>> OlfactometerCOMS;
 
-    static const uint8_t BruceChNo = 11;
-    static const uint8_t BruceFirstChan = 2;
+    //Param File streams
+    std::ofstream OlfactometerParamsOut;
+    std::ifstream OlfactometerParamsIn;
+
+    //Identifiers
+
+    std::string OlfacName;
+    uint8_t NoOdorButtons;
+    uint8_t FirstOdorButtonID;
+
+    std::vector<char> ActiveButtons;
+
+    bool OlfactometerInit = false;
+    bool isUpdated = false;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OlfactometerEditor);

@@ -27,6 +27,7 @@
 #include <SerialLib.h>
 #include <ProcessorHeaders.h>
 #include "serial/ofArduino.h"
+#include "FerTimer.h"
 
 
 
@@ -67,22 +68,54 @@ public:
 
 
 
-    void InitOlfactometer(const std::pair<std::string,std::string>& COMPair);
+    bool InitOlfactometer(const std::pair<std::string,std::string>& COMPair);
+    void FinOlfactometer();
 
-    void StartOdorPres();
 
-    void SetSeriesNo(int SN);
-    void SetTrialLength(double TL);
-    void SetOpenTime(double OT);
 
     int GetSeriesNo() const;
     double GetTrialLength() const;
     double GetOpenTime() const;
 
+    void SetSeriesNo(int SN);
+    void SetTrialLength(double TL);
+    void SetOpenTime(double OT);
+    void setOdorVec(const std::vector<char> ActiveButtons, uint8_t IdxShift);
+
 private:
+
+
+    void RunOdorPres();
+
+    bool ResetOlfactometer();
+
+    void InitOdorPres();
+
+    //Rotating functions for the Process Loop
+
+    void OdorValveOpener(AudioSampleBuffer& buffer);
+
+    void Equilibrate6Sec(AudioSampleBuffer& buffer);
+
+    void RespProc(AudioSampleBuffer& buffer);
+
+    void FinalValveOpener(AudioSampleBuffer& buffer);
+
+    void ValvesCloser(AudioSampleBuffer& buffer);
+
+    void RestartFuncLoop(AudioSampleBuffer& buffer);
+
+    void CheckSerialTime(AudioSampleBuffer& buffer);
+
+    void EmptyFunc(AudioSampleBuffer& buffer);
+
+
+
+    ////////////////////////////////////////////////////////
 
 public:
 
+    static const uint8_t RespChannel = 4;
 
     enum class OlfactometersID : uint8_t
     {
@@ -93,11 +126,19 @@ public:
         BEAST
     };
 
+    static const uint8_t BruceChNo = 11;
+    static const uint8_t BruceFirstChan = 2;
+    static const uint8_t BruceA2SOdorPin = 13;
+    static const uint8_t BruceA2SFVPin = 3;
+    static const uint8_t BruceMO = 5;
+    static const uint8_t BruceSynchPin = 4;
+
 
 private:
     /** An open-frameworks Arduino object. */
     ofArduino OlfacArduino;
     ofSerial OlfacSerial;
+    Time timer;
 
     bool state;
     bool acquisitionIsActive;
@@ -107,6 +148,30 @@ private:
     int SeriesNo;
     double TrialLength;
     double OpenTime;
+    std::vector<uint8_t> OdorVec;
+
+    
+    int CurrentSeries = 0;
+    uint32_t TimeCounter;
+    uint32_t CurrentTime;
+    uint32_t TargetTime;
+    uint32_t LoopTime;
+    uint32_t SerialTime;
+    std::vector<uint8_t>::iterator CurrentOdor;
+    std::vector<uint8_t>::iterator PastLastOdor;
+    float RespBuffer[2000 * 3]; //2000 Sampling Rate. 3 secs. I actually using 2 sec but some extra memory to avoid any unwanted leaks.
+    float* RespBuffPtr = RespBuffer;
+    float RespMean;
+    float RespStd;
+
+    float TestBuffer[2000];
+    float* TestBuffPtr = TestBuffer;
+    uint32_t TestEpoch = 0;
+    //uint32_t SamplesinBuffer = 0;
+
+
+
+    void(Olfactometer::* OlfactometerProc)(AudioSampleBuffer& buffer);
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);

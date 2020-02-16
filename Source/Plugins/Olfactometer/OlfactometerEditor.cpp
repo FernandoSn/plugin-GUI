@@ -26,6 +26,10 @@
 //#include "Olfactometer.h"
 //#include <SerialLib.h>
 #include <stdio.h>
+#include <bitset>
+
+//std::ofstream DebugOlEd("OlEd.txt");
+
 
 OdorChButton::OdorChButton(int id) : id(id)
 {
@@ -93,11 +97,8 @@ void OdorChButton::paintButton(Graphics& g, bool isMouseOver, bool isButtonDown)
 
 OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDefaultParameterEditors=true)
     : 
-    GenericEditor(parentNode, useDefaultParameterEditors),
-    OlfactometerParams("OlfactometerParams.txt")
+    GenericEditor(parentNode, useDefaultParameterEditors)
 {
-
-    // accumulator = 0;
 
     desiredWidth = 350;
 
@@ -106,9 +107,6 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
 
     std::vector<ofSerialDeviceInfo> devices = serial.getDeviceList();
 
-
-    //OlfactometerParams.open("OlfactometerParams.dat");
-
     FindLabOlfactometers(devices);
 
     deviceSelector = std::make_unique<ComboBox>();
@@ -116,10 +114,6 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
     deviceSelector->addListener(this);
     deviceSelector->addItem("Device",1);
     
-    //for (int i = 0; i < devices.size(); i++)
-    //{
-    //    deviceSelector->addItem(devices[i].getDevicePath(),i+2);
-    //}
     int ComboBoxIdx = 0;
     for (auto iter = OlfactometerCOMS.begin(); iter != OlfactometerCOMS.end(); ++iter, ComboBoxIdx++) 
     {
@@ -173,7 +167,7 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
     TrialLengthValue->setTooltip("Set the high cut for the selected channels");
     addAndMakeVisible(TrialLengthValue.get());
 
-    OpenTimeValue = std::make_unique<Label>("open time value", LastSeriesNoStr);
+    OpenTimeValue = std::make_unique<Label>("open time value", LastOpenTimeStr);
     OpenTimeValue->setBounds(97, 94, 60, 18);
     OpenTimeValue->setFont(Font("Default", 15, Font::plain));
     OpenTimeValue->setColour(Label::textColourId, Colours::white);
@@ -183,81 +177,20 @@ OlfactometerEditor::OlfactometerEditor(GenericProcessor* parentNode, bool useDef
     OpenTimeValue->setTooltip("sdfsdfsd");
     addAndMakeVisible(OpenTimeValue.get());
 
-    DrawOdorChans(BruceChNo,BruceFirstChan);
 
-     /*Image im;
-     im = ImageCache::getFromMemory(BinaryData::ArduinoIcon_png,
-                                    BinaryData::ArduinoIcon_pngSize);
-
-     icon = new ImageIcon(im);
-     addAndMakeVisible(icon);
-     icon->setBounds(75,15,50,50);
-
-     icon->setOpacity(0.3f);*/
-
-    //deviceSelector = new ComboBox(); 
-    //deviceSelector = std::make_unique<ComboBox>();
-    //deviceSelector->setBounds(10,105,125,20);
-    //deviceSelector->addListener(this);
-    //deviceSelector->addItem("Device",1);
-    //
-    //for (int i = 0; i < devices.size(); i++)
-    //{
-    //    deviceSelector->addItem(devices[i].getDevicePath(),i+2);
-    //}
-
-    //deviceSelector->setSelectedId(1, dontSendNotification);
-    //addAndMakeVisible(deviceSelector.get());
-
-    ////inputChannelSelector = new ComboBox();
-    //inputChannelSelector = std::make_unique<ComboBox>();
-    //inputChannelSelector->setBounds(10,30,55,20);
-    //inputChannelSelector->addListener(this);
-    //inputChannelSelector->addItem("Trig",1);
-
-    //for (int i = 0; i < 16; i++)
-    //    inputChannelSelector->addItem(String(i+1),i+2); // start numbering at one for
-    //// user-visible channels
-
-    //inputChannelSelector->setSelectedId(1, dontSendNotification);
-    //addAndMakeVisible(inputChannelSelector.get());
-
-    ////outputChannelSelector = new ComboBox();
-    //outputChannelSelector = std::make_unique<ComboBox>();
-    //outputChannelSelector->setBounds(10,80,80,20);
-    //outputChannelSelector->addListener(this);
-    //outputChannelSelector->addItem("Output CH",1);
-
-    //for (int i = 1; i < 13; i++)
-    //    outputChannelSelector->addItem(String(i+1),i+2);
-
-    //outputChannelSelector->setSelectedId(14, dontSendNotification);
-    //addAndMakeVisible(outputChannelSelector.get());
-
-    ////gateChannelSelector = new ComboBox();
-    //gateChannelSelector = std::make_unique<ComboBox>();
-    //gateChannelSelector->setBounds(10,55,55,20);
-    //gateChannelSelector->addListener(this);
-    //gateChannelSelector->addItem("Gate",1);
-
-    //for (int i = 0; i < 16; i++)
-    //    gateChannelSelector->addItem(String(i+1),i+2); // start numbering at one for
-    //// user-visible channels
-
-    //gateChannelSelector->setSelectedId(1, dontSendNotification);
-    //addAndMakeVisible(gateChannelSelector.get());
-
-    WriteDigButton = std::make_unique<UtilityButton>("W", Font("Small Text", 13, Font::bold));
+    /*WriteDigButton = std::make_unique<UtilityButton>("W", Font("Small Text", 13, Font::bold));
     WriteDigButton->setRadius(3.0f);
     WriteDigButton->setBounds(95, 60, 65, 25);
     WriteDigButton->addListener(this);
 
-    addAndMakeVisible(WriteDigButton.get());
+    addAndMakeVisible(WriteDigButton.get());*/
 
 }
 
 OlfactometerEditor::~OlfactometerEditor()
 {
+    if(OlfactometerInit)
+        SaveOlfacParams();
 }
 
 void OlfactometerEditor::receivedEvent()
@@ -274,20 +207,42 @@ void OlfactometerEditor::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     {
         if ((juce::String)"Device" != deviceSelector->getText())
         {
-            std::string tempstr = deviceSelector->getText().toStdString();
+            OlfacName = deviceSelector->getText().toStdString();
 
-            Olfac->InitOlfactometer(
-                OlfactometerCOMS.find(tempstr)->second
-            );
+            //This is bad. If this params are not defined before the functions below are beign called, the plugin will behave weird.
+
+            NoOdorButtons = Olfactometer::BruceChNo; ///I need to rewrite this to capture all posible olfactometers.
+            FirstOdorButtonID = Olfactometer::BruceFirstChan;
+            ActiveButtons = std::vector<char>(NoOdorButtons,false);
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            //Olfactometer Connection.
+            OlfactometerInit = Olfac->InitOlfactometer(OlfactometerCOMS.find(OlfacName)->second);
+
+            LoadOlfacParams();
+
+            OdorChButtons.ensureStorageAllocated(NoOdorButtons);
+
+            DrawOdorChans(NoOdorButtons, FirstOdorButtonID);
+
             SeriesNoValue->setEditable(true);
             TrialLengthValue->setEditable(true);
             OpenTimeValue->setEditable(true);
+
+
+            //Setting Olfactometer vars.
+            Olfac->SetSeriesNo(LastSeriesNoStr.getIntValue());
+            Olfac->SetTrialLength(LastTrialLengthStr.getDoubleValue());
+            Olfac->SetOpenTime(LastOpenTimeStr.getDoubleValue());
         }
         else
         {
+            Olfac->FinOlfactometer();
             SeriesNoValue->setEditable(false);
             TrialLengthValue->setEditable(false);
             OpenTimeValue->setEditable(false);
+
+            OlfactometerInit = false;
         }
     }
 }
@@ -296,10 +251,17 @@ void OlfactometerEditor::buttonEvent(Button* button)
 {
     if(OdorChButtons.contains((OdorChButton*)button))
     {
-    ((OdorChButton*)button)->setEnabled(!((OdorChButton*)button)->enabled);
-    //thread->toggleDIChannel(((DIButton*)button)->getId());
-    repaint();
+        OdorChButton* OdorB = reinterpret_cast<OdorChButton*>(button);
+        bool IsEnabled = OdorB->enabled;
+        OdorB->setEnabled(!IsEnabled);
+        int idx = OdorB->getId() - FirstOdorButtonID;
+        ActiveButtons[idx] = !IsEnabled;
+        //thread->toggleDIChannel(((DIButton*)button)->getId());
+        //DebugOlEd << " Odor butt \n";
+        repaint();
     }
+
+    //DebugOlEd << " Other butt \n";
 }
 
 void OlfactometerEditor::labelTextChanged(Label* label)
@@ -333,6 +295,18 @@ void OlfactometerEditor::labelTextChanged(Label* label)
             LastOpenTimeStr = label->getText();
         }
     }
+}
+
+void OlfactometerEditor::updateSettings()
+{
+    /*if (!isUpdated)
+    {
+
+        Olfac->setOdorVec(ActiveButtons, FirstOdorButtonID); 
+        DebugOlEd << "Child upd \n"; 
+        isUpdated = true;
+
+    }*/
 }
 
 void OlfactometerEditor::timerCallback()
@@ -423,7 +397,8 @@ void OlfactometerEditor::DrawOdorChans(uint8_t ChNo, uint8_t FirstCh)
         
         b->setBounds(xOffset, y_pos, 25, 15);
         b->addListener(this);
-        b->setEnabled(true);
+        b->setEnabled(ActiveButtons[i]);
+        //b->setEnabled(true);
         addAndMakeVisible(b);
         OdorChButtons.add(b);
     }
@@ -514,3 +489,104 @@ void OlfactometerEditor::FindLabOlfactometers(std::vector<ofSerialDeviceInfo>& D
         }
     }
 }
+
+void OlfactometerEditor::LoadOlfacParams()
+{
+
+    OlfactometerParamsIn.open(OlfacName);
+    char StrBuff[3];
+    StrBuff[2] = 0;
+
+    OlfactometerParamsIn.read(StrBuff, 2);
+    if (StrBuff[0] == 48)
+        LastSeriesNoStr = StrBuff + 1;
+    else
+        LastSeriesNoStr = StrBuff;
+
+    OlfactometerParamsIn.read(StrBuff, 2);
+    if (StrBuff[0] == 48)
+        LastTrialLengthStr = StrBuff + 1;
+    else
+        LastTrialLengthStr = StrBuff;
+
+    OlfactometerParamsIn.read(StrBuff, 2);
+    if (StrBuff[0] == 48)
+        LastOpenTimeStr = StrBuff + 1;
+    else
+        LastOpenTimeStr = StrBuff;
+
+    SeriesNoValue->setText(LastSeriesNoStr, dontSendNotification);
+    TrialLengthValue->setText(LastTrialLengthStr, dontSendNotification);
+    OpenTimeValue->setText(LastOpenTimeStr, dontSendNotification);
+
+
+    OlfactometerParamsIn.read(reinterpret_cast<char*>(ActiveButtons.data()), NoOdorButtons);
+
+    OlfactometerParamsIn.close();
+}
+
+void OlfactometerEditor::SaveOlfacParams()
+{
+
+    LastSeriesNoStr = SeriesNoValue->getText();
+    LastTrialLengthStr = TrialLengthValue->getText();
+    LastOpenTimeStr = OpenTimeValue->getText();
+
+    if (LastSeriesNoStr.length() == 1)
+        LastSeriesNoStr = "0" + LastSeriesNoStr;
+
+    if (LastTrialLengthStr.length() == 1)
+        LastTrialLengthStr = "0" + LastTrialLengthStr;
+
+    if (LastOpenTimeStr.length() == 1)
+        LastOpenTimeStr = "0" + LastOpenTimeStr;
+
+    OlfactometerParamsOut.open(OlfacName);
+
+    OlfactometerParamsOut << LastSeriesNoStr
+        << LastTrialLengthStr << LastOpenTimeStr;
+    
+    for (auto it = ActiveButtons.begin(); it < ActiveButtons.end(); ++it)
+    {
+        OlfactometerParamsOut << *it;
+        //a = *it;
+    }
+
+    OlfactometerParamsOut.close();
+
+}
+
+//void OlfactometerEditor::saveCustomParameters(XmlElement* xml)
+//{
+//    Deb << "save \n";
+//
+//    xml->setAttribute("Type", "OlfactometerEditor");
+//
+//    LastSeriesNoStr = SeriesNoValue->getText();
+//    LastTrialLengthStr = TrialLengthValue->getText();
+//    LastOpenTimeStr = OpenTimeValue->getText();
+//
+//    XmlElement* textLabelValues = xml->createNewChildElement("OLFPARAMS");
+//    textLabelValues->setAttribute("no of series value", LastSeriesNoStr);
+//    textLabelValues->setAttribute("trial length value", LastTrialLengthStr);
+//    textLabelValues->setAttribute("open time value", LastOpenTimeStr);
+//
+//}
+//
+//void OlfactometerEditor::loadCustomParameters(XmlElement* xml)
+//{
+//    Deb << "load \n";
+//    forEachXmlChildElement(*xml, xmlNode)
+//    {
+//        if (xmlNode->hasTagName("OLFPARAMS"))
+//        {
+//            LastSeriesNoStr = xmlNode->getStringAttribute("no of series value", LastSeriesNoStr);
+//            LastTrialLengthStr = xmlNode->getStringAttribute("trial length value", LastTrialLengthStr);
+//            LastOpenTimeStr = xmlNode->getStringAttribute("open time value", LastOpenTimeStr);
+//
+//            SeriesNoValue->setText(LastSeriesNoStr, dontSendNotification);
+//            TrialLengthValue->setText(LastTrialLengthStr, dontSendNotification);
+//            OpenTimeValue->setText(LastOpenTimeStr, dontSendNotification);
+//        }
+//    }
+//}

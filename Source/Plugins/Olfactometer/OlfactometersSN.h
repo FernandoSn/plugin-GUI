@@ -3,6 +3,7 @@
 #include <string>
 
 #define MAX_OLFACTOMETERS 5
+#define MAX_ARDUINO_CLOCK 3600000 //miliseconds
 
 //Serial numbers of the Arduino boards of each olfactometer.
 

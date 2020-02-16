@@ -21,6 +21,15 @@
 
 */
 
+
+//TODOs: Make Pin 31 or 22 of the Arduino firmdata mega usable for synch NPX and NIDAQ.
+//Make Timer robust. If timer resets it may interrupt the func loop.
+//Implement the vector for selecting Odor chans with the buttons.
+//Handle the Arduino clock problem for recordings that last more than 1 hour.
+//Reorgnize the arch to accept more olfactometers and avoid dead memory.
+//Add advance section to modify Arduino pins functions.
+//Test if a filled buffer is bad for the arduinos.
+
 #include "Olfactometer.h"
 #include "OlfactometerEditor.h"
 
@@ -28,9 +37,15 @@
 #include <chrono>
 #include <thread>
 #include <array>
+#include <numeric>
 
 #include <fstream>
-std::ofstream DebugFile("Debugfile.txt");
+
+//std::ofstream DebugOlfac1("DebugOlfac1.txt");
+//std::ofstream DebugOlfac2("DebugOlfac2.txt");
+//std::ofstream DebugOlfac3("DebugOlfac3.txt");
+//std::ofstream DebugOlfac4("DebugOlfac4.txt");
+//std::ofstream DebugOlfac5("DebugOlfac5.txt");
 
 Olfactometer::Olfactometer()
     : GenericProcessor      ("Olfactometer")
@@ -40,15 +55,19 @@ Olfactometer::Olfactometer()
     , SeriesNo              (0)
     , TrialLength           (0)
     , OpenTime              (0)
+    , timer                 ()
+    , OlfactometerProc      (&Olfactometer::OdorValveOpener)
 {
     setProcessorType (PROCESSOR_TYPE_SINK);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    //uint32 FT = timer.getMillisecondCounter();
+    //timer.waitForMillisecondCounter(FT + 10000);
 }
 
 
 Olfactometer::~Olfactometer()
 {
-    if (OlfacArduino.isInitialized())
-        OlfacArduino.disconnect();
+    FinOlfactometer();
 }
 
 
@@ -58,15 +77,18 @@ AudioProcessorEditor* Olfactometer::createEditor()
     return editor;
 }
 
-void Olfactometer::InitOlfactometer(const std::pair<std::string, std::string>& COMPair)
+bool Olfactometer::InitOlfactometer(const std::pair<std::string, std::string>& COMPair)
 {
     if (!acquisitionIsActive)
     {
-        Time timer;
-
-        OlfacArduino.connect(COMPair.first);
-        OlfacSerial.setup(COMPair.second.c_str(),9600);
-
+        if ((!OlfacArduino.connect(COMPair.first)) || (!OlfacSerial.setup(COMPair.second.c_str(), 9600)))
+        {
+            CoreServices::sendStatusMessage(("Error: Check Olfactometer connections (" + COMPair.first
+                + " and " + COMPair.second + ")"));
+            String message = "Connection cannot be established. Make sure both boards are connected.";
+            AlertWindow::showMessageBox(AlertWindow::AlertIconType::WarningIcon, "ERROR", message, "OK");
+            return false;
+        }
 
         if (OlfacArduino.isArduinoReady())
         {
@@ -83,48 +105,15 @@ void Olfactometer::InitOlfactometer(const std::pair<std::string, std::string>& C
             std::cout << "firmata v" << OlfacArduino.getMajorFirmwareVersion()
                 << "." << OlfacArduino.getMinorFirmwareVersion() << std::endl;
 
-
-            //Set all pins to zero.
-            for (int i = 5; i < 13; i++)
+            if (!ResetOlfactometer())
             {
-                OlfacArduino.sendDigital(i, ARD_LOW);
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                //timer.waitForMillisecondCounter(currentTime + 4000);
+                CoreServices::sendStatusMessage(("OlfacSerial data unavailable " + COMPair.second));
+                String message = "Disconnect and restart the Olfactometer to empty the buffer of both boards.";
+                AlertWindow::showMessageBox(AlertWindow::AlertIconType::WarningIcon, "Data unavailable", message, "OK");
+                FinOlfactometer();
+
+                return false;
             }
-
-            OlfacArduino.sendDigital(2, ARD_HIGH);
-            OlfacArduino.sendDigital(3, ARD_HIGH);
-            std::this_thread::sleep_for(std::chrono::milliseconds(4000));
-
-
-            for (int IntTest = 1; IntTest < 6; IntTest++)
-            {
-                OlfacArduino.sendDigital(13, ARD_HIGH);
-                OlfacArduino.sendDigital(13, ARD_LOW);
-                std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
-                int AvailableInts = (OlfacSerial.available()/4);
-                std::vector<uint32_t> TempBuff(AvailableInts,0);
-                int BytesRead = OlfacSerial.readBytes((uint8_t*)TempBuff.data(), AvailableInts *4);
-
-                uint32_t TimeTag = TempBuff[0] % 1000;
-
-                std::array<uint32_t, 4> TempArr = { 1,2,3,4 };
-
-                DebugFile << AvailableInts << " " << BytesRead << "\n";
-
-                if (!(std::find(TempArr.begin(), TempArr.end(), TimeTag) != TempArr.end())) 
-                {
-                    DebugFile << "init testing " << IntTest << "\n";
-                }
-                else 
-                {
-                    DebugFile << "Good data.\n";
-                    break;
-                }
-
-            }
-
 
         }
 
@@ -132,24 +121,419 @@ void Olfactometer::InitOlfactometer(const std::pair<std::string, std::string>& C
         {
             std::cout << "OlfacArduino is initialized." << std::endl;
             CoreServices::sendStatusMessage(("OlfacArduino initialized at " + COMPair.first));
-            deviceSelected = true;
+            deviceSelected = true; //Not sure why I added this. DEBUG ME PLEASE
+            return true;
         }
         else
         {
             std::cout << "OlfacArduino is NOT initialized." << std::endl;
             CoreServices::sendStatusMessage(("OlfacArduino could not be initialized at " + COMPair.first));
+            String message = "Disconnect and restart the Olfactometer.";
+            AlertWindow::showMessageBox(AlertWindow::AlertIconType::WarningIcon, "Unknown connection Error", message, "OK");
+            FinOlfactometer();
+            
+            return false;
         }
     }
     else
     {
         CoreServices::sendStatusMessage("Cannot change device while acquisition is active.");
+        return false;
     }
 }
 
-void Olfactometer::StartOdorPres()
+void Olfactometer::FinOlfactometer()
 {
-    OlfacArduino.sendDigital(13, ARD_HIGH);
-    OlfacArduino.sendDigital(13, ARD_LOW);
+    if (OlfacArduino.isInitialized())
+        OlfacArduino.disconnect();
+
+    OlfacSerial.close();
+}
+
+void Olfactometer::RunOdorPres()
+{
+
+    OlfacArduino.sendDigital(5, ARD_LOW); //Mineral Oil Valve always open.
+
+    std::vector<int> OdorChannels = { 5,6,7 };
+
+    //std::vector<int>::iterator asd = OdorChannels.begin();
+
+    for (auto OdorChannel = OdorChannels.begin(); OdorChannel < OdorChannels.end(); ++OdorChannel)
+    {
+
+        uint32 FT = timer.getMillisecondCounter();
+
+        OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_HIGH);
+
+        if (*OdorChannel != 5)
+        {
+            OlfacArduino.sendDigital(*OdorChannel, ARD_HIGH);
+            OlfacArduino.sendDigital(5, ARD_HIGH);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(6000));
+
+        uint32 currentTime = timer.getMillisecondCounter();
+        //timer.waitForMillisecondCounter(currentTime + 4000);
+        while (timer.getMillisecondCounter() - currentTime < 10000)
+        {
+            OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            break;
+        }
+
+        OlfacArduino.sendDigital(BruceA2SFVPin, ARD_HIGH);
+
+
+        OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_LOW);
+
+        if (*OdorChannel != 5)
+        {
+            OlfacArduino.sendDigital(5, ARD_LOW);
+            OlfacArduino.sendDigital(*OdorChannel, ARD_LOW);
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(timer.getMillisecondCounter() - FT));
+
+    }
+
+
+}
+
+bool Olfactometer::ResetOlfactometer()
+{
+    //Flush serial arduino.
+    OlfacSerial.flush(true, true);
+
+    //Set all pins to zero.
+    for (int i = 5; i < 13; i++)
+    {
+        OlfacArduino.sendDigital(i, ARD_LOW);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        //timer.waitForMillisecondCounter(currentTime + 4000);
+    }
+
+    OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
+
+    OlfacArduino.sendDigital(2, ARD_HIGH);
+    OlfacArduino.sendDigital(3, ARD_HIGH);
+    std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+
+
+    for (int IntTest = 1; IntTest < 6; IntTest++)
+    {
+        OlfacArduino.sendDigital(13, ARD_HIGH);
+        OlfacArduino.sendDigital(13, ARD_LOW);
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+        int AvailableInts = (OlfacSerial.available() / 4);
+        std::vector<uint32_t> TempBuff(AvailableInts, 0);
+        int BytesRead = OlfacSerial.readBytes((uint8_t*)TempBuff.data(), AvailableInts * 4);
+
+        uint32_t TimeTag = TempBuff.data()[0] % 1000;
+
+        std::array<uint32_t, 4> TempArr = { 1,2,3,4 };
+
+        //DebugFile << AvailableInts << " " << BytesRead <<" "<< TimeTag << "\n";
+
+        if (std::find(TempArr.begin(), TempArr.end(), TimeTag) == TempArr.end())
+        {
+            //DebugFile << "init testing " << IntTest << "\n";
+        }
+        else
+        {
+            //DebugFile << "Good data.\n";
+            return true;
+        }
+
+    }
+
+    return false;
+}
+
+void Olfactometer::InitOdorPres()
+{
+    OlfacArduino.sendDigital(BruceMO, ARD_LOW); //Mineral Oil Valve always open.
+
+    //editor->updateSettings();
+
+    OdorVec.push_back(5);
+    OdorVec.push_back(6);
+    OdorVec.push_back(7);
+    OdorVec.push_back(8);
+    OdorVec.push_back(9);
+    OdorVec.push_back(10);
+    OdorVec.push_back(11);
+
+    CurrentOdor = OdorVec.begin();
+    PastLastOdor = OdorVec.end();
+
+    SerialTime = timer.getMillisecondCounter();
+
+
+    //TargetTime = (uint32_t)(TrialLength * 1000.0);
+
+    //TimeCounter = timer.getMillisecondCounter();
+}
+
+void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
+{
+    //DebugOlfac1 << "ODORValveOpener \n";
+    LoopTime = timer.getMillisecondCounter();
+    ////DebugOlfac3 << LoopTime <<"\n";
+    //if (CurrentTime >= TimeCounter + TargetTime)
+    //{
+
+    OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_HIGH);
+    if (*CurrentOdor != BruceMO)
+    {
+        OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
+        OlfacArduino.sendDigital(BruceMO, ARD_HIGH);
+    }
+
+    TimeCounter = timer.getMillisecondCounter();
+    //TimeCounter = CurrentTime;
+    TargetTime = 6000; //Equilibrate for 6 seconds
+
+    CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)));
+
+    OlfactometerProc = &Olfactometer::Equilibrate6Sec;
+    //}
+}
+
+void Olfactometer::Equilibrate6Sec(AudioSampleBuffer& buffer)
+{
+    CurrentTime = timer.getMillisecondCounter();
+    //DebugOlfac1 << "Fuera6sec \n";
+    if (CurrentTime >= TimeCounter + TargetTime)
+    {
+        //DebugOlfac2 << "Dentro6sec \n";
+        TimeCounter = CurrentTime;
+        TargetTime = 2000; //Equilibrate for 6 seconds
+        OlfactometerProc = &Olfactometer::RespProc;
+    }
+}
+
+void Olfactometer::RespProc(AudioSampleBuffer& buffer)
+{
+    //DebugOlfac1 << "FueraRespProc \n";
+    CurrentTime = timer.getMillisecondCounter();
+
+    if (CurrentTime <= TimeCounter + TargetTime)
+    {
+        //DebugOlfac2 << "DentroRespProcIF \n";
+        //Extracting data from NIDAQ and copying it into RespBuffer;
+
+        uint32_t SamNo = getNumSamples(RespChannel);
+
+
+        const float* RawRespPtr = buffer.getReadPointer(RespChannel);
+
+        std::memcpy(RespBuffPtr, RawRespPtr, SamNo * sizeof(float));
+
+        RespBuffPtr += SamNo;
+
+        //SamplesinBuffer += SamNo;
+    }
+    else
+    {
+        //DebugOlfac2 << "DentroRespProcELSE \n";
+        float* BuffPtrCpy = RespBuffer;
+
+        float SamplesInBuffer = (float)std::distance(RespBuffer, RespBuffPtr);
+        float Sum = (float)std::accumulate(RespBuffer, RespBuffPtr, 0.0f);
+
+        RespMean = Sum / SamplesInBuffer;
+
+        float BinVariance = 0.0f;
+
+        for (; BuffPtrCpy < RespBuffPtr; ++BuffPtrCpy)
+        {
+            BinVariance += ((*BuffPtrCpy) - RespMean) * ((*BuffPtrCpy) - RespMean);
+            //DebugOlfac5 << *BuffPtrCpy << "\n";
+        }
+
+        BinVariance /= (SamplesInBuffer - 1.0f); // this is Variance over N. Matlab uses Bessels correction to compute STD. Actually Im gonna use Bessels correction.
+
+        RespStd = std::sqrt(BinVariance); // Stand deviation to my STD vector.
+
+        //Reset vars;
+        RespBuffPtr = RespBuffer;
+
+        TimeCounter = CurrentTime;
+        TargetTime = 5000; //MaxTime for final Valve Opener
+        //DebugOlfac3 << "Number of Samples in RespBuff: " << SamplesInBuffer << "\n";
+        //DebugOlfac3 << "sum in RespBuff: " << Sum << "\n";
+        //DebugOlfac3 << "Mean in RespBuff: " << RespMean << "\n";
+        //DebugOlfac3 << "STD in RespBuff: " << RespStd << "\n";
+        OlfactometerProc = &Olfactometer::FinalValveOpener;
+        //DebugOlfac5 << 20 << "\n";
+    }
+}
+
+void Olfactometer::FinalValveOpener(AudioSampleBuffer& buffer)
+{
+
+    CurrentTime = timer.getMillisecondCounter();
+    //DebugOlfac1 << "FueraFVO \n";
+    if (CurrentTime <= TimeCounter + TargetTime)
+    {
+        //DebugOlfac2 << "DentroFVOIF \n";
+        //DebugOlfac3 << "DentroFVOIF \n";
+        if (TestEpoch < 200)
+        {
+            uint32_t SamNo = getNumSamples(RespChannel);
+
+            const float* RawRespPtr = buffer.getReadPointer(RespChannel);
+
+            std::memcpy(TestBuffPtr, RawRespPtr, SamNo * sizeof(float));
+
+            TestBuffPtr += SamNo;
+
+            TestEpoch += SamNo;
+
+            //DebugOlfac3 << " Filling Test Buff, samples: "<< TestEpoch<<"\n";
+        }
+        else
+        {
+            float Thresh = RespMean - RespStd;
+
+            //DebugOlfac3 << " Test Thresh: " << Thresh << "\n";
+            /////
+            float* temp = TestBuffer;
+
+            for (; temp<TestBuffPtr ; ++temp)
+            {
+                //DebugOlfac4 << *temp << "\n";
+
+            }
+
+            //DebugOlfac3 << " Test Thresh: " << Thresh << "\n";
+            ////
+            if (std::any_of(TestBuffer, TestBuffPtr, [&Thresh](float& Sample) 
+                {
+                    return Sample < Thresh;
+
+                }) &&
+                (*(TestBuffPtr - 1) > RespMean))
+            {
+                OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
+                OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
+
+                //Reset vars;
+                TestEpoch = 0;
+                TestBuffPtr = TestBuffer;
+
+                TimeCounter = CurrentTime;
+                TargetTime = (uint32_t)(OpenTime * 1000.0); //Open time of the final valve
+                //DebugOlfac3 << " Test Crossed: " << Thresh << "\n";
+                OlfactometerProc = &Olfactometer::ValvesCloser;
+            }
+            else
+            {
+                //DebugOlfac3 << " Test not Crossed: " << Thresh << "\n";
+                TestEpoch = 0;
+                TestBuffPtr = TestBuffer;
+            }
+
+
+            //DebugOlfac4 << 20 << "\n";
+        }
+    }
+    else
+    {
+        //DebugOlfac2 << "DentroFVOELSE \n";
+        OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
+        OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
+
+        //Reset vars;
+        TestEpoch = 0;
+        TestBuffPtr = TestBuffer;
+
+        TimeCounter = CurrentTime;
+        TargetTime = (uint32_t)(OpenTime * 1000.0); //Open time of the final valve
+        //DebugOlfac3 << " No thresh cross final else \n";
+        OlfactometerProc = &Olfactometer::ValvesCloser;
+    }
+
+}
+
+void Olfactometer::ValvesCloser(AudioSampleBuffer& buffer)
+{
+    CurrentTime = timer.getMillisecondCounter();
+    //DebugOlfac1 << "FueraValveCloser \n";
+    if (CurrentTime >= TimeCounter + TargetTime)
+    {
+        //DebugOlfac2 << "DentroValveCloser \n";
+        OlfacArduino.sendDigital(BruceA2SFVPin, ARD_HIGH);
+        OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_LOW);
+        OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
+
+        if (*CurrentOdor != BruceMO)
+        {
+            OlfacArduino.sendDigital(BruceMO, ARD_LOW);
+            OlfacArduino.sendDigital(*CurrentOdor, ARD_LOW);
+        }
+        TimeCounter = CurrentTime;
+        TargetTime = (uint32_t)(TrialLength * 1000.0);
+        OlfactometerProc = &Olfactometer::RestartFuncLoop;
+    }
+
+}
+
+void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
+{
+    CurrentTime = timer.getMillisecondCounter();
+    //DebugOlfac1 << "FueraREstLoop \n";
+    if (CurrentTime >= LoopTime + TargetTime)
+    {
+        //DebugOlfac2 << "DentroREstLoop \n";
+        ++CurrentOdor;
+
+        if (CurrentOdor < PastLastOdor)
+        {
+
+            OlfactometerProc = &Olfactometer::CheckSerialTime;
+
+        }
+        else
+        {
+            CurrentSeries++;
+
+            if (CurrentSeries < SeriesNo)
+            {
+                CurrentOdor = OdorVec.begin();
+                OlfactometerProc = &Olfactometer::CheckSerialTime;
+            }
+            else
+            {
+                CoreServices::sendStatusMessage("Odor presentation finished");
+                OlfactometerProc = &Olfactometer::EmptyFunc;
+            }
+        }
+    }
+}
+
+void Olfactometer::CheckSerialTime(AudioSampleBuffer& buffer)
+{
+    //DebugOlfac1 << "FueraValveCloser \n";
+    if (timer.getMillisecondCounter() > SerialTime + 3600000)
+    {
+        ResetOlfactometer();
+
+        OlfactometerProc = &Olfactometer::OdorValveOpener;
+    }
+    else 
+    {
+
+        OlfactometerProc = &Olfactometer::OdorValveOpener;
+
+    }
+
+}
+
+void Olfactometer::EmptyFunc(AudioSampleBuffer& buffer)
+{
 }
 
 void Olfactometer::SetSeriesNo(int SN)
@@ -165,6 +549,22 @@ void Olfactometer::SetTrialLength(double TL)
 void Olfactometer::SetOpenTime(double OT)
 {
     OpenTime = OT;
+}
+
+void Olfactometer::setOdorVec(const std::vector<char> ActiveButtons, uint8_t IdxShift)
+{
+    //Getting the active odor Channels from the Active Buttons char vec from OlfactometerEditor. 
+    uint8_t IdxCount = 0;
+    for (auto it = ActiveButtons.begin(); it < ActiveButtons.end(); ++it)
+    {
+        if (*it != 0)
+        {
+            OdorVec.push_back(IdxCount + IdxShift);
+        }
+        IdxCount++;
+    }
+    CurrentOdor = OdorVec.begin(); //Iterators to get individual odor valves in the main Process Loop.
+    PastLastOdor = OdorVec.end();
 }
 
 int Olfactometer::GetSeriesNo() const
@@ -185,6 +585,8 @@ double Olfactometer::GetOpenTime() const
 
 void Olfactometer::handleEvent (const EventChannel* eventInfo, const MidiMessage& event, int sampleNum)
 {
+
+    //DebugFile << "h" << "\n";
   //  if (Event::getEventType(event) == EventChannel::TTL)
   //  {
 		//TTLEventPtr ttl = TTLEvent::deserializeFromMessage(event, eventInfo);
@@ -247,11 +649,10 @@ void Olfactometer::setParameter (int parameterIndex, float newValue)
     }*/
 }
 
-
 bool Olfactometer::enable()
 {
     acquisitionIsActive = true;
-
+    InitOdorPres();
     return deviceSelected;
 }
 
@@ -260,12 +661,81 @@ bool Olfactometer::disable()
 {
     //OlfacArduino.sendDigital (outputChannel, ARD_LOW);
     acquisitionIsActive = false;
-
+    
     return true;
 }
 
-
+//int asd = 0;
 void Olfactometer::process (AudioSampleBuffer& buffer)
-{
-    checkForEvents ();
+{   
+    //std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    //std::chrono::steady_clock::time_point start1 = std::chrono::steady_clock::now();
+    //DebugFile << Time::highResolutionTicksToSeconds(Time::getHighResolutionTicks()) << "\n";
+    //uint32 NowJuce = Time::getMillisecondCounter();
+    ////DebugOlfac2 << "Process \n";
+
+    (this->*OlfactometerProc)(buffer);
+    
+
+    /*uint32 SamNo = getNumSamples(2);
+
+    const float* ptr = buffer.getReadPointer(2);
+
+    const float* endBuff = ptr + SamNo;
+
+    for (; ptr < endBuff; ++ptr)
+    {
+
+        //DebugOlfac1 << *ptr << "\n";
+
+
+    }*/
+
+
+    /*uint32_t SamNo = getNumSamples(RespChannel);
+
+
+    const float* RawRespPtr = buffer.getReadPointer(RespChannel);
+
+    std::memcpy(RespBuffPtr, RawRespPtr, SamNo * sizeof(float));
+
+    float* temp = RespBuffPtr;
+
+    for (; RespBuffPtr < temp + SamNo; ++RespBuffPtr)
+    {
+
+        //DebugOlfac1 << *RespBuffPtr << "\n";
+
+
+    }*/
+    //RespBuffPtr += SamNo;
+
+
+
+
+
+    ////std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    //////DebugOlfac2 << getTimestamp(2) << "\n";// << Time::getMillisecondCounter() << "\n";;
+
+    //std::chrono::steady_clock::time_point end1 = std::chrono::steady_clock::now();
+    //std::chrono::duration<float> duration1 = end1 - start1;
+    //float asd = duration1.count();
+
+    //uint32 NowJuce2 = Time::getMillisecondCounter()-NowJuce;
+
+    ////DebugOlfac1 << NowJuce2 << "\n";
+
+    //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    //std::chrono::duration<float> duration = end - start;
+
+    
+
+    ////DebugOlfac2 << duration.count() << "\n";
+
+
+    ////DebugOlfac2 << Time::getMillisecondCounter() - NowJuce << "\n";;
+
+    //RunOdorPres();
+    //chec
+    //checkForEvents ();
 }
