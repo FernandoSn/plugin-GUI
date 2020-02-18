@@ -293,7 +293,7 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
 
     TimeCounter = timer.getMillisecondCounter();
     //TimeCounter = CurrentTime;
-    TargetTime = 6000; //Equilibrate for 6 seconds
+    TargetTime = EquilibrationTime; //Equilibrate for...
 
     CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)));
 
@@ -309,7 +309,7 @@ void Olfactometer::Equilibrate6Sec(AudioSampleBuffer& buffer)
     {
         //DebugOlfac2 << "Dentro6sec \n";
         TimeCounter = CurrentTime;
-        TargetTime = 2000; //Equilibrate for 6 seconds
+        TargetTime = RespEpochTime; //Set baseline respiration epoch
         OlfactometerProc = &Olfactometer::RespProc;
     }
 }
@@ -361,7 +361,7 @@ void Olfactometer::RespProc(AudioSampleBuffer& buffer)
         RespBuffPtr = RespBuffer;
 
         TimeCounter = CurrentTime;
-        TargetTime = 5000; //MaxTime for final Valve Opener
+        TargetTime = RespToleranceTime; //MaxTime for final Valve Opener
         //DebugOlfac3 << "Number of Samples in RespBuff: " << SamplesInBuffer << "\n";
         //DebugOlfac3 << "sum in RespBuff: " << Sum << "\n";
         //DebugOlfac3 << "Mean in RespBuff: " << RespMean << "\n";

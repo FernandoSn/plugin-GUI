@@ -170,8 +170,18 @@ private:
     //uint32_t SamplesinBuffer = 0;
 
 
-
+	//Func ptr for the proc loop.
     void(Olfactometer::* OlfactometerProc)(AudioSampleBuffer& buffer);
+
+	//Statics for vars inside the func loop
+
+	/*static const uint32_t EquilibrationTime = 6000;
+	static const uint32_t RespEpochTime = 2000;
+	static const uint32_t RespToleranceTime = 5000;*/
+
+	static const uint32_t EquilibrationTime = 0;
+	static const uint32_t RespEpochTime = 0;
+	static const uint32_t RespToleranceTime = 0;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
