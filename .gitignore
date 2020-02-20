@@ -12,14 +12,14 @@
 
 
 
-.vs\plugin-GUI\v16\Browse.VC
-.vs/plugin-GUI/v16/Browse.VC
+.vs\plugin-GUI\v16\Browse.VC.db
+.vs/plugin-GUI/v16/Browse.VC.db
 
-Builds\VisualStudio2013\.vs\open-ephys\v16\Browse.VC
-Builds/VisualStudio2013/.vs/open-ephys/v16/Browse.VC
+Builds\VisualStudio2013\.vs\open-ephys\v16\Browse.VC.db
+Builds/VisualStudio2013/.vs/open-ephys/v16/Browse.VC.db
 
-Builds\VisualStudio2013\Plugins\.vs\Plugins\v16\Browse.VC
-Builds/VisualStudio2013/Plugins/.vs/Plugins/v16/Browse.VC
+Builds\VisualStudio2013\Plugins\.vs\Plugins\v16\Browse.VC.db
+Builds/VisualStudio2013/Plugins/.vs/Plugins/v16/Browse.VC.db
 
 
 # 2. binaries
