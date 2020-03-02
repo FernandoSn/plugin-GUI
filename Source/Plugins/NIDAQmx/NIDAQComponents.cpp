@@ -504,13 +504,22 @@ void NIDAQmx::run()
 	DAQmxErrChk(NIDAQ::DAQmxStartTask(taskHandleAI));
 
 	NIDAQ::int32 numSampsPerChan;
+	NIDAQ::float64 timeout;
 	if (isUSBDevice)
-		numSampsPerChan = 100;
+	{
+		//This is an arbitrary number, if the main loop takes longer that 300 samples per chan to complete 
+		//some samples are not gonna get written on file. You can increase this num up to CHANNEL_BUFFER_SIZE.
+		numSampsPerChan = 300;
+		timeout = -1;
+	}
 	else
+	{
 		numSampsPerChan = CHANNEL_BUFFER_SIZE;
+		timeout = -1;
+	}
 
-	NIDAQ::int32 arraySizeInSamps = ai.size() * numSampsPerChan;
-	NIDAQ::float64 timeout = 5.0;
+	int TotalAnalogChans = ai.size();
+	NIDAQ::int32 arraySizeInSamps = TotalAnalogChans * numSampsPerChan;
 
 	uint64 linesEnabled = 0;
 
@@ -519,10 +528,11 @@ void NIDAQmx::run()
 
 	while (!threadShouldExit())
 	{
-
+		//-1 is passed to read all the samples currently available in the board buffer. 
+		//For buffer size look into the manual of your board.
 		DAQmxErrChk(NIDAQ::DAQmxReadAnalogF64(
 			taskHandleAI,
-			numSampsPerChan,
+			-1,
 			timeout,
 			DAQmx_Val_GroupByScanNumber, //DAQmx_Val_GroupByScanNumber
 			ai_data,
@@ -530,12 +540,14 @@ void NIDAQmx::run()
 			&ai_read,
 			NULL));
 
-		if (getActiveDigitalLines() > 0)
+		int DigitalLines = getActiveDigitalLines();
+
+		if (DigitalLines)
 		{
 			if (isUSBDevice)
 				DAQmxErrChk(NIDAQ::DAQmxReadDigitalU32(
 					taskHandleDI,
-					numSampsPerChan,
+					-1,
 					timeout,
 					DAQmx_Val_GroupByScanNumber,
 					di_data_32,
@@ -545,7 +557,7 @@ void NIDAQmx::run()
 			else 
 				DAQmxErrChk(NIDAQ::DAQmxReadDigitalU8(
 					taskHandleDI,
-					numSampsPerChan,
+					-1,
 					timeout,
 					DAQmx_Val_GroupByScanNumber,
 					di_data_8,
@@ -567,9 +579,26 @@ void NIDAQmx::run()
 		}
 		*/
 
-		float aiSamples[MAX_ANALOG_CHANNELS];
+		//Loop to handle Digital inputs
 		int count = 0;
-		for (int i = 0; i < arraySizeInSamps; i++)
+		for (int i = 0; i < di_read; i++)
+		{
+				if (DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
+				{
+					//Bitwise operations to get the mask for the eventCode.
+					if (isUSBDevice)
+						eventCode = di_data_32[count++] & DigitalLines;
+					else
+						eventCode = di_data_8[count++] & DigitalLines;
+				}
+		}
+
+		//Loop to handle Analog inputs.
+		//Actually it seems that analog and digital are added to the same or different buffers with the same func call
+		//ie. addToBuffer.
+
+		float aiSamples[MAX_ANALOG_CHANNELS];
+		for (int i = 0; i < TotalAnalogChans * ai_read; i++)
 		{
 	
 			int channel = i % MAX_ANALOG_CHANNELS;
@@ -581,20 +610,11 @@ void NIDAQmx::run()
 			if (i % MAX_ANALOG_CHANNELS == 0)
 			{
 				ai_timestamp++;
-				if (getActiveDigitalLines() > 0)
-				{
-					if (isUSBDevice)
-						eventCode = di_data_32[count++] & getActiveDigitalLines();
-					else
-						eventCode = di_data_8[count++] & getActiveDigitalLines();
-				}
 				aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
 			}
 
 		}
-
 		fflush(stdout);
-
 	}
 
 	/*********************************************/
