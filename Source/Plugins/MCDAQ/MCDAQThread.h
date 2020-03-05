@@ -30,7 +30,7 @@
 #include <string.h>
 #include <cmath>
 
-#include "MCDAQ-api/MCDAQbd.h"
+#include "mc-api/cbw.h"
 #include "MCDAQComponents.h"
 
 class SourceNode;

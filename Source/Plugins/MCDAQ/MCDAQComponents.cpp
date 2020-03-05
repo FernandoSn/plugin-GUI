@@ -59,7 +59,10 @@ void MCDAQAPI::getInfo()
 	//TODO
 }
 
-MCDAQbdDeviceManager::MCDAQbdDeviceManager() {}
+MCDAQbdDeviceManager::MCDAQbdDeviceManager() 
+{
+	MCDAQ::cbIgnoreInstaCal();
+}
 
 MCDAQbdDeviceManager::~MCDAQbdDeviceManager() {}
 
