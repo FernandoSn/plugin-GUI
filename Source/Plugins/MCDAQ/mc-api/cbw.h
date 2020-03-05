@@ -18,7 +18,8 @@
 #include <time.h>
 #endif
 
-
+namespace MCC
+{
 /* Current Revision Number */
 #define CURRENTREVNUM      6.5
 
@@ -1824,3 +1825,4 @@ typedef struct
 #endif
 
 #endif  /* ifndef NT_DRIVER */
+}
