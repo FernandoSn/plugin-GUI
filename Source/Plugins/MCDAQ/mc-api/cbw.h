@@ -18,7 +18,7 @@
 #include <time.h>
 #endif
 
-namespace MCC
+namespace MCDAQ
 {
 /* Current Revision Number */
 #define CURRENTREVNUM      6.5

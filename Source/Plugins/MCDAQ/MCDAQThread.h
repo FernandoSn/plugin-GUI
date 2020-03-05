@@ -22,19 +22,19 @@
 */
 
 
-#ifndef __NIDAQTHREAD_H__
-#define __NIDAQTHREAD_H__
+#ifndef __MCDAQTHREAD_H__
+#define __MCDAQTHREAD_H__
 
 #include <DataThreadHeaders.h>
 #include <stdio.h>
 #include <string.h>
 #include <cmath>
 
-#include "nidaq-api/NIDAQmx.h"
-#include "NIDAQComponents.h"
+#include "MCDAQ-api/MCDAQbd.h"
+#include "MCDAQComponents.h"
 
 class SourceNode;
-class NIDAQThread;
+class MCDAQThread;
 
 /**
 
@@ -44,13 +44,13 @@ class NIDAQThread;
 
 */
 
-class NIDAQThread : public DataThread
+class MCDAQThread : public DataThread
 {
 
 public:
 
-	NIDAQThread(SourceNode* sn);
-	~NIDAQThread();
+	MCDAQThread(SourceNode* sn);
+	~MCDAQThread();
 
 	bool updateBuffer();
 
@@ -160,21 +160,21 @@ public:
 	friend class DIButton;
 	friend class SourceTypeButton;
 
-	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NIDAQThread);
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MCDAQThread);
 
 private:
 
-	/* Handle to NIDAQ API info */
-	NIDAQAPI api;
+	/* Handle to MCDAQ API info */
+	MCDAQAPI api;
 
-	/* Manages connected NIDAQ devices */
-	ScopedPointer<NIDAQmxDeviceManager> dm; 
+	/* Manages connected MCDAQ devices */
+	ScopedPointer<MCDAQbdDeviceManager> dm; 
 
 	/* Flag any available devices */
 	bool inputAvailable;
 
-	/* Handle to chosen NIDAQ device */
-	ScopedPointer<NIDAQmx> mNIDAQ;
+	/* Handle to chosen MCDAQ device */
+	ScopedPointer<MCDAQbd> mMCDAQ;
 
 	/* Handle to input channels */
 	Array<AnalogIn> ai;
@@ -194,4 +194,4 @@ private:
 
 };
 
-#endif  // __NIDAQTHREAD_H__
+#endif  // __MCDAQTHREAD_H__

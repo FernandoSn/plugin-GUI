@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#ifndef __NIDAQCOMPONENTS_H__
-#define __NIDAQCOMPONENTS_H__
+#ifndef __MCDAQCOMPONENTS_H__
+#define __MCDAQCOMPONENTS_H__
 
 #include <DataThreadHeaders.h>
 #include <stdio.h>
@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define STR2CHR( jString ) ((jString).toUTF8())
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 
-class NIDAQmx;
+class MCDAQbd;
 class InputChannel;
 class AnalogIn;
 class DigitalIn;
@@ -47,28 +47,28 @@ class Trigger;
 class Counter;
 class UserDefined;
 
-class NIDAQComponent
+class MCDAQComponent
 {
 public:
-	NIDAQComponent();
-	~NIDAQComponent();
+	MCDAQComponent();
+	~MCDAQComponent();
 	int serial_number;
 	virtual void getInfo() = 0;
 };
 
 /* API */
 
-class NIDAQAPI
+class MCDAQAPI
 {
 public:
 	void getInfo();
 };
 
-class NIDAQmxDeviceManager
+class MCDAQbdDeviceManager
 {
 public:
-	NIDAQmxDeviceManager();
-	~NIDAQmxDeviceManager();
+	MCDAQbdDeviceManager();
+	~MCDAQbdDeviceManager();
 
 	void scanForDevices();
 
@@ -77,7 +77,7 @@ public:
 
 	int getNumAvailableDevices();
 
-	friend class NIDAQThread;
+	friend class MCDAQThread;
 
 private:
 	int selectedDeviceIndex;
@@ -86,16 +86,16 @@ private:
 };
 
 struct VRange {
-	NIDAQ::float64 vmin, vmax;
+	MCDAQ::float64 vmin, vmax;
 	VRange() : vmin(0), vmax(0) {}
-	VRange(NIDAQ::float64 rmin, NIDAQ::float64 rmax)
+	VRange(MCDAQ::float64 rmin, MCDAQ::float64 rmax)
 		: vmin(rmin), vmax(rmax) {}
 };
 
 struct SRange {
-	NIDAQ::float64 smin, smaxs, smaxm;
+	MCDAQ::float64 smin, smaxs, smaxm;
 	SRange() : smin(0), smaxs(0), smaxm(0) {}
-	SRange(NIDAQ::float64 smin, NIDAQ::float64 smaxs, NIDAQ::float64 smaxm)
+	SRange(MCDAQ::float64 smin, MCDAQ::float64 smaxs, MCDAQ::float64 smaxm)
 		: smin(smin), smaxs(smaxs), smaxm(smaxm) {}
 };
 
@@ -106,13 +106,13 @@ enum SOURCE_TYPE {
 	PSEUDO_DIFF
 };
 
-class NIDAQmx : public Thread
+class MCDAQbd : public Thread
 {
 public:
 
-	NIDAQmx();
-	NIDAQmx(const char* deviceName);
-	~NIDAQmx();
+	MCDAQbd();
+	MCDAQbd(const char* deviceName);
+	~MCDAQbd();
 
 	void connect(); 
 
@@ -130,18 +130,18 @@ public:
 
 	void run();
 
-	friend class NIDAQThread;
+	friend class MCDAQThread;
 
 private:
 
 	String				deviceName;
 	String				productName;
-	NIDAQ::int32		deviceCategory;
-	NIDAQ::uInt32		productNum;
-	NIDAQ::uInt32		serialNum;
+	MCDAQ::int32		deviceCategory;
+	MCDAQ::uInt32		productNum;
+	MCDAQ::uInt32		serialNum;
 	bool				isUSBDevice;
 	bool				simAISamplingSupported;
-	NIDAQ::float64		adcResolution;
+	MCDAQ::float64		adcResolution;
 	SRange 				sampleRateRange;
 
 	Array<VRange>		aiVRanges;
@@ -151,16 +151,16 @@ private:
 	float				samplerate;
 
 	Array<AnalogIn> 	ai;
-	Array<NIDAQ::int32> terminalConfig;
+	Array<MCDAQ::int32> terminalConfig;
 	Array<SOURCE_TYPE>  st;
 	Array<bool>			aiChannelEnabled;
 
 	Array<DigitalIn> 	di;
 	Array<bool>			diChannelEnabled;
 
-	NIDAQ::float64		ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
-	NIDAQ::uInt8		di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
-	NIDAQ::uInt32		di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
+	MCDAQ::float64		ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	MCDAQ::uInt8		di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
+	MCDAQ::uInt32		di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
 
 	int64 ai_timestamp;
 	uint64 eventCode;
@@ -191,7 +191,7 @@ public:
 
 	float getFillPercentage();
 
-	friend class NIDAQmx;
+	friend class MCDAQbd;
 	
 private:
 	String id;
@@ -211,7 +211,7 @@ public:
 	Array<SOURCE_TYPE> getTerminalConfig();
 
 private:
-	NIDAQ::int32 terminalConfig;
+	MCDAQ::int32 terminalConfig;
 };
 
 class DigitalIn : public InputChannel
@@ -223,4 +223,4 @@ public:
 private:
 };
 
-#endif  // __NIDAQCOMPONENTS_H__
+#endif  // __MCDAQCOMPONENTS_H__

@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#include "NIDAQThread.h"
-#include "NIDAQEditor.h"
+#include "MCDAQThread.h"
+#include "MCDAQEditor.h"
 
 EditorBackground::EditorBackground(int nAI, int nDI) : nAI(nAI), nDI(nDI) {}
 
@@ -142,7 +142,7 @@ void EditorBackground::paint(Graphics& g)
 
 }
 
-FifoMonitor::FifoMonitor(NIDAQThread* thread_) : thread(thread_), fillPercentage(0.0)
+FifoMonitor::FifoMonitor(MCDAQThread* thread_) : thread(thread_), fillPercentage(0.0)
 {
 	startTimer(500); // update fill percentage every 0.5 seconds
 }
@@ -172,7 +172,7 @@ void FifoMonitor::paint(Graphics& g)
 	g.fillRoundedRectangle(2, this->getHeight() - 2 - barHeight, this->getWidth() - 4, barHeight, 2);
 }
 
-AIButton::AIButton(int id_, NIDAQThread* thread_) : id(id_), thread(thread_), enabled(true)
+AIButton::AIButton(int id_, MCDAQThread* thread_) : id(id_), thread(thread_), enabled(true)
 {
 	startTimer(500);
 }
@@ -223,7 +223,7 @@ void AIButton::timerCallback()
 
 }
 
-DIButton::DIButton(int id_, NIDAQThread* thread_) : id(id_), thread(thread_), enabled(true)
+DIButton::DIButton(int id_, MCDAQThread* thread_) : id(id_), thread(thread_), enabled(true)
 {
 	startTimer(500);
 }
@@ -276,7 +276,7 @@ void DIButton::timerCallback()
 
 }
 
-SourceTypeButton::SourceTypeButton(int id_, NIDAQThread* thread_, SOURCE_TYPE source) : id(id_), thread(thread_)
+SourceTypeButton::SourceTypeButton(int id_, MCDAQThread* thread_, SOURCE_TYPE source) : id(id_), thread(thread_)
 {
 
 	update(source);
@@ -314,8 +314,8 @@ void SourceTypeButton::timerCallback()
 
 }
 
-BackgroundLoader::BackgroundLoader(NIDAQThread* thread, NIDAQEditor* editor)
-	: Thread("NIDAQ Loader"), t(thread), e(editor)
+BackgroundLoader::BackgroundLoader(MCDAQThread* thread, MCDAQEditor* editor)
+	: Thread("MCDAQ Loader"), t(thread), e(editor)
 {
 }
 
@@ -331,12 +331,12 @@ void BackgroundLoader::run()
 	/* Let the main GUI know the plugin is done initializing */
 	MessageManagerLock mml;
 	CoreServices::updateSignalChain(e);
-	CoreServices::sendStatusMessage("NIDAQ plugin ready for acquisition!");
+	CoreServices::sendStatusMessage("MCDAQ plugin ready for acquisition!");
 
 }
 
 
-NIDAQEditor::NIDAQEditor(GenericProcessor* parentNode, NIDAQThread* t, bool useDefaultParameterEditors)
+MCDAQEditor::MCDAQEditor(GenericProcessor* parentNode, MCDAQThread* t, bool useDefaultParameterEditors)
 	: GenericEditor(parentNode, useDefaultParameterEditors), thread(t)
 {
 
@@ -344,10 +344,10 @@ NIDAQEditor::NIDAQEditor(GenericProcessor* parentNode, NIDAQThread* t, bool useD
 
 }
 
-void NIDAQEditor::draw()
+void MCDAQEditor::draw()
 {
 
-	NIDAQThread* t = thread; 
+	MCDAQThread* t = thread; 
 
 	int nAI = t->getNumAnalogInputs();
 	int nDI = t->getNumDigitalInputs();
@@ -448,16 +448,16 @@ void NIDAQEditor::draw()
 	background->toBack();
 	background->repaint();
 
-	setDisplayName("NIDAQmx-(" + t->getProductName() + ")");
+	setDisplayName("MCDAQbd-(" + t->getProductName() + ")");
 
 }
 
-NIDAQEditor::~NIDAQEditor()
+MCDAQEditor::~MCDAQEditor()
 {
 
 }
 
-void NIDAQEditor::comboBoxChanged(ComboBox* comboBox)
+void MCDAQEditor::comboBoxChanged(ComboBox* comboBox)
 {
 
 	if (comboBox == sampleRateSelectBox)
@@ -487,7 +487,7 @@ void NIDAQEditor::comboBoxChanged(ComboBox* comboBox)
 
 } 
 
-void NIDAQEditor::buttonEvent(Button* button)
+void MCDAQEditor::buttonEvent(Button* button)
 {
 
 	if (aiButtons.contains((AIButton*)button))
@@ -519,15 +519,15 @@ void NIDAQEditor::buttonEvent(Button* button)
 }
 
 
-void NIDAQEditor::saveCustomParameters(XmlElement* xml)
+void MCDAQEditor::saveCustomParameters(XmlElement* xml)
 {
 	xml->setAttribute("productName", thread->getProductName());
 }
 
 
-void NIDAQEditor::loadCustomParameters(XmlElement* xml)
+void MCDAQEditor::loadCustomParameters(XmlElement* xml)
 {
-	String productName = xml->getStringAttribute("productName", "NIDAQmx");
+	String productName = xml->getStringAttribute("productName", "MCDAQbd");
 	if (!thread->swapConnection(productName));
 		draw();
 }

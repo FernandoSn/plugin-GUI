@@ -24,22 +24,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <chrono>
 #include <math.h>
 
-#include "NIDAQComponents.h"
+#include "MCDAQComponents.h"
 
-static int32 GetTerminalNameWithDevPrefix(NIDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[]);
+static int32 GetTerminalNameWithDevPrefix(MCDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[]);
 
-static int32 GetTerminalNameWithDevPrefix(NIDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[])
+static int32 GetTerminalNameWithDevPrefix(MCDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[])
 {
 
-	NIDAQ::int32	error = 0;
+	MCDAQ::int32	error = 0;
 	char			device[256];
-	NIDAQ::int32	productCategory;
-	NIDAQ::uInt32	numDevices, i = 1;
+	MCDAQ::int32	productCategory;
+	MCDAQ::uInt32	numDevices, i = 1;
 
-	DAQmxErrChk(NIDAQ::DAQmxGetTaskNumDevices(taskHandle, &numDevices));
+	DAQmxErrChk(MCDAQ::DAQmxGetTaskNumDevices(taskHandle, &numDevices));
 	while (i <= numDevices) {
-		DAQmxErrChk(NIDAQ::DAQmxGetNthTaskDevice(taskHandle, i++, device, 256));
-		DAQmxErrChk(NIDAQ::DAQmxGetDevProductCategory(device, &productCategory));
+		DAQmxErrChk(MCDAQ::DAQmxGetNthTaskDevice(taskHandle, i++, device, 256));
+		DAQmxErrChk(MCDAQ::DAQmxGetDevProductCategory(device, &productCategory));
 		if (productCategory != DAQmx_Val_CSeriesModule && productCategory != DAQmx_Val_SCXIModule) {
 			*triggerName++ = '/';
 			strcat(strcat(strcpy(triggerName, device), "/"), terminalName);
@@ -51,23 +51,23 @@ Error:
 	return error;
 }
 
-NIDAQComponent::NIDAQComponent() : serial_number(0) {}
-NIDAQComponent::~NIDAQComponent() {}
+MCDAQComponent::MCDAQComponent() : serial_number(0) {}
+MCDAQComponent::~MCDAQComponent() {}
 
-void NIDAQAPI::getInfo()
+void MCDAQAPI::getInfo()
 {
 	//TODO
 }
 
-NIDAQmxDeviceManager::NIDAQmxDeviceManager() {}
+MCDAQbdDeviceManager::MCDAQbdDeviceManager() {}
 
-NIDAQmxDeviceManager::~NIDAQmxDeviceManager() {}
+MCDAQbdDeviceManager::~MCDAQbdDeviceManager() {}
 
-void NIDAQmxDeviceManager::scanForDevices()
+void MCDAQbdDeviceManager::scanForDevices()
 {
 
 	char data[2048] = { 0 };
-	NIDAQ::DAQmxGetSysDevNames(data, sizeof(data));
+	MCDAQ::DAQmxGetSysDevNames(data, sizeof(data));
 
 	StringArray deviceList; 
 	deviceList.addTokens(&data[0], ", ", "\"");
@@ -81,16 +81,16 @@ void NIDAQmxDeviceManager::scanForDevices()
 
 }
 
-String NIDAQmxDeviceManager::getDeviceFromIndex(int index)
+String MCDAQbdDeviceManager::getDeviceFromIndex(int index)
 {
 	return devices[index];
 }
 
-String NIDAQmxDeviceManager::getDeviceFromProductName(String productName)
+String MCDAQbdDeviceManager::getDeviceFromProductName(String productName)
 {
 	for (auto device : devices)
 	{
-		ScopedPointer<NIDAQmx> n = new NIDAQmx(STR2CHR(device));
+		ScopedPointer<MCDAQbd> n = new MCDAQbd(STR2CHR(device));
 		if (n->getProductName() == productName)
 			return device;
 	}
@@ -98,15 +98,15 @@ String NIDAQmxDeviceManager::getDeviceFromProductName(String productName)
 
 }
 
-int NIDAQmxDeviceManager::getNumAvailableDevices()
+int MCDAQbdDeviceManager::getNumAvailableDevices()
 {
 	return devices.size();
 }
 
-NIDAQmx::NIDAQmx() : Thread("NIDAQmx_Thread") {};
+MCDAQbd::MCDAQbd() : Thread("MCDAQbd_Thread") {};
 
-NIDAQmx::NIDAQmx(const char* deviceName) 
-	: Thread("NIDAQmx_Thread"),
+MCDAQbd::MCDAQbd(const char* deviceName) 
+	: Thread("MCDAQbd_Thread"),
 	deviceName(deviceName)
 {
 
@@ -149,28 +149,28 @@ NIDAQmx::NIDAQmx(const char* deviceName)
 
 }
 
-NIDAQmx::~NIDAQmx() {
+MCDAQbd::~MCDAQbd() {
 }
 
-String NIDAQmx::getProductName()
+String MCDAQbd::getProductName()
 {
 	return productName;
 }
 
-String NIDAQmx::getSerialNumber()
+String MCDAQbd::getSerialNumber()
 {
 	return String(serialNum);
 }
 
-void NIDAQmx::connect()
+void MCDAQbd::connect()
 {
 	/* Get category type */
-	NIDAQ::DAQmxGetDevProductCategory(STR2CHR(deviceName), &deviceCategory);
+	MCDAQ::DAQmxGetDevProductCategory(STR2CHR(deviceName), &deviceCategory);
 	printf("Device Category: %i\n", deviceCategory);
 
 	/* Get product name */
 	char pname[2048] = { 0 };
-	NIDAQ::DAQmxGetDevProductType(STR2CHR(deviceName), &pname[0], sizeof(pname));
+	MCDAQ::DAQmxGetDevProductType(STR2CHR(deviceName), &pname[0], sizeof(pname));
 	productName = String(&pname[0]);
 	printf("Product Name: %s\n", productName);
 
@@ -178,27 +178,27 @@ void NIDAQmx::connect()
 	if (productName.contains("USB"))
 		isUSBDevice = true;
 
-	NIDAQ::DAQmxGetDevProductNum(STR2CHR(deviceName), &productNum);
+	MCDAQ::DAQmxGetDevProductNum(STR2CHR(deviceName), &productNum);
 	printf("Product Num: %d\n", productNum);
 
-	NIDAQ::DAQmxGetDevSerialNum(STR2CHR(deviceName), &serialNum);
+	MCDAQ::DAQmxGetDevSerialNum(STR2CHR(deviceName), &serialNum);
 	printf("Serial Num: %d\n", serialNum);
 
 	/* Get simultaneous sampling supported */
-	NIDAQ::bool32 supported = false;
-	NIDAQ::DAQmxGetDevAISimultaneousSamplingSupported(STR2CHR(deviceName), &supported);
+	MCDAQ::bool32 supported = false;
+	MCDAQ::DAQmxGetDevAISimultaneousSamplingSupported(STR2CHR(deviceName), &supported);
 	simAISamplingSupported = (supported == 1);
 	//printf("Simultaneous sampling %ssupported\n", simAISamplingSupported ? "" : "NOT ");
 
 	/* Get device sample rates */
-	NIDAQ::float64 smin;
-	NIDAQ::DAQmxGetDevAIMinRate(STR2CHR(deviceName), &smin);
+	MCDAQ::float64 smin;
+	MCDAQ::DAQmxGetDevAIMinRate(STR2CHR(deviceName), &smin);
 
-	NIDAQ::float64 smaxs;
-	NIDAQ::DAQmxGetDevAIMaxSingleChanRate(STR2CHR(deviceName), &smaxs);
+	MCDAQ::float64 smaxs;
+	MCDAQ::DAQmxGetDevAIMaxSingleChanRate(STR2CHR(deviceName), &smaxs);
 
-	NIDAQ::float64 smaxm;
-	NIDAQ::DAQmxGetDevAIMaxMultiChanRate(STR2CHR(deviceName), &smaxm);
+	MCDAQ::float64 smaxm;
+	MCDAQ::DAQmxGetDevAIMaxMultiChanRate(STR2CHR(deviceName), &smaxm);
 
 	fflush(stdout);
 
@@ -217,17 +217,17 @@ void NIDAQmx::connect()
 
 }
 
-void NIDAQmx::getAIVoltageRanges()
+void MCDAQbd::getAIVoltageRanges()
 {
 
-	NIDAQ::float64 data[512];
-	NIDAQ::DAQmxGetDevAIVoltageRngs(STR2CHR(deviceName), &data[0], sizeof(data));
+	MCDAQ::float64 data[512];
+	MCDAQ::DAQmxGetDevAIVoltageRngs(STR2CHR(deviceName), &data[0], sizeof(data));
 
 	//printf("Detected voltage ranges:\n");
 	for (int i = 0; i < 512; i += 2)
 	{
-		NIDAQ::float64 vmin = data[i];
-		NIDAQ::float64 vmax = data[i + 1];
+		MCDAQ::float64 vmin = data[i];
+		MCDAQ::float64 vmax = data[i + 1];
 		if (vmin == vmax || vmax < 1e-2)
 			break;
 		//printf("Vmin: %f Vmax: %f \n", vmin, vmax);
@@ -238,17 +238,17 @@ void NIDAQmx::getAIVoltageRanges()
 
 }
 
-void NIDAQmx::getAIChannels()
+void MCDAQbd::getAIChannels()
 {
 
-	NIDAQ::int32	error = 0;
+	MCDAQ::int32	error = 0;
 	char			errBuff[ERR_BUFF_SIZE] = { '\0' };
 
-	NIDAQ::TaskHandle adcResolutionQuery;
-	NIDAQ::DAQmxCreateTask("ADCResolutionQuery", &adcResolutionQuery);
+	MCDAQ::TaskHandle adcResolutionQuery;
+	MCDAQ::DAQmxCreateTask("ADCResolutionQuery", &adcResolutionQuery);
 
 	char data[2048];
-	NIDAQ::DAQmxGetDevAIPhysicalChans(STR2CHR(deviceName), &data[0], sizeof(data));
+	MCDAQ::DAQmxGetDevAIPhysicalChans(STR2CHR(deviceName), &data[0], sizeof(data));
 
 	StringArray channel_list;
 	channel_list.addTokens(&data[0], ", ", "\"");
@@ -263,8 +263,8 @@ void NIDAQmx::getAIChannels()
 		{
 
 			/* Get channel termination */
-			NIDAQ::int32 termCfgs;
-			NIDAQ::DAQmxGetPhysicalChanAITermCfgs(channel_list[i].toUTF8(), &termCfgs);
+			MCDAQ::int32 termCfgs;
+			MCDAQ::DAQmxGetPhysicalChanAITermCfgs(channel_list[i].toUTF8(), &termCfgs);
 
 			printf("%s - ", channel_list[i].toUTF8());
 			printf("Terminal Config: %d\n", termCfgs);
@@ -291,9 +291,9 @@ void NIDAQmx::getAIChannels()
 			}
 
 			/* Get channel ADC resolution */
-			DAQmxErrChk(NIDAQ::DAQmxCreateAIVoltageChan(
+			DAQmxErrChk(MCDAQ::DAQmxCreateAIVoltageChan(
 				adcResolutionQuery,			//task handle
-				STR2CHR(ai[aiCount-1].id),	//NIDAQ physical channel name (e.g. dev1/ai1)
+				STR2CHR(ai[aiCount-1].id),	//MCDAQ physical channel name (e.g. dev1/ai1)
 				"",							//user-defined channel name (optional)
 				DAQmx_Val_Cfg_Default,		//input terminal configuration
 				vRange.vmin,				//min input voltage
@@ -301,25 +301,25 @@ void NIDAQmx::getAIChannels()
 				DAQmx_Val_Volts,			//voltage units
 				NULL));
 
-			DAQmxErrChk(NIDAQ::DAQmxGetAIResolution(adcResolutionQuery, channel_list[i].toUTF8(), &adcResolution));
+			DAQmxErrChk(MCDAQ::DAQmxGetAIResolution(adcResolutionQuery, channel_list[i].toUTF8(), &adcResolution));
 			aiChannelEnabled.add(true);
 
 		}
 	}
 
 	fflush(stdout);
-	NIDAQ::DAQmxStopTask(adcResolutionQuery);
-	NIDAQ::DAQmxClearTask(adcResolutionQuery);
+	MCDAQ::DAQmxStopTask(adcResolutionQuery);
+	MCDAQ::DAQmxClearTask(adcResolutionQuery);
 
 Error:
 
 	if (DAQmxFailed(error))
-		NIDAQ::DAQmxGetExtendedErrorInfo(errBuff, ERR_BUFF_SIZE);
+		MCDAQ::DAQmxGetExtendedErrorInfo(errBuff, ERR_BUFF_SIZE);
 
 	if (adcResolutionQuery != 0) {
 		// DAQmx Stop Code
-		NIDAQ::DAQmxStopTask(adcResolutionQuery);
-		NIDAQ::DAQmxClearTask(adcResolutionQuery);
+		MCDAQ::DAQmxStopTask(adcResolutionQuery);
+		MCDAQ::DAQmxClearTask(adcResolutionQuery);
 	}
 
 	if (DAQmxFailed(error))
@@ -330,13 +330,13 @@ Error:
 
 }
 
-void NIDAQmx::getDIChannels()
+void MCDAQbd::getDIChannels()
 {
 
 	char data[2048];
-	//NIDAQ::DAQmxGetDevTerminals(STR2CHR(deviceName), &data[0], sizeof(data)); //gets all terminals
-	//NIDAQ::DAQmxGetDevDIPorts(STR2CHR(deviceName), &data[0], sizeof(data));	//gets line name
-	NIDAQ::DAQmxGetDevDILines(STR2CHR(deviceName), &data[0], sizeof(data));	//gets ports on line
+	//MCDAQ::DAQmxGetDevTerminals(STR2CHR(deviceName), &data[0], sizeof(data)); //gets all terminals
+	//MCDAQ::DAQmxGetDevDIPorts(STR2CHR(deviceName), &data[0], sizeof(data));	//gets line name
+	MCDAQ::DAQmxGetDevDILines(STR2CHR(deviceName), &data[0], sizeof(data));	//gets ports on line
 	printf("Found digital inputs: \n");
 
 	StringArray channel_list;
@@ -360,7 +360,7 @@ void NIDAQmx::getDIChannels()
 
 }
 
-int NIDAQmx::getActiveDigitalLines()
+int MCDAQbd::getActiveDigitalLines()
 {
 	uint16 linesEnabled = 0;
 	for (int i = 0; i < diChannelEnabled.size(); i++)
@@ -371,7 +371,7 @@ int NIDAQmx::getActiveDigitalLines()
 	return linesEnabled;
 }
 
-void NIDAQmx::toggleSourceType(int index)
+void MCDAQbd::toggleSourceType(int index)
 {
 
 	SOURCE_TYPE current = st[index];
@@ -383,34 +383,34 @@ void NIDAQmx::toggleSourceType(int index)
 
 }
 
-void NIDAQmx::run()
+void MCDAQbd::run()
 {
-	/* Derived from NIDAQmx: ANSI C Example program: ContAI-ReadDigChan.c */
+	/* Derived from MCDAQbd: ANSI C Example program: ContAI-ReadDigChan.c */
 
-	NIDAQ::int32	error = 0;
+	MCDAQ::int32	error = 0;
 	char			errBuff[ERR_BUFF_SIZE] = { '\0' };
 
 	/**************************************/
 	/********CONFIG ANALOG CHANNELS********/
 	/**************************************/
 
-	NIDAQ::int32		ai_read = 0;
+	MCDAQ::int32		ai_read = 0;
 	static int			totalAIRead = 0;
-	NIDAQ::TaskHandle	taskHandleAI = 0;
+	MCDAQ::TaskHandle	taskHandleAI = 0;
 
 	String usePort; //Temporary digital port restriction until software buffering is implemented
 
 	/* Create an analog input task */
 	if (isUSBDevice)
-		DAQmxErrChk(NIDAQ::DAQmxCreateTask(STR2CHR("AITask_USB" + getSerialNumber()), &taskHandleAI));
+		DAQmxErrChk(MCDAQ::DAQmxCreateTask(STR2CHR("AITask_USB" + getSerialNumber()), &taskHandleAI));
 	else
-		DAQmxErrChk(NIDAQ::DAQmxCreateTask(STR2CHR("AITask_PXI" + getSerialNumber()), &taskHandleAI));
+		DAQmxErrChk(MCDAQ::DAQmxCreateTask(STR2CHR("AITask_PXI" + getSerialNumber()), &taskHandleAI));
 
 
 	/* Create a voltage channel for each analog input */
 	for (int i = 0; i < ai.size(); i++)
 	{
-		NIDAQ::int32 termConfig;
+		MCDAQ::int32 termConfig;
 
 		switch (st[i]) {
 		case SOURCE_TYPE::RSE:
@@ -425,9 +425,9 @@ void NIDAQmx::run()
 			termConfig = DAQmx_Val_Cfg_Default;
 		}
 
-		DAQmxErrChk(NIDAQ::DAQmxCreateAIVoltageChan(
+		DAQmxErrChk(MCDAQ::DAQmxCreateAIVoltageChan(
 			taskHandleAI,					//task handle
-			STR2CHR(ai[i].id),			//NIDAQ physical channel name (e.g. dev1/ai1)
+			STR2CHR(ai[i].id),			//MCDAQ physical channel name (e.g. dev1/ai1)
 			"",							//user-defined channel name (optional)
 			termConfig,					//input terminal configuration
 			voltageRange.vmin,			//min input voltage
@@ -438,7 +438,7 @@ void NIDAQmx::run()
 	}
 
 	/* Configure sample clock timing */
-	DAQmxErrChk(NIDAQ::DAQmxCfgSampClkTiming(
+	DAQmxErrChk(MCDAQ::DAQmxCfgSampClkTiming(
 		taskHandleAI,
 		"",													//source : NULL means use internal clock
 		samplerate,											//rate : samples per second per channel
@@ -457,12 +457,12 @@ void NIDAQmx::run()
 	/********CONFIG DIGITAL LINES********/
 	/************************************/
 
-	NIDAQ::int32		di_read = 0;
+	MCDAQ::int32		di_read = 0;
 	static int			totalDIRead = 0;
-	NIDAQ::TaskHandle	taskHandleDI = 0;
+	MCDAQ::TaskHandle	taskHandleDI = 0;
 
 	char ports[2048];
-	NIDAQ::DAQmxGetDevDIPorts(STR2CHR(deviceName), &ports[0], sizeof(ports));
+	MCDAQ::DAQmxGetDevDIPorts(STR2CHR(deviceName), &ports[0], sizeof(ports));
 
 	/* For now, restrict max num digital inputs until software buffering is implemented */
 	if (MAX_DIGITAL_CHANNELS <= 8)
@@ -474,12 +474,12 @@ void NIDAQmx::run()
 
 	/* Create a digital input task using device serial number to gurantee unique task name per device */
 	if (isUSBDevice)
-		DAQmxErrChk(NIDAQ::DAQmxCreateTask(STR2CHR("DITask_USB"+getSerialNumber()), &taskHandleDI));
+		DAQmxErrChk(MCDAQ::DAQmxCreateTask(STR2CHR("DITask_USB"+getSerialNumber()), &taskHandleDI));
 	else
-		DAQmxErrChk(NIDAQ::DAQmxCreateTask(STR2CHR("DITask_PXI"+getSerialNumber()), &taskHandleDI));
+		DAQmxErrChk(MCDAQ::DAQmxCreateTask(STR2CHR("DITask_PXI"+getSerialNumber()), &taskHandleDI));
 
 	/* Create a channel for each digital input */
-	DAQmxErrChk(NIDAQ::DAQmxCreateDIChan(
+	DAQmxErrChk(MCDAQ::DAQmxCreateDIChan(
 		taskHandleDI,
 		STR2CHR(usePort),
 		"",
@@ -487,7 +487,7 @@ void NIDAQmx::run()
 
 	
 	if (!isUSBDevice) //USB devices do not have an internal clock and instead use CPU, so we can't configure the sample clock timing
-		DAQmxErrChk(NIDAQ::DAQmxCfgSampClkTiming(
+		DAQmxErrChk(MCDAQ::DAQmxCfgSampClkTiming(
 			taskHandleDI,							//task handle
 			trigName,								//source : NULL means use internal clock, we will sync to analog input clock
 			samplerate,								//rate : samples per second per channel
@@ -497,14 +497,14 @@ void NIDAQmx::run()
 														//If sampleMode == DAQmx_Val_FiniteSamps : # of samples to acquire for each channel
 														//Elif sampleMode == DAQmx_Val_ContSamps : circular buffer size
 
-	DAQmxErrChk(NIDAQ::DAQmxTaskControl(taskHandleAI, DAQmx_Val_Task_Commit));
-	DAQmxErrChk(NIDAQ::DAQmxTaskControl(taskHandleDI, DAQmx_Val_Task_Commit));
+	DAQmxErrChk(MCDAQ::DAQmxTaskControl(taskHandleAI, DAQmx_Val_Task_Commit));
+	DAQmxErrChk(MCDAQ::DAQmxTaskControl(taskHandleDI, DAQmx_Val_Task_Commit));
 
-	DAQmxErrChk(NIDAQ::DAQmxStartTask(taskHandleDI));
-	DAQmxErrChk(NIDAQ::DAQmxStartTask(taskHandleAI));
+	DAQmxErrChk(MCDAQ::DAQmxStartTask(taskHandleDI));
+	DAQmxErrChk(MCDAQ::DAQmxStartTask(taskHandleAI));
 
-	NIDAQ::int32 numSampsPerChan;
-	NIDAQ::float64 timeout;
+	MCDAQ::int32 numSampsPerChan;
+	MCDAQ::float64 timeout;
 	if (isUSBDevice)
 	{
 		//This is an arbitrary number, if the main loop takes longer that 300 samples per chan to complete 
@@ -519,7 +519,7 @@ void NIDAQmx::run()
 	}
 
 	int TotalAnalogChans = ai.size();
-	NIDAQ::int32 arraySizeInSamps = TotalAnalogChans * numSampsPerChan;
+	MCDAQ::int32 arraySizeInSamps = TotalAnalogChans * numSampsPerChan;
 
 	uint64 linesEnabled = 0;
 
@@ -530,7 +530,7 @@ void NIDAQmx::run()
 	{
 		//-1 is passed to read all the samples currently available in the board buffer. 
 		//For buffer size look into the manual of your board.
-		DAQmxErrChk(NIDAQ::DAQmxReadAnalogF64(
+		DAQmxErrChk(MCDAQ::DAQmxReadAnalogF64(
 			taskHandleAI,
 			-1,
 			timeout,
@@ -545,7 +545,7 @@ void NIDAQmx::run()
 		if (DigitalLines)
 		{
 			if (isUSBDevice)
-				DAQmxErrChk(NIDAQ::DAQmxReadDigitalU32(
+				DAQmxErrChk(MCDAQ::DAQmxReadDigitalU32(
 					taskHandleDI,
 					-1,
 					timeout,
@@ -555,7 +555,7 @@ void NIDAQmx::run()
 					&di_read,
 					NULL));
 			else 
-				DAQmxErrChk(NIDAQ::DAQmxReadDigitalU8(
+				DAQmxErrChk(MCDAQ::DAQmxReadDigitalU8(
 					taskHandleDI,
 					-1,
 					timeout,
@@ -621,28 +621,28 @@ void NIDAQmx::run()
 	// DAQmx Stop Code
 	/*********************************************/
 
-	NIDAQ::DAQmxStopTask(taskHandleAI);
-	NIDAQ::DAQmxClearTask(taskHandleAI);
-	NIDAQ::DAQmxStopTask(taskHandleDI);
-	NIDAQ::DAQmxClearTask(taskHandleDI);
+	MCDAQ::DAQmxStopTask(taskHandleAI);
+	MCDAQ::DAQmxClearTask(taskHandleAI);
+	MCDAQ::DAQmxStopTask(taskHandleDI);
+	MCDAQ::DAQmxClearTask(taskHandleDI);
 
 	return;
 
 Error:
 
 	if (DAQmxFailed(error))
-		NIDAQ::DAQmxGetExtendedErrorInfo(errBuff, ERR_BUFF_SIZE);
+		MCDAQ::DAQmxGetExtendedErrorInfo(errBuff, ERR_BUFF_SIZE);
 
 	if (taskHandleAI != 0) {
 		// DAQmx Stop Code
-		NIDAQ::DAQmxStopTask(taskHandleAI);
-		NIDAQ::DAQmxClearTask(taskHandleAI);
+		MCDAQ::DAQmxStopTask(taskHandleAI);
+		MCDAQ::DAQmxClearTask(taskHandleAI);
 	}
 
 	if (taskHandleDI != 0) {
 		// DAQmx Stop Code
-		NIDAQ::DAQmxStopTask(taskHandleDI);
-		NIDAQ::DAQmxClearTask(taskHandleDI);
+		MCDAQ::DAQmxStopTask(taskHandleDI);
+		MCDAQ::DAQmxClearTask(taskHandleDI);
 	}
 	if (DAQmxFailed(error))
 		printf("DAQmx Error: %s\n", errBuff);

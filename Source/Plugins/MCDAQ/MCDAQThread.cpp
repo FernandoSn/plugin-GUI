@@ -21,31 +21,31 @@
 
 */
 
-#include "NIDAQThread.h"
-#include "NIDAQEditor.h"
+#include "MCDAQThread.h"
+#include "MCDAQEditor.h"
 #include <stdexcept>
 
-DataThread* NIDAQThread::createDataThread(SourceNode *sn)
+DataThread* MCDAQThread::createDataThread(SourceNode *sn)
 {
-	return new NIDAQThread(sn);
+	return new MCDAQThread(sn);
 }
 
-GenericEditor* NIDAQThread::createEditor(SourceNode* sn)
+GenericEditor* MCDAQThread::createEditor(SourceNode* sn)
 {
-    return new NIDAQEditor(sn, this, true);
+    return new MCDAQEditor(sn, this, true);
 }
 
-NIDAQThread::NIDAQThread(SourceNode* sn) : DataThread(sn), inputAvailable(false)
+MCDAQThread::MCDAQThread(SourceNode* sn) : DataThread(sn), inputAvailable(false)
 {
 
-	dm = new NIDAQmxDeviceManager();
+	dm = new MCDAQbdDeviceManager();
 
 	dm->scanForDevices();
 
 	if (dm->getNumAvailableDevices() == 0)
 	{
 		//Okay for now as plugin-GUI handles source init runtime errors. 
-		throw std::runtime_error("No NIDAQ devices detected!");
+		throw std::runtime_error("No MCDAQ devices detected!");
 	}
 
 	inputAvailable = true;
@@ -54,42 +54,42 @@ NIDAQThread::NIDAQThread(SourceNode* sn) : DataThread(sn), inputAvailable(false)
 }
 
 
-NIDAQThread::~NIDAQThread()
+MCDAQThread::~MCDAQThread()
 {
 }
 
-int NIDAQThread::openConnection()
+int MCDAQThread::openConnection()
 {
 
-	mNIDAQ = new NIDAQmx(STR2CHR(dm->getDeviceFromIndex(0)));
+	mMCDAQ = new MCDAQbd(STR2CHR(dm->getDeviceFromIndex(0)));
 
 	sourceBuffers.add(new DataBuffer(getNumAnalogInputs(), 10000));
 
-	mNIDAQ->aiBuffer = sourceBuffers.getLast();
+	mMCDAQ->aiBuffer = sourceBuffers.getLast();
 
-	sampleRateIndex = mNIDAQ->sampleRates.size() - 1;
+	sampleRateIndex = mMCDAQ->sampleRates.size() - 1;
 	setSampleRate(sampleRateIndex);
 
-	voltageRangeIndex = mNIDAQ->aiVRanges.size() - 1;
+	voltageRangeIndex = mMCDAQ->aiVRanges.size() - 1;
 	setVoltageRange(voltageRangeIndex);
 
 	return 0;
 
 }
 
-int NIDAQThread::getNumAvailableDevices()
+int MCDAQThread::getNumAvailableDevices()
 {
 	return dm->getNumAvailableDevices();
 }
 
-void NIDAQThread::selectFromAvailableDevices()
+void MCDAQThread::selectFromAvailableDevices()
 {
 
 	PopupMenu deviceSelect;
 	StringArray productNames;
 	for (int i = 0; i < getNumAvailableDevices(); i++)
 	{
-		ScopedPointer<NIDAQmx> n = new NIDAQmx(STR2CHR(dm->getDeviceFromIndex(i)));
+		ScopedPointer<MCDAQbd> n = new MCDAQbd(STR2CHR(dm->getDeviceFromIndex(i)));
 		if (!(n->getProductName() == getProductName()))
 		{
 			deviceSelect.addItem(productNames.size() + 1, "Swap to " + n->getProductName());
@@ -103,26 +103,26 @@ void NIDAQThread::selectFromAvailableDevices()
 	swapConnection(productNames[selectedDeviceIndex - 1]);
 }
 
-String NIDAQThread::getProductName() const
+String MCDAQThread::getProductName() const
 {
-	return mNIDAQ->productName;
+	return mMCDAQ->productName;
 }
 
-int NIDAQThread::swapConnection(String productName)
+int MCDAQThread::swapConnection(String productName)
 {
 
 	if (!dm->getDeviceFromProductName(productName).isEmpty())
 	{
-		mNIDAQ = new NIDAQmx(STR2CHR(dm->getDeviceFromProductName(productName)));
+		mMCDAQ = new MCDAQbd(STR2CHR(dm->getDeviceFromProductName(productName)));
 
 		sourceBuffers.removeLast();
 		sourceBuffers.add(new DataBuffer(getNumAnalogInputs(), 10000));
-		mNIDAQ->aiBuffer = sourceBuffers.getLast();
+		mMCDAQ->aiBuffer = sourceBuffers.getLast();
 
-		sampleRateIndex = mNIDAQ->sampleRates.size() - 1;
+		sampleRateIndex = mMCDAQ->sampleRates.size() - 1;
 		setSampleRate(sampleRateIndex);
 
-		voltageRangeIndex = mNIDAQ->aiVRanges.size() - 1;
+		voltageRangeIndex = mMCDAQ->aiVRanges.size() - 1;
 		setVoltageRange(voltageRangeIndex);
 
 		return 0;
@@ -131,150 +131,150 @@ int NIDAQThread::swapConnection(String productName)
 
 }
 
-void NIDAQThread::toggleSourceType(int id)
+void MCDAQThread::toggleSourceType(int id)
 {
-	mNIDAQ->toggleSourceType(id);
+	mMCDAQ->toggleSourceType(id);
 }
 
-SOURCE_TYPE NIDAQThread::getSourceTypeForInput(int index)
+SOURCE_TYPE MCDAQThread::getSourceTypeForInput(int index)
 {
-	return mNIDAQ->st[index];
+	return mMCDAQ->st[index];
 }
 
-void NIDAQThread::closeConnection()
+void MCDAQThread::closeConnection()
 {
 }
 
-int NIDAQThread::getNumAnalogInputs() const
+int MCDAQThread::getNumAnalogInputs() const
 {
-	return mNIDAQ->ai.size();
+	return mMCDAQ->ai.size();
 }
 
-int NIDAQThread::getNumDigitalInputs() const
+int MCDAQThread::getNumDigitalInputs() const
 {
-	return mNIDAQ->di.size();
+	return mMCDAQ->di.size();
 }
 
-void NIDAQThread::toggleAIChannel(int index)
+void MCDAQThread::toggleAIChannel(int index)
 {
-	mNIDAQ->aiChannelEnabled.set(index, !mNIDAQ->aiChannelEnabled[index]);
+	mMCDAQ->aiChannelEnabled.set(index, !mMCDAQ->aiChannelEnabled[index]);
 }
 
-void NIDAQThread::toggleDIChannel(int index)
+void MCDAQThread::toggleDIChannel(int index)
 {
-	mNIDAQ->diChannelEnabled.set(index, !mNIDAQ->diChannelEnabled[index]);
+	mMCDAQ->diChannelEnabled.set(index, !mMCDAQ->diChannelEnabled[index]);
 }
 
-void NIDAQThread::setVoltageRange(int rangeIndex)
+void MCDAQThread::setVoltageRange(int rangeIndex)
 {
 	voltageRangeIndex = rangeIndex;
-	mNIDAQ->voltageRange = mNIDAQ->aiVRanges[rangeIndex];
+	mMCDAQ->voltageRange = mMCDAQ->aiVRanges[rangeIndex];
 }
 
-void NIDAQThread::setSampleRate(int rateIndex)
+void MCDAQThread::setSampleRate(int rateIndex)
 {
 	sampleRateIndex = rateIndex;
-	mNIDAQ->samplerate = mNIDAQ->sampleRates[rateIndex];
+	mMCDAQ->samplerate = mMCDAQ->sampleRates[rateIndex];
 }
 
-int NIDAQThread::getVoltageRangeIndex()
+int MCDAQThread::getVoltageRangeIndex()
 {
 	return voltageRangeIndex;
 }
 
-int NIDAQThread::getSampleRateIndex()
+int MCDAQThread::getSampleRateIndex()
 {
 	return sampleRateIndex;
 }
 
-Array<String> NIDAQThread::getVoltageRanges()
+Array<String> MCDAQThread::getVoltageRanges()
 {
 	Array<String> voltageRanges;
-	for (auto range : mNIDAQ->aiVRanges)
+	for (auto range : mMCDAQ->aiVRanges)
 	{
 		voltageRanges.add(String(range.vmin) + "-" + String(range.vmax) + " V");
 	}
 	return voltageRanges;
 }
 
-Array<String> NIDAQThread::getSampleRates()
+Array<String> MCDAQThread::getSampleRates()
 {
 	Array<String> sampleRates;
-	for (auto rate : mNIDAQ->sampleRates)
+	for (auto rate : mMCDAQ->sampleRates)
 	{
 		sampleRates.add(String(rate) + " S/s");
 	}
 	return sampleRates;
 }
 
-bool NIDAQThread::foundInputSource()
+bool MCDAQThread::foundInputSource()
 {
     return inputAvailable;
 }
 
-XmlElement NIDAQThread::getInfoXml()
+XmlElement MCDAQThread::getInfoXml()
 {
 
 	//TODO: 
-	XmlElement nidaq_info("NI-DAQmx");
+	XmlElement MCDAQ_info("NI-DAQmx");
 	XmlElement* api_info = new XmlElement("API");
 	//api_info->setAttribute("version", api.version);
-	nidaq_info.addChildElement(api_info);
+	MCDAQ_info.addChildElement(api_info);
 
-	return nidaq_info;
+	return MCDAQ_info;
 
 }
 
 /** Initializes data transfer.*/
-bool NIDAQThread::startAcquisition()
+bool MCDAQThread::startAcquisition()
 {
 	//TODO:
-	mNIDAQ->startThread();
+	mMCDAQ->startThread();
 	this->startThread();
     return true;
 }
 
 /** Stops data transfer.*/
-bool NIDAQThread::stopAcquisition()
+bool MCDAQThread::stopAcquisition()
 {
 
 	if (isThreadRunning())
 	{
 		signalThreadShouldExit();
 	}
-	if (mNIDAQ->isThreadRunning())
+	if (mMCDAQ->isThreadRunning())
 	{
-		mNIDAQ->signalThreadShouldExit();
+		mMCDAQ->signalThreadShouldExit();
 	}
     return true;
 }
 
-void NIDAQThread::setDefaultChannelNames()
+void MCDAQThread::setDefaultChannelNames()
 {
 
 	for (int i = 0; i < getNumAnalogInputs(); i++)
 	{
 		ChannelCustomInfo info;
 		info.name = "AI" + String(i + 1);
-		info.gain = mNIDAQ->voltageRange.vmax / float(0x7fff);
+		info.gain = mMCDAQ->voltageRange.vmax / float(0x7fff);
 		channelInfo.set(i, info);
 	}
 
 }
 
-bool NIDAQThread::usesCustomNames() const
+bool MCDAQThread::usesCustomNames() const
 {
 	return true;
 }
 
 /** Returns the number of virtual subprocessors this source can generate */
-unsigned int NIDAQThread::getNumSubProcessors() const
+unsigned int MCDAQThread::getNumSubProcessors() const
 {
 	return 1;
 }
 
 /** Returns the number of continuous headstage channels the data source can provide.*/
-int NIDAQThread::getNumDataOutputs(DataChannel::DataChannelTypes type, int subProcessorIdx) const
+int MCDAQThread::getNumDataOutputs(DataChannel::DataChannelTypes type, int subProcessorIdx) const
 {
 	if (subProcessorIdx > 0) return 0;
 
@@ -289,35 +289,35 @@ int NIDAQThread::getNumDataOutputs(DataChannel::DataChannelTypes type, int subPr
 }
 
 /** Returns the number of TTL channels that each subprocessor generates*/
-int NIDAQThread::getNumTTLOutputs(int subProcessorIdx) const
+int MCDAQThread::getNumTTLOutputs(int subProcessorIdx) const
 {
 	return getNumDigitalInputs();
 }
 
 /** Returns the sample rate of the data source.*/
-float NIDAQThread::getSampleRate(int subProcessorIdx) const
+float MCDAQThread::getSampleRate(int subProcessorIdx) const
 {
-	return mNIDAQ->samplerate;
+	return mMCDAQ->samplerate;
 }
 
-float NIDAQThread::getBitVolts(const DataChannel* chan) const
+float MCDAQThread::getBitVolts(const DataChannel* chan) const
 {
-	return mNIDAQ->voltageRange.vmax / float(0x7fff);
+	return mMCDAQ->voltageRange.vmax / float(0x7fff);
 }
 
 
 
-void NIDAQThread::setTriggerMode(bool trigger)
+void MCDAQThread::setTriggerMode(bool trigger)
 {
     //TODO
 }
 
-void NIDAQThread::setAutoRestart(bool restart)
+void MCDAQThread::setAutoRestart(bool restart)
 {
 	//TODO
 }
 
-bool NIDAQThread::updateBuffer()
+bool MCDAQThread::updateBuffer()
 {
 	return true;
 }

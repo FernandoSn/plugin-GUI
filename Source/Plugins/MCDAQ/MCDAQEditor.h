@@ -21,26 +21,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#ifndef __NIDAQEDITOR_H__
-#define __NIDAQEDITOR_H__
+#ifndef __MCDAQEDITOR_H__
+#define __MCDAQEDITOR_H__
 
 #include <ProcessorHeaders.h>
 #include <EditorHeaders.h>
-#include "NIDAQThread.h"
+#include "MCDAQThread.h"
 
 class UtilityButton;
 /**
 
-User interface for NIDAQmx devices.
+User interface for MCDAQbd devices.
 
 @see SourceNode
 
 */
 class SourceNode;
 
-class NIDAQEditor;
-class NIDAQCanvas;
-class NIDAQInterface;
+class MCDAQEditor;
+class MCDAQCanvas;
+class MCDAQInterface;
 class Annotation;
 class ColorSelector;
 
@@ -59,16 +59,16 @@ private:
 class AIButton : public ToggleButton, public Timer
 {
 public:
-	AIButton(int id, NIDAQThread* thread);
+	AIButton(int id, MCDAQThread* thread);
 
 	void setId(int id);
 	int getId(); 
 	void setEnabled(bool);
 	void timerCallback();
 
-	NIDAQThread* thread;
+	MCDAQThread* thread;
 
-	friend class NIDAQEditor;
+	friend class MCDAQEditor;
 
 private:
 	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown);
@@ -81,16 +81,16 @@ private:
 class DIButton : public ToggleButton, public Timer
 {
 public:
-	DIButton(int id, NIDAQThread* thread);
+	DIButton(int id, MCDAQThread* thread);
 
 	void setId(int id);
 	int getId();
 	void setEnabled(bool);
 	void timerCallback() override;
 
-	NIDAQThread* thread;
+	MCDAQThread* thread;
 
-	friend class NIDAQEditor;
+	friend class MCDAQEditor;
 
 private:
 	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
@@ -103,7 +103,7 @@ private:
 class SourceTypeButton : public TextButton, public Timer
 {
 public:
-	SourceTypeButton(int id, NIDAQThread* thread, SOURCE_TYPE source);
+	SourceTypeButton(int id, MCDAQThread* thread, SOURCE_TYPE source);
 
 	void setId(int id);
 	int getId();
@@ -112,9 +112,9 @@ public:
 
 	void update(SOURCE_TYPE sourceType);
 
-	NIDAQThread* thread;
+	MCDAQThread* thread;
 
-	friend class NIDAQEditor;
+	friend class MCDAQEditor;
 
 private:
 
@@ -126,7 +126,7 @@ private:
 class FifoMonitor : public Component, public Timer
 {
 public:
-	FifoMonitor(NIDAQThread* thread);
+	FifoMonitor(MCDAQThread* thread);
 
 	void setFillPercentage(float percentage);
 
@@ -136,26 +136,26 @@ private:
 	void paint(Graphics& g);
 
 	float fillPercentage;
-	NIDAQThread* thread;
+	MCDAQThread* thread;
 	int id;
 };
 
 class BackgroundLoader : public Thread
 {
 public:
-	BackgroundLoader(NIDAQThread* t, NIDAQEditor* e);
+	BackgroundLoader(MCDAQThread* t, MCDAQEditor* e);
 	~BackgroundLoader();
 	void run();
 private:
-	NIDAQThread* t;
-	NIDAQEditor* e;
+	MCDAQThread* t;
+	MCDAQEditor* e;
 };
 
-class NIDAQEditor : public GenericEditor, public ComboBox::Listener
+class MCDAQEditor : public GenericEditor, public ComboBox::Listener
 {
 public:
-	NIDAQEditor(GenericProcessor* parentNode, NIDAQThread* thread, bool useDefaultParameterEditors);
-	virtual ~NIDAQEditor();
+	MCDAQEditor(GenericProcessor* parentNode, MCDAQThread* thread, bool useDefaultParameterEditors);
+	virtual ~MCDAQEditor();
 
 	void draw();
 
@@ -182,9 +182,9 @@ private:
 	ScopedPointer<BackgroundLoader> uiLoader;
 	ScopedPointer<EditorBackground> background;
 
-	NIDAQThread* thread;
+	MCDAQThread* thread;
 
-	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NIDAQEditor);
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MCDAQEditor);
 
 };
 

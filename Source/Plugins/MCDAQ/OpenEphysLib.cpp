@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <PluginInfo.h>
-#include "NIDAQThread.h"
+#include "MCDAQThread.h"
 #include <string>
 
 #ifdef WIN32
@@ -49,7 +49,7 @@ extern "C" EXPORT int getPluginInfo(int index, Plugin::PluginInfo* info)
 	case 0:
 		info->type = PluginType::PLUGIN_TYPE_DATA_THREAD;
 		info->dataThread.name = "NI-DAQmx"; 
-		info->dataThread.creator = &createDataThread<NIDAQThread>;
+		info->dataThread.creator = &createDataThread<MCDAQThread>;
 		break;
 	default:
 		return -1;
