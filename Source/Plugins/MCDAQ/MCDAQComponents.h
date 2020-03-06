@@ -38,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ERR_BUFF_SIZE 2048
 #define STR2CHR( jString ) ((jString).toUTF8())
 
+#define MAXNUMDEVS 10
 
 //#define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 //#define MCDAQErrChk(ULStat) if(ULStat != 0) throw Board::MCCException( __LINE__,__FILE__,ULStat ) This is ideal but OE architecture doesn't support exceptions, I'll try to implement this is in the future. For now I am outputting to console.
@@ -78,6 +79,8 @@ public:
 
 	String getDeviceFromIndex(int deviceIndex);
 	String getDeviceFromProductName(String productName);
+	const MCDAQ::DaqDeviceDescriptor& GetDeviceDescFromIndex(int deviceIndex);
+	const MCDAQ::DaqDeviceDescriptor& GetDeviceDescProductName(int deviceIndex);
 
 	int getNumAvailableDevices();
 
@@ -85,16 +88,16 @@ public:
 
 private:
 	int selectedDeviceIndex; //This var seems to be not init.
-	int NumberOfDevices;
-	std::vector<MCDAQ::DaqDeviceDescriptor> DeviceInventory;
-
+	int NumberOfDevices = MAXNUMDEVS;
+	MCDAQ::DaqDeviceDescriptor DeviceInventory[MAXNUMDEVS];
+	float   RevLevel = (float)CURRENTREVNUM;
 	
 };
 
 struct VRange {
-	MCDAQ::float64 vmin, vmax;
+	float vmin, vmax;
 	VRange() : vmin(0), vmax(0) {}
-	VRange(MCDAQ::float64 rmin, MCDAQ::float64 rmax)
+	VRange(float rmin, float rmax)
 		: vmin(rmin), vmax(rmax) {}
 };
 
@@ -117,7 +120,7 @@ class MCDAQbd : public Thread
 public:
 
 	MCDAQbd();
-	MCDAQbd(const char* deviceName);
+	MCDAQbd(MCDAQ::DaqDeviceDescriptor DeviceInfo, int BoardNum);
 	~MCDAQbd();
 
 	void connect(); 
@@ -140,33 +143,36 @@ public:
 
 private:
 
-	String				deviceName;
-	String				productName;
-	MCDAQ::int32		deviceCategory;
-	MCDAQ::uInt32		productNum;
-	MCDAQ::uInt32		serialNum;
-	bool				isUSBDevice;
-	bool				simAISamplingSupported;
-	MCDAQ::float64		adcResolution;
-	SRange 				sampleRateRange;
+	String							deviceName;
+	String							productName;
+	MCDAQ::DaqDeviceInterface		deviceCategory;
+	unsigned int					productNum;
+	long long						serialNum;
+	int								BoardNum;
+	bool							isUSBDevice;
+	bool							simAISamplingSupported;
+	int								ADCResolution;
+	bool							LowRes;
+	bool							DiffCh;
+	SRange 							sampleRateRange;
 
-	Array<VRange>		aiVRanges;
-	VRange				voltageRange;
+	Array<VRange>					aiVRanges;
+	VRange							voltageRange;
 
-	Array<float>		sampleRates;
-	float				samplerate;
+	Array<float>					sampleRates;
+	float							samplerate;
 
-	Array<AnalogIn> 	ai;
-	Array<MCDAQ::int32> terminalConfig;
-	Array<SOURCE_TYPE>  st;
-	Array<bool>			aiChannelEnabled;
+	Array<AnalogIn> 				ai;
+	//Array<MCDAQ::int32>				terminalConfig;
+	//Array<SOURCE_TYPE>				st;
+	Array<bool>						aiChannelEnabled;
 
-	Array<DigitalIn> 	di;
-	Array<bool>			diChannelEnabled;
+	Array<DigitalIn> 				di;
+	Array<bool>						diChannelEnabled;
 
-	MCDAQ::float64		ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
-	MCDAQ::uInt8		di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
-	MCDAQ::uInt32		di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
+	MCDAQ::float64					ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	MCDAQ::uInt8					di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
+	MCDAQ::uInt32					di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
 
 	int64 ai_timestamp;
 	uint64 eventCode;

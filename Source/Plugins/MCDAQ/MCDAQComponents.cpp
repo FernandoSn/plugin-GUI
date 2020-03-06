@@ -31,7 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 
 #include "MCDAQComponents.h"
+#include "mc-api/Utilities.h"
 #include <fstream>
+#include <string>
 
 std::ofstream DebugMCFile("DebugMCFile.txt");
 
@@ -70,28 +72,25 @@ void MCDAQAPI::getInfo()
 
 MCDAQbdDeviceManager::MCDAQbdDeviceManager() 
 {
-	MCDAQ::cbIgnoreInstaCal();
-	DeviceInventory.reserve(10); //this is arbitrary but i am assuming that no one would connect more than 10 MCDAQ devices to a PC.
+	//Disabling MCC error system so we can handle them ourselves.
+	MCDAQErrChk(MCDAQ::cbErrHandling(DONTPRINT, DONTSTOP));
+	//Ignore instacall
+	MCDAQErrChk(MCDAQ::cbIgnoreInstaCal());
+	//Set the version of the api.
+	MCDAQErrChk(MCDAQ::cbDeclareRevision(&RevLevel));
+	
 }
 
 MCDAQbdDeviceManager::~MCDAQbdDeviceManager() {}
 
 void MCDAQbdDeviceManager::scanForDevices()
 {
-	MCDAQ::cbGetDaqDeviceInventory(MCDAQ::DaqDeviceInterface::ANY_IFC, DeviceInventory.data(), &NumberOfDevices);
-	DeviceInventory.shrink_to_fit();
-
-	for (auto it = DeviceInventory.begin(), end = DeviceInventory.end(); it < end; ++it)
-	{
-
-		DebugMCFile << it->ProductName << " : ";
-
-	}
+	MCDAQErrChk(MCDAQ::cbGetDaqDeviceInventory(MCDAQ::DaqDeviceInterface::ANY_IFC, DeviceInventory, &NumberOfDevices));
 }
 
-String MCDAQbdDeviceManager::getDeviceFromIndex(int index)
+String MCDAQbdDeviceManager::getDeviceFromIndex(int deviceIndex)
 {
-	return String(DeviceInventory[index].ProductName);
+	return String(DeviceInventory[deviceIndex].ProductName);
 }
 
 String MCDAQbdDeviceManager::getDeviceFromProductName(String productName)
@@ -99,6 +98,9 @@ String MCDAQbdDeviceManager::getDeviceFromProductName(String productName)
 	//I don't really get why are they doing this redundant instantiation
 	//Anyway I will adapt my code to this and replace Juce ScopedPointers to Std unique ptr. In the future I'll rewrite this but for now this should work
 	//I dont think this gonna impact performance, plus memory is being freed so it is fine for now.
+
+	//Update: I dont think I am going to use this func at all. I believe this was created because for NIDAQmx the device name and product name are different.
+	//for MC the "device name" doesnt exist.
 
 	for (auto it = DeviceInventory.begin(), end = DeviceInventory.end(); it < end; ++it)
 	{
@@ -112,6 +114,16 @@ String MCDAQbdDeviceManager::getDeviceFromProductName(String productName)
 	return "";
 }
 
+const MCDAQ::DaqDeviceDescriptor& MCDAQbdDeviceManager::GetDeviceDescFromIndex(int deviceIndex)
+{
+	return DeviceInventory[deviceIndex];
+}
+
+const MCDAQ::DaqDeviceDescriptor& MCDAQbdDeviceManager::GetDeviceDescProductName(int deviceIndex)
+{
+	// TODO: insert return statement here
+}
+
 int MCDAQbdDeviceManager::getNumAvailableDevices()
 {
 	return NumberOfDevices;
@@ -119,15 +131,33 @@ int MCDAQbdDeviceManager::getNumAvailableDevices()
 
 MCDAQbd::MCDAQbd() : Thread("MCDAQbd_Thread") {};
 
-MCDAQbd::MCDAQbd(const char* deviceName) 
+MCDAQbd::MCDAQbd(MCDAQ::DaqDeviceDescriptor DeviceInfo, int BoardNum)
 	: Thread("MCDAQbd_Thread"),
-	deviceName(deviceName)
+	deviceName(DeviceInfo.DevString),
+	productName(DeviceInfo.ProductName),
+	deviceCategory(DeviceInfo.InterfaceType),
+	productNum(DeviceInfo.ProductID),
+	serialNum(DeviceInfo.NUID),
+	BoardNum(BoardNum)
 {
+	//Creating Board on MCC Lib.
+	MCDAQErrChk(MCDAQ::cbCreateDaqDevice(BoardNum, DeviceInfo));
 
-	adcResolution = 0; //bits
+	//TODO: Aadd a check for diff channels. Test this with Usb-204 board.
+	/*if (MCDAQ::cbAInputMode(BoardNum, SINGLE_ENDED) != 0)
+		DiffCh = false;*/
+
+	//Getting the ADC Resolution.
+	MCDAQErrChk(MCDAQ::cbGetConfig(BOARDINFO, BoardNum, 0, BIADRES, &ADCResolution));
+
+	//Getting the resolution bool.
+	ADCResolution > 16 ? LowRes = false : LowRes = true;
+
+
 
 	connect();
 
+	//this could be static.
 	float sample_rates[NUM_SAMPLE_RATES] = {
 		1000.0f, 1250.0f, 1500.0f,
 		2000.0f, 2500.0f,
@@ -146,7 +176,7 @@ MCDAQbd::MCDAQbd(const char* deviceName)
 
 	int idx = 0;
 	while (sample_rates[idx] <= sampleRateRange.smaxm && idx < NUM_SAMPLE_RATES)
-		sampleRates.add(sample_rates[idx++]); 
+		sampleRates.add(sample_rates[idx++]);
 
 	// Default to highest sample rate
 	samplerate = sampleRates[sampleRates.size() - 1];
@@ -160,6 +190,7 @@ MCDAQbd::MCDAQbd(const char* deviceName)
 
 	for (int i = 0; i < diChannelEnabled.size(); i++)
 		diChannelEnabled.set(i, true);
+
 
 }
 
@@ -178,41 +209,7 @@ String MCDAQbd::getSerialNumber()
 
 void MCDAQbd::connect()
 {
-	/* Get category type */
-	MCDAQ::DAQmxGetDevProductCategory(STR2CHR(deviceName), &deviceCategory);
-	printf("Device Category: %i\n", deviceCategory);
 
-	/* Get product name */
-	char pname[2048] = { 0 };
-	MCDAQ::DAQmxGetDevProductType(STR2CHR(deviceName), &pname[0], sizeof(pname));
-	productName = String(&pname[0]);
-	printf("Product Name: %s\n", productName);
-
-	isUSBDevice = false;
-	if (productName.contains("USB"))
-		isUSBDevice = true;
-
-	MCDAQ::DAQmxGetDevProductNum(STR2CHR(deviceName), &productNum);
-	printf("Product Num: %d\n", productNum);
-
-	MCDAQ::DAQmxGetDevSerialNum(STR2CHR(deviceName), &serialNum);
-	printf("Serial Num: %d\n", serialNum);
-
-	/* Get simultaneous sampling supported */
-	MCDAQ::bool32 supported = false;
-	MCDAQ::DAQmxGetDevAISimultaneousSamplingSupported(STR2CHR(deviceName), &supported);
-	simAISamplingSupported = (supported == 1);
-	//printf("Simultaneous sampling %ssupported\n", simAISamplingSupported ? "" : "NOT ");
-
-	/* Get device sample rates */
-	MCDAQ::float64 smin;
-	MCDAQ::DAQmxGetDevAIMinRate(STR2CHR(deviceName), &smin);
-
-	MCDAQ::float64 smaxs;
-	MCDAQ::DAQmxGetDevAIMaxSingleChanRate(STR2CHR(deviceName), &smaxs);
-
-	MCDAQ::float64 smaxm;
-	MCDAQ::DAQmxGetDevAIMaxMultiChanRate(STR2CHR(deviceName), &smaxm);
 
 	fflush(stdout);
 
@@ -233,115 +230,53 @@ void MCDAQbd::connect()
 
 void MCDAQbd::getAIVoltageRanges()
 {
+	char RangeString[RANGENAMELEN];
+	double RangeVolts;
 
-	MCDAQ::float64 data[512];
-	MCDAQ::DAQmxGetDevAIVoltageRngs(STR2CHR(deviceName), &data[0], sizeof(data));
-
-	//printf("Detected voltage ranges:\n");
-	for (int i = 0; i < 512; i += 2)
+	if (LowRes)
 	{
-		MCDAQ::float64 vmin = data[i];
-		MCDAQ::float64 vmax = data[i + 1];
-		if (vmin == vmax || vmax < 1e-2)
-			break;
-		//printf("Vmin: %f Vmax: %f \n", vmin, vmax);
-		aiVRanges.add(VRange(vmin, vmax));
+		unsigned short dataValue;
+		for (int RangeCode = 0; RangeCode < 20; i++)
+		{
+			if (!MCDAQ::cbAIn(BoardNum, 0, RangeCode, &dataValue))
+			{
+				GetRangeInfo(RangeCode, RangeString, &RangeVolts);
+				aiVRanges.add(VRange(0.0 - RangeVolts/2.0, RangeVolts/2.0));
+			}
+		}
 	}
-
 	fflush(stdout);
-
 }
 
 void MCDAQbd::getAIChannels()
 {
+	//TODO: Toggle between SE or DIFF
+	MCDAQErrChk(MCDAQ::cbAInputMode(BoardNum, SINGLE_ENDED));
+	DiffCh = true;
 
-	MCDAQ::int32	error = 0;
-	char			errBuff[ERR_BUFF_SIZE] = { '\0' };
+	int NumberOfChannels;
 
-	MCDAQ::TaskHandle adcResolutionQuery;
-	MCDAQ::DAQmxCreateTask("ADCResolutionQuery", &adcResolutionQuery);
-
-	char data[2048];
-	MCDAQ::DAQmxGetDevAIPhysicalChans(STR2CHR(deviceName), &data[0], sizeof(data));
-
-	StringArray channel_list;
-	channel_list.addTokens(&data[0], ", ", "\"");
+	MCDAQErrChk(MCDAQ::cbGetConfig(BOARDINFO, BoardNum, 0, DINUMBITS, &NumberOfChannels));
 
 	int aiCount = 0;
 
-	VRange vRange = aiVRanges[aiVRanges.size() - 1];
+	VRange vRange = aiVRanges[0];
 
-	for (int i = 0; i < channel_list.size(); i++)
+	for (int i = 0; i < NumberOfChannels; i++)
 	{
-		if (channel_list[i].length() > 0 && aiCount++ < MAX_ANALOG_CHANNELS)
+		if (aiCount++ < MAX_ANALOG_CHANNELS)
 		{
 
-			/* Get channel termination */
-			MCDAQ::int32 termCfgs;
-			MCDAQ::DAQmxGetPhysicalChanAITermCfgs(channel_list[i].toUTF8(), &termCfgs);
+			ai.add(AnalogIn(std::to_string(i)));
 
-			printf("%s - ", channel_list[i].toUTF8());
-			printf("Terminal Config: %d\n", termCfgs);
+			//terminalConfig.add(termCfgs);
 
-			ai.add(AnalogIn(channel_list[i].toUTF8()));
-
-			terminalConfig.add(termCfgs);
-
-			if (termCfgs & DAQmx_Val_Bit_TermCfg_RSE)
-			{
-				st.add(SOURCE_TYPE::RSE);
-			}
-			else if (termCfgs & DAQmx_Val_Bit_TermCfg_NRSE)
-			{
-				st.add(SOURCE_TYPE::NRSE);
-			}
-			else if (termCfgs & DAQmx_Val_Bit_TermCfg_Diff)
-			{
-				st.add(SOURCE_TYPE::DIFF);
-			}
-			else 
-			{
-				st.add(SOURCE_TYPE::PSEUDO_DIFF);
-			}
-
-			/* Get channel ADC resolution */
-			DAQmxErrChk(MCDAQ::DAQmxCreateAIVoltageChan(
-				adcResolutionQuery,			//task handle
-				STR2CHR(ai[aiCount-1].id),	//MCDAQ physical channel name (e.g. dev1/ai1)
-				"",							//user-defined channel name (optional)
-				DAQmx_Val_Cfg_Default,		//input terminal configuration
-				vRange.vmin,				//min input voltage
-				vRange.vmax,				//max input voltage
-				DAQmx_Val_Volts,			//voltage units
-				NULL));
-
-			DAQmxErrChk(MCDAQ::DAQmxGetAIResolution(adcResolutionQuery, channel_list[i].toUTF8(), &adcResolution));
 			aiChannelEnabled.add(true);
 
 		}
 	}
 
 	fflush(stdout);
-	MCDAQ::DAQmxStopTask(adcResolutionQuery);
-	MCDAQ::DAQmxClearTask(adcResolutionQuery);
-
-Error:
-
-	if (DAQmxFailed(error))
-		MCDAQ::DAQmxGetExtendedErrorInfo(errBuff, ERR_BUFF_SIZE);
-
-	if (adcResolutionQuery != 0) {
-		// DAQmx Stop Code
-		MCDAQ::DAQmxStopTask(adcResolutionQuery);
-		MCDAQ::DAQmxClearTask(adcResolutionQuery);
-	}
-
-	if (DAQmxFailed(error))
-		printf("DAQmx Error: %s\n", errBuff);
-	fflush(stdout);
-
-	return;
-
 }
 
 void MCDAQbd::getDIChannels()

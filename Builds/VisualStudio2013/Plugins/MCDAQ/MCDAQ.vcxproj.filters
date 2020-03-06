@@ -44,5 +44,20 @@
     <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\cbw.h">
       <Filter>Source Files\mc-api</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Analog.h">
+      <Filter>Source Files\mc-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Board.h">
+      <Filter>Source Files\mc-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Counters.h">
+      <Filter>Source Files\mc-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Digital.h">
+      <Filter>Source Files\mc-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Utilities.h">
+      <Filter>Source Files\mc-api</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

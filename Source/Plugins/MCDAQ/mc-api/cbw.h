@@ -12,7 +12,6 @@
  *
  *
  **************************************************************************/
-
 #if !defined (NT_DRIVER) && !defined (WIN95_DRIVER)
 #include <windows.h>
 #include <time.h>

@@ -25,7 +25,12 @@
     <ClCompile Include="..\..\..\..\Source\Plugins\MCDAQ\OpenEphysLib.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Analog.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Board.h" />
     <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\cbw.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Counters.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Digital.h" />
+    <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\mc-api\Utilities.h" />
     <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\MCDAQComponents.h" />
     <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\MCDAQEditor.h" />
     <ClInclude Include="..\..\..\..\Source\Plugins\MCDAQ\MCDAQThread.h" />
