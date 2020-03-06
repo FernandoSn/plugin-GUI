@@ -37,7 +37,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_DIGITAL_CHANNELS 8
 #define ERR_BUFF_SIZE 2048
 #define STR2CHR( jString ) ((jString).toUTF8())
-#define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
+
+
+//#define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
+//#define MCDAQErrChk(ULStat) if(ULStat != 0) throw Board::MCCException( __LINE__,__FILE__,ULStat ) This is ideal but OE architecture doesn't support exceptions, I'll try to implement this is in the future. For now I am outputting to console.
+#define MCDAQErrChk(ULStat) if(ULStat != 0) std::cout << "MCDAQ error code(ULStat): " << ULStat;
 
 class MCDAQbd;
 class InputChannel;
@@ -80,8 +84,10 @@ public:
 	friend class MCDAQThread;
 
 private:
-	int selectedDeviceIndex;
-	StringArray devices;
+	int selectedDeviceIndex; //This var seems to be not init.
+	int NumberOfDevices;
+	std::vector<MCDAQ::DaqDeviceDescriptor> DeviceInventory;
+
 	
 };
 

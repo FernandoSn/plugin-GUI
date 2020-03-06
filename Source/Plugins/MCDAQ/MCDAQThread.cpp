@@ -38,7 +38,7 @@ GenericEditor* MCDAQThread::createEditor(SourceNode* sn)
 MCDAQThread::MCDAQThread(SourceNode* sn) : DataThread(sn), inputAvailable(false)
 {
 
-	dm = new MCDAQbdDeviceManager();
+	dm = std::make_unique<MCDAQbdDeviceManager>();
 
 	dm->scanForDevices();
 
@@ -60,8 +60,7 @@ MCDAQThread::~MCDAQThread()
 
 int MCDAQThread::openConnection()
 {
-
-	mMCDAQ = new MCDAQbd(STR2CHR(dm->getDeviceFromIndex(0)));
+	mMCDAQ = std::make_unique<MCDAQbd>(STR2CHR(dm->getDeviceFromIndex(0)));
 
 	sourceBuffers.add(new DataBuffer(getNumAnalogInputs(), 10000));
 

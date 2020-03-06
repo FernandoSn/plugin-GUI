@@ -1,8 +1,14 @@
 /*
 ------------------------------------------------------------------
 
-This file is part of the Open Ephys GUI
-Copyright (C) 2019 Allen Institute for Brain Science and Open Ephys
+Fernando Santos Valencia
+The Franks Lab
+the MCC plugin is currently under development based on the NIDAQmx plugin.
+In my opinion NIDAQmx plugin needs improvement.
+I will not change the architecture for now due to time constrains.
+
+Additionally, I found Juce library not the best to handle strings.
+all the String management could be done better with the standard library.
 
 ------------------------------------------------------------------
 
@@ -25,6 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 
 #include "MCDAQComponents.h"
+#include <fstream>
+
+std::ofstream DebugMCFile("DebugMCFile.txt");
 
 static int32 GetTerminalNameWithDevPrefix(MCDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[]);
 
@@ -62,48 +71,50 @@ void MCDAQAPI::getInfo()
 MCDAQbdDeviceManager::MCDAQbdDeviceManager() 
 {
 	MCDAQ::cbIgnoreInstaCal();
+	DeviceInventory.reserve(10); //this is arbitrary but i am assuming that no one would connect more than 10 MCDAQ devices to a PC.
 }
 
 MCDAQbdDeviceManager::~MCDAQbdDeviceManager() {}
 
 void MCDAQbdDeviceManager::scanForDevices()
 {
+	MCDAQ::cbGetDaqDeviceInventory(MCDAQ::DaqDeviceInterface::ANY_IFC, DeviceInventory.data(), &NumberOfDevices);
+	DeviceInventory.shrink_to_fit();
 
-	char data[2048] = { 0 };
-	MCDAQ::DAQmxGetSysDevNames(data, sizeof(data));
+	for (auto it = DeviceInventory.begin(), end = DeviceInventory.end(); it < end; ++it)
+	{
 
-	StringArray deviceList; 
-	deviceList.addTokens(&data[0], ", ", "\"");
+		DebugMCFile << it->ProductName << " : ";
 
-	StringArray deviceNames;
-	StringArray productList;
-
-	for (int i = 0; i < deviceList.size(); i++)
-		if (deviceList[i].length() > 0)
-			devices.add(deviceList[i].toUTF8());
-
+	}
 }
 
 String MCDAQbdDeviceManager::getDeviceFromIndex(int index)
 {
-	return devices[index];
+	return String(DeviceInventory[index].ProductName);
 }
 
 String MCDAQbdDeviceManager::getDeviceFromProductName(String productName)
 {
-	for (auto device : devices)
-	{
-		ScopedPointer<MCDAQbd> n = new MCDAQbd(STR2CHR(device));
-		if (n->getProductName() == productName)
-			return device;
-	}
-	return "";
+	//I don't really get why are they doing this redundant instantiation
+	//Anyway I will adapt my code to this and replace Juce ScopedPointers to Std unique ptr. In the future I'll rewrite this but for now this should work
+	//I dont think this gonna impact performance, plus memory is being freed so it is fine for now.
 
+	for (auto it = DeviceInventory.begin(), end = DeviceInventory.end(); it < end; ++it)
+	{
+		
+		std::unique_ptr<MCDAQbd> n = std::make_unique<MCDAQbd>(it->ProductName);
+		if (n->getProductName() == productName)
+			return String(it->ProductName);
+
+	}
+
+	return "";
 }
 
 int MCDAQbdDeviceManager::getNumAvailableDevices()
 {
-	return devices.size();
+	return NumberOfDevices;
 }
 
 MCDAQbd::MCDAQbd() : Thread("MCDAQbd_Thread") {};

@@ -168,13 +168,13 @@ private:
 	MCDAQAPI api;
 
 	/* Manages connected MCDAQ devices */
-	ScopedPointer<MCDAQbdDeviceManager> dm; 
+	std::unique_ptr<MCDAQbdDeviceManager> dm;
 
 	/* Flag any available devices */
 	bool inputAvailable;
 
 	/* Handle to chosen MCDAQ device */
-	ScopedPointer<MCDAQbd> mMCDAQ;
+	std::unique_ptr<MCDAQbd> mMCDAQ;
 
 	/* Handle to input channels */
 	Array<AnalogIn> ai;
