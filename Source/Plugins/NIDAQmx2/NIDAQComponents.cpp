@@ -523,6 +523,46 @@ void NIDAQmx::run()
 
 	uint64 linesEnabled = 0;
 
+
+
+
+
+
+
+	int Packet20Hz = 256 * 4;
+	int LowChan = 0;
+	int HighChan = 7;
+	long Rate = 2000;
+	int Gain = BIP5VOLTS;
+	unsigned Options = CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //CONVERTDATA
+	int BoardNum = 0;
+	float     revision = (float)CURRENTREVNUM;
+
+	MCDAQ::cbDeclareRevision(&revision);
+	MCDAQ::cbErrHandling(PRINTALL, DONTSTOP);
+
+	MCDAQ::cbAInputMode(BoardNum, SINGLE_ENDED);
+	//Enable CALLBACK Board::ProcBackgroundBoard
+	MCDAQ::cbEnableEvent(BoardNum, ON_DATA_AVAILABLE, Packet20Hz, NIDAQmx::ProcBackgroundBoard, this);
+
+	// IMPORTANT : Putting this thread to sleep to get the correct Packets.
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	// Starting Scan.
+	MCDAQ::cbAInScan(BoardNum, LowChan, HighChan, Packet20Hz, &Rate, Gain,
+		reinterpret_cast<void*>(ai_dataRaw), Options);
+
+
+
+
+
+
+
+
+
+
+
+
 	ai_timestamp = 0;
 	eventCode = 0;
 
@@ -620,7 +660,7 @@ void NIDAQmx::run()
 	/*********************************************/
 	// DAQmx Stop Code
 	/*********************************************/
-
+	MCDAQ::cbStopBackground(BoardNum, AIFUNCTION);
 	NIDAQ::DAQmxStopTask(taskHandleAI);
 	NIDAQ::DAQmxClearTask(taskHandleAI);
 	NIDAQ::DAQmxStopTask(taskHandleDI);
@@ -650,6 +690,27 @@ Error:
 
 	return;
 
+}
+
+void NIDAQmx::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned EventData, void* UserData)
+{
+	//NOTE: this Proc could be implemented passing a pointer to This Board on the UserData Param.
+	//However I found that it is a bit slower. Static variables do the work faster, however the code looks messier.
+	// Im gonna stick with static variables for now, but be aware that it is posible to use pure member variables.
+
+
+	//ftRec.StartFrame();
+	//std::memcpy(TempRecData, RecordingData, TempCpySize);
+	//RecordingFile.write(reinterpret_cast<char*>(TempRecData), TempCpySize);
+	//BoardGfxReady = true;
+	//ftRec.StopFrame(logfileRec);
+
+	//DebugMCFile << EventData << "\n";
+	//Conteo = EventData;
+
+	std::memcpy(((NIDAQmx*)UserData)->ai_dataMCC, ((NIDAQmx*)UserData)->ai_dataRaw, 256 * 4 * 2);
+
+	((NIDAQmx*)UserData)->ProcFinished = true;
 }
 
 InputChannel::InputChannel()

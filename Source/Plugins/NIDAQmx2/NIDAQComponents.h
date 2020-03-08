@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 
 #include "nidaq-api/NIDAQmx.h"
+#include "nidaq-api/cbw.h"
 
 #define NUM_SOURCE_TYPES 4
 #define CHANNEL_BUFFER_SIZE 1000
@@ -134,6 +135,10 @@ public:
 
 private:
 
+	static void CALLBACK ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned EventData, void* UserData);
+
+private:
+
 	String				deviceName;
 	String				productName;
 	NIDAQ::int32		deviceCategory;
@@ -159,6 +164,8 @@ private:
 	Array<bool>			diChannelEnabled;
 
 	NIDAQ::float64		ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	NIDAQ::float64		ai_dataMCC[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	NIDAQ::float64		ai_dataRaw[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
 	NIDAQ::uInt8		di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
 	NIDAQ::uInt32		di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
 
@@ -166,6 +173,8 @@ private:
 	uint64 eventCode;
 
 	DataBuffer* aiBuffer;
+
+	bool ProcFinished = false;
 
 };
 

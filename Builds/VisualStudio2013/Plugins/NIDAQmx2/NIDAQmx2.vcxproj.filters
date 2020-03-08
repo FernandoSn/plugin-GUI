@@ -30,6 +30,24 @@
     <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx2\NIDAQThread.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx2\nidaq-api\Analog.h">
+      <Filter>Source Files\nidaq-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx2\nidaq-api\Board.h">
+      <Filter>Source Files\nidaq-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx2\nidaq-api\cbw.h">
+      <Filter>Source Files\nidaq-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx2\nidaq-api\Counters.h">
+      <Filter>Source Files\nidaq-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx2\nidaq-api\Digital.h">
+      <Filter>Source Files\nidaq-api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Source\Plugins\NIDAQmx2\nidaq-api\Utilities.h">
+      <Filter>Source Files\nidaq-api</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Source\Plugins\NIDAQmx2\NIDAQComponents.cpp">
