@@ -37,30 +37,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 std::ofstream DebugMCFile("DebugMCFile.txt");
 
-static int32 GetTerminalNameWithDevPrefix(MCDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[]);
-
-static int32 GetTerminalNameWithDevPrefix(MCDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[])
-{
-
-	MCDAQ::int32	error = 0;
-	char			device[256];
-	MCDAQ::int32	productCategory;
-	MCDAQ::uInt32	numDevices, i = 1;
-
-	DAQmxErrChk(MCDAQ::DAQmxGetTaskNumDevices(taskHandle, &numDevices));
-	while (i <= numDevices) {
-		DAQmxErrChk(MCDAQ::DAQmxGetNthTaskDevice(taskHandle, i++, device, 256));
-		DAQmxErrChk(MCDAQ::DAQmxGetDevProductCategory(device, &productCategory));
-		if (productCategory != DAQmx_Val_CSeriesModule && productCategory != DAQmx_Val_SCXIModule) {
-			*triggerName++ = '/';
-			strcat(strcat(strcpy(triggerName, device), "/"), terminalName);
-			break;
-		}
-	}
-
-Error:
-	return error;
-}
 
 MCDAQComponent::MCDAQComponent() : serial_number(0) {}
 MCDAQComponent::~MCDAQComponent() {}
@@ -102,14 +78,14 @@ String MCDAQbdDeviceManager::getDeviceFromProductName(String productName)
 	//Update: I dont think I am going to use this func at all. I believe this was created because for NIDAQmx the device name and product name are different.
 	//for MC the "device name" doesnt exist.
 
-	for (auto it = DeviceInventory.begin(), end = DeviceInventory.end(); it < end; ++it)
+	/*for (auto it = DeviceInventory.begin(), end = DeviceInventory.end(); it < end; ++it)
 	{
 		
 		std::unique_ptr<MCDAQbd> n = std::make_unique<MCDAQbd>(it->ProductName);
 		if (n->getProductName() == productName)
 			return String(it->ProductName);
 
-	}
+	}*/
 
 	return "";
 }
@@ -119,9 +95,10 @@ const MCDAQ::DaqDeviceDescriptor& MCDAQbdDeviceManager::GetDeviceDescFromIndex(i
 	return DeviceInventory[deviceIndex];
 }
 
-const MCDAQ::DaqDeviceDescriptor& MCDAQbdDeviceManager::GetDeviceDescProductName(int deviceIndex)
+const MCDAQ::DaqDeviceDescriptor& MCDAQbdDeviceManager::GetDeviceDescProductName(String productName)
 {
 	// TODO: insert return statement here
+	return DeviceInventory[0];
 }
 
 int MCDAQbdDeviceManager::getNumAvailableDevices()
@@ -131,7 +108,7 @@ int MCDAQbdDeviceManager::getNumAvailableDevices()
 
 MCDAQbd::MCDAQbd() : Thread("MCDAQbd_Thread") {};
 
-MCDAQbd::MCDAQbd(MCDAQ::DaqDeviceDescriptor DeviceInfo, int BoardNum)
+MCDAQbd::MCDAQbd(const MCDAQ::DaqDeviceDescriptor& DeviceInfo, int BoardNum)
 	: Thread("MCDAQbd_Thread"),
 	deviceName(DeviceInfo.DevString),
 	productName(DeviceInfo.ProductName),
@@ -217,10 +194,8 @@ void MCDAQbd::connect()
 	getAIChannels();
 	getDIChannels();
 
-	if (!simAISamplingSupported)
-		smaxm = smaxs / ai.size();
 
-	sampleRateRange = SRange(smin, smaxs, smaxm);
+	sampleRateRange = SRange(500, 30000, 30000); //this is arbitrary but MCC library doesnt support checking max sampling rate before acqusitionn.
 
 	printf("Min sample rate: %1.2f\n", sampleRateRange.smin);
 	printf("Max single channel sample rate: %1.2f\n", sampleRateRange.smaxs);
@@ -236,7 +211,7 @@ void MCDAQbd::getAIVoltageRanges()
 	if (LowRes)
 	{
 		unsigned short dataValue;
-		for (int RangeCode = 0; RangeCode < 20; i++)
+		for (int RangeCode = 0; RangeCode < 20; RangeCode++)
 		{
 			if (!MCDAQ::cbAIn(BoardNum, 0, RangeCode, &dataValue))
 			{
@@ -252,22 +227,24 @@ void MCDAQbd::getAIChannels()
 {
 	//TODO: Toggle between SE or DIFF
 	MCDAQErrChk(MCDAQ::cbAInputMode(BoardNum, SINGLE_ENDED));
-	DiffCh = true;
+	SupportsDiff = true;
+	DiffOn = false;
 
-	int NumberOfChannels;
+	int NumberOfAIChannels;
 
-	MCDAQErrChk(MCDAQ::cbGetConfig(BOARDINFO, BoardNum, 0, DINUMBITS, &NumberOfChannels));
+	MCDAQErrChk(MCDAQ::cbGetConfig(BOARDINFO, BoardNum, 0, DINUMBITS, &NumberOfAIChannels));
 
 	int aiCount = 0;
 
-	VRange vRange = aiVRanges[0];
+	//VRange vRange = aiVRanges[0];
 
-	for (int i = 0; i < NumberOfChannels; i++)
+	for (int i = 0; i < NumberOfAIChannels; i++)
 	{
 		if (aiCount++ < MAX_ANALOG_CHANNELS)
 		{
+			std::string temp = std::to_string(i);
 
-			ai.add(AnalogIn(std::to_string(i)));
+			ai.add(AnalogIn(String(temp.c_str())));
 
 			//terminalConfig.add(termCfgs);
 
@@ -282,26 +259,25 @@ void MCDAQbd::getAIChannels()
 void MCDAQbd::getDIChannels()
 {
 
-	char data[2048];
-	//MCDAQ::DAQmxGetDevTerminals(STR2CHR(deviceName), &data[0], sizeof(data)); //gets all terminals
-	//MCDAQ::DAQmxGetDevDIPorts(STR2CHR(deviceName), &data[0], sizeof(data));	//gets line name
-	MCDAQ::DAQmxGetDevDILines(STR2CHR(deviceName), &data[0], sizeof(data));	//gets ports on line
-	printf("Found digital inputs: \n");
+	int NumberOfDIChannels;
+	MCDAQErrChk(MCDAQ::cbGetConfig(BOARDINFO, BoardNum, 0, DICONFIG, &NumberOfDIChannels));
 
-	StringArray channel_list;
-	channel_list.addTokens(&data[0], ", ", "\"");
-
+	NumberOfDIChannels /= 8; //This works for USB-1608G. I am assuming DICONFIG returns the total bits that the board can handle.
+	
 	int diCount = 0;
 
-	for (int i = 0; i < channel_list.size(); i++)
+	for (int i = 0; i < NumberOfDIChannels; i++)
 	{
-		StringArray channel_type;
-		channel_type.addTokens(channel_list[i], "/", "\"");
-		if (channel_list[i].length() > 0 && diCount++ < MAX_DIGITAL_CHANNELS)
+		if (diCount++ < MAX_DIGITAL_CHANNELS)
 		{
-			printf("%s\n", channel_list[i].toUTF8());
-			di.add(DigitalIn(channel_list[i].toUTF8()));
-			diChannelEnabled.add(false);
+			std::string temp = std::to_string(i);
+
+			di.add(DigitalIn(String(temp.c_str())));
+
+			//terminalConfig.add(termCfgs);
+
+			diChannelEnabled.add(true);
+
 		}
 	}
 
@@ -323,282 +299,105 @@ int MCDAQbd::getActiveDigitalLines()
 void MCDAQbd::toggleSourceType(int index)
 {
 
-	SOURCE_TYPE current = st[index];
-	int next = (static_cast<int>(current)+1) % NUM_SOURCE_TYPES;
-	SOURCE_TYPE source = static_cast<SOURCE_TYPE>(next);
-	while (!((1 << next) & terminalConfig[index]))
-		source = static_cast<SOURCE_TYPE>(++next % NUM_SOURCE_TYPES);
-	st.set(index,source);
-
+	if (DiffOn)
+		DiffOn = false;
+	else
+		DiffOn = true;
+	
 }
 
 void MCDAQbd::run()
 {
-	/* Derived from MCDAQbd: ANSI C Example program: ContAI-ReadDigChan.c */
-
-	MCDAQ::int32	error = 0;
-	char			errBuff[ERR_BUFF_SIZE] = { '\0' };
-
-	/**************************************/
-	/********CONFIG ANALOG CHANNELS********/
-	/**************************************/
-
-	MCDAQ::int32		ai_read = 0;
-	static int			totalAIRead = 0;
-	MCDAQ::TaskHandle	taskHandleAI = 0;
-
-	String usePort; //Temporary digital port restriction until software buffering is implemented
-
-	/* Create an analog input task */
-	if (isUSBDevice)
-		DAQmxErrChk(MCDAQ::DAQmxCreateTask(STR2CHR("AITask_USB" + getSerialNumber()), &taskHandleAI));
-	else
-		DAQmxErrChk(MCDAQ::DAQmxCreateTask(STR2CHR("AITask_PXI" + getSerialNumber()), &taskHandleAI));
-
-
-	/* Create a voltage channel for each analog input */
-	for (int i = 0; i < ai.size(); i++)
-	{
-		MCDAQ::int32 termConfig;
-
-		switch (st[i]) {
-		case SOURCE_TYPE::RSE:
-			termConfig = DAQmx_Val_RSE;
-		case SOURCE_TYPE::NRSE:
-			termConfig = DAQmx_Val_NRSE;
-		case SOURCE_TYPE::DIFF:
-			termConfig = DAQmx_Val_Diff;
-		case SOURCE_TYPE::PSEUDO_DIFF:
-			termConfig = DAQmx_Val_PseudoDiff;
-		default:
-			termConfig = DAQmx_Val_Cfg_Default;
-		}
-
-		DAQmxErrChk(MCDAQ::DAQmxCreateAIVoltageChan(
-			taskHandleAI,					//task handle
-			STR2CHR(ai[i].id),			//MCDAQ physical channel name (e.g. dev1/ai1)
-			"",							//user-defined channel name (optional)
-			termConfig,					//input terminal configuration
-			voltageRange.vmin,			//min input voltage
-			voltageRange.vmax,			//max input voltage
-			DAQmx_Val_Volts,			//voltage units
-			NULL));
-
-	}
-
-	/* Configure sample clock timing */
-	DAQmxErrChk(MCDAQ::DAQmxCfgSampClkTiming(
-		taskHandleAI,
-		"",													//source : NULL means use internal clock
-		samplerate,											//rate : samples per second per channel
-		DAQmx_Val_Rising,									//activeEdge : (DAQmc_Val_Rising || DAQmx_Val_Falling)
-		DAQmx_Val_ContSamps,								//sampleMode : (DAQmx_Val_FiniteSamps || DAQmx_Val_ContSamps || DAQmx_Val_HWTimedSinglePoint)
-		MAX_ANALOG_CHANNELS * CHANNEL_BUFFER_SIZE));		//sampsPerChanToAcquire : 
-																//If sampleMode == DAQmx_Val_FiniteSamps : # of samples to acquire for each channel
-																//Elif sampleMode == DAQmx_Val_ContSamps : circular buffer size
-
-
-	/* Get handle to analog trigger to sync with digital inputs */
-	char trigName[256];
-	DAQmxErrChk(GetTerminalNameWithDevPrefix(taskHandleAI, "ai/SampleClock", trigName));
-
-	/************************************/
-	/********CONFIG DIGITAL LINES********/
-	/************************************/
-
-	MCDAQ::int32		di_read = 0;
-	static int			totalDIRead = 0;
-	MCDAQ::TaskHandle	taskHandleDI = 0;
-
-	char ports[2048];
-	MCDAQ::DAQmxGetDevDIPorts(STR2CHR(deviceName), &ports[0], sizeof(ports));
-
-	/* For now, restrict max num digital inputs until software buffering is implemented */
-	if (MAX_DIGITAL_CHANNELS <= 8)
-	{
-		StringArray port_list;
-		port_list.addTokens(&ports[0], ", ", "\"");
-		usePort = port_list[0];
-	}
-
-	/* Create a digital input task using device serial number to gurantee unique task name per device */
-	if (isUSBDevice)
-		DAQmxErrChk(MCDAQ::DAQmxCreateTask(STR2CHR("DITask_USB"+getSerialNumber()), &taskHandleDI));
-	else
-		DAQmxErrChk(MCDAQ::DAQmxCreateTask(STR2CHR("DITask_PXI"+getSerialNumber()), &taskHandleDI));
-
-	/* Create a channel for each digital input */
-	DAQmxErrChk(MCDAQ::DAQmxCreateDIChan(
-		taskHandleDI,
-		STR2CHR(usePort),
-		"",
-		DAQmx_Val_ChanForAllLines));
-
 	
-	if (!isUSBDevice) //USB devices do not have an internal clock and instead use CPU, so we can't configure the sample clock timing
-		DAQmxErrChk(MCDAQ::DAQmxCfgSampClkTiming(
-			taskHandleDI,							//task handle
-			trigName,								//source : NULL means use internal clock, we will sync to analog input clock
-			samplerate,								//rate : samples per second per channel
-			DAQmx_Val_Rising,						//activeEdge : (DAQmc_Val_Rising || DAQmx_Val_Falling)
-			DAQmx_Val_ContSamps,					//sampleMode : (DAQmx_Val_FiniteSamps || DAQmx_Val_ContSamps || DAQmx_Val_HWTimedSinglePoint)
-			CHANNEL_BUFFER_SIZE));					//sampsPerChanToAcquire : want to sync with analog samples per channel
-														//If sampleMode == DAQmx_Val_FiniteSamps : # of samples to acquire for each channel
-														//Elif sampleMode == DAQmx_Val_ContSamps : circular buffer size
+	int Packet20Hz = 256 * 4;
+	int LowChan = 0;
+	int HighChan = 15;
+	long Rate = 2000;
+	int Gain = BIP5VOLTS;
+	unsigned Options = CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //CONVERTDATA
 
-	DAQmxErrChk(MCDAQ::DAQmxTaskControl(taskHandleAI, DAQmx_Val_Task_Commit));
-	DAQmxErrChk(MCDAQ::DAQmxTaskControl(taskHandleDI, DAQmx_Val_Task_Commit));
 
-	DAQmxErrChk(MCDAQ::DAQmxStartTask(taskHandleDI));
-	DAQmxErrChk(MCDAQ::DAQmxStartTask(taskHandleAI));
 
-	MCDAQ::int32 numSampsPerChan;
-	MCDAQ::float64 timeout;
-	if (isUSBDevice)
-	{
-		//This is an arbitrary number, if the main loop takes longer that 300 samples per chan to complete 
-		//some samples are not gonna get written on file. You can increase this num up to CHANNEL_BUFFER_SIZE.
-		numSampsPerChan = 300;
-		timeout = -1;
-	}
-	else
-	{
-		numSampsPerChan = CHANNEL_BUFFER_SIZE;
-		timeout = -1;
-	}
+	//Enable CALLBACK Board::ProcBackgroundBoard
+	MCDAQErrChk(MCDAQ::cbEnableEvent(BoardNum, ON_DATA_AVAILABLE, Packet20Hz, MCDAQbd::ProcBackgroundBoard, this));
 
-	int TotalAnalogChans = ai.size();
-	MCDAQ::int32 arraySizeInSamps = TotalAnalogChans * numSampsPerChan;
+	// IMPORTANT : Putting this thread to sleep to get the correct Packets.
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-	uint64 linesEnabled = 0;
+	// Starting Scan.
+	MCDAQErrChk(MCDAQ::cbAInScan(BoardNum, LowChan, HighChan, Packet20Hz, &Rate, Gain,
+		reinterpret_cast<void*>(ai_dataRaw), Options));
 
 	ai_timestamp = 0;
 	eventCode = 0;
 
 	while (!threadShouldExit())
 	{
-		//-1 is passed to read all the samples currently available in the board buffer. 
-		//For buffer size look into the manual of your board.
-		DAQmxErrChk(MCDAQ::DAQmxReadAnalogF64(
-			taskHandleAI,
-			-1,
-			timeout,
-			DAQmx_Val_GroupByScanNumber, //DAQmx_Val_GroupByScanNumber
-			ai_data,
-			arraySizeInSamps,
-			&ai_read,
-			NULL));
-
-		int DigitalLines = getActiveDigitalLines();
-
-		if (DigitalLines)
-		{
-			if (isUSBDevice)
-				DAQmxErrChk(MCDAQ::DAQmxReadDigitalU32(
-					taskHandleDI,
-					-1,
-					timeout,
-					DAQmx_Val_GroupByScanNumber,
-					di_data_32,
-					numSampsPerChan,
-					&di_read,
-					NULL));
-			else 
-				DAQmxErrChk(MCDAQ::DAQmxReadDigitalU8(
-					taskHandleDI,
-					-1,
-					timeout,
-					DAQmx_Val_GroupByScanNumber,
-					di_data_8,
-					numSampsPerChan,
-					&di_read,
-					NULL));
-		}
-
-		/*
-		std::chrono::milliseconds last_time;
-		std::chrono::milliseconds t = std::chrono::duration_cast< std::chrono::milliseconds >(
-			std::chrono::system_clock::now().time_since_epoch());
-		long long t_ms = t.count()*std::chrono::milliseconds::period::num / std::chrono::milliseconds::period::den;
-		if (ai_read>0) {
-			printf("Read @ %i | ", t_ms);
-			printf("Acquired %d AI samples. Total %d | ", (int)ai_read, (int)(totalAIRead += ai_read));
-			printf("Acquired %d DI samples. Total %d\n", (int)di_read, (int)(totalDIRead += di_read));
-			fflush(stdout);
-		}
-		*/
-
-		//Loop to handle Digital inputs
-		int count = 0;
-		for (int i = 0; i < di_read; i++)
-		{
-				if (DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
-				{
-					//Bitwise operations to get the mask for the eventCode.
-					if (isUSBDevice)
-						eventCode = di_data_32[count++] & DigitalLines;
-					else
-						eventCode = di_data_8[count++] & DigitalLines;
-				}
-		}
-
+		
+		
 		//Loop to handle Analog inputs.
 		//Actually it seems that analog and digital are added to the same or different buffers with the same func call
 		//ie. addToBuffer.
-
-		float aiSamples[MAX_ANALOG_CHANNELS];
-		for (int i = 0; i < TotalAnalogChans * ai_read; i++)
+		if (ProcFinished)
 		{
-	
-			int channel = i % MAX_ANALOG_CHANNELS;
 
-			aiSamples[channel] = 0;
-			if (aiChannelEnabled[channel])
-				aiSamples[channel] = ai_data[i];
-
-			if (i % MAX_ANALOG_CHANNELS == 0)
+			float aiSamples[MAX_ANALOG_CHANNELS];
+			for (int i = 0; i < Packet20Hz; i++)
 			{
-				ai_timestamp++;
-				aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
+	
+				int channel = i % MAX_ANALOG_CHANNELS;
+
+				aiSamples[channel] = 0;
+				if (aiChannelEnabled[channel])
+					aiSamples[channel] = ai_data[i];
+
+				if (i % MAX_ANALOG_CHANNELS == 0)
+				{
+					ai_timestamp++;
+					aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
+					DebugMCFile << ai_data[channel] << "\n";
+				}
+
 			}
+			ProcFinished = false;
+			fflush(stdout);
+
 
 		}
-		fflush(stdout);
+
 	}
 
 	/*********************************************/
 	// DAQmx Stop Code
 	/*********************************************/
 
-	MCDAQ::DAQmxStopTask(taskHandleAI);
-	MCDAQ::DAQmxClearTask(taskHandleAI);
-	MCDAQ::DAQmxStopTask(taskHandleDI);
-	MCDAQ::DAQmxClearTask(taskHandleDI);
+	MCDAQErrChk(MCDAQ::cbStopBackground(BoardNum, AIFUNCTION));
+
+	fflush(stdout);
 
 	return;
 
-Error:
+}
 
-	if (DAQmxFailed(error))
-		MCDAQ::DAQmxGetExtendedErrorInfo(errBuff, ERR_BUFF_SIZE);
+void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned EventData, void* UserData)
+{
+	//NOTE: this Proc could be implemented passing a pointer to This Board on the UserData Param.
+	//However I found that it is a bit slower. Static variables do the work faster, however the code looks messier.
+	// Im gonna stick with static variables for now, but be aware that it is posible to use pure member variables.
 
-	if (taskHandleAI != 0) {
-		// DAQmx Stop Code
-		MCDAQ::DAQmxStopTask(taskHandleAI);
-		MCDAQ::DAQmxClearTask(taskHandleAI);
-	}
 
-	if (taskHandleDI != 0) {
-		// DAQmx Stop Code
-		MCDAQ::DAQmxStopTask(taskHandleDI);
-		MCDAQ::DAQmxClearTask(taskHandleDI);
-	}
-	if (DAQmxFailed(error))
-		printf("DAQmx Error: %s\n", errBuff);
-		fflush(stdout);
+	//ftRec.StartFrame();
+	//std::memcpy(TempRecData, RecordingData, TempCpySize);
+	//RecordingFile.write(reinterpret_cast<char*>(TempRecData), TempCpySize);
+	//BoardGfxReady = true;
+	//ftRec.StopFrame(logfileRec);
 
-	return;
+	//DebugMCFile << EventData << "\n";
+	//Conteo = EventData;
 
+	std::memcpy(((MCDAQbd*)UserData)->ai_data, ((MCDAQbd*)UserData)->ai_dataRaw, 256 * 4 * 2);
+
+	((MCDAQbd*)UserData)->ProcFinished = true;
 }
 
 InputChannel::InputChannel()

@@ -296,13 +296,13 @@ int SourceTypeButton::getId()
 void SourceTypeButton::update(SOURCE_TYPE sourceType)
 {
 	switch (sourceType) {
-	case SOURCE_TYPE::RSE:
+	case SOURCE_TYPE::RSE1:
 		setButtonText("RSE"); return;
-	case SOURCE_TYPE::NRSE:
+	case SOURCE_TYPE::NRSE2:
 		setButtonText("NRSE"); return;
-	case SOURCE_TYPE::DIFF:
+	case SOURCE_TYPE::DIFF3:
 		setButtonText("DIFF"); return;
-	case SOURCE_TYPE::PSEUDO_DIFF:
+	case SOURCE_TYPE::PSEUDO_DIFF4:
 		setButtonText("PDIF"); return;
 	default:
 		break;

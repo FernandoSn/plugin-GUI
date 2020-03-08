@@ -60,7 +60,9 @@ MCDAQThread::~MCDAQThread()
 
 int MCDAQThread::openConnection()
 {
-	mMCDAQ = std::make_unique<MCDAQbd>(STR2CHR(dm->getDeviceFromIndex(0)));
+	//mMCDAQ = std::make_unique<MCDAQbd>(STR2CHR(dm->getDeviceFromIndex(0)));
+
+	mMCDAQ = std::make_unique<MCDAQbd>(dm->GetDeviceDescFromIndex(0),0);
 
 	sourceBuffers.add(new DataBuffer(getNumAnalogInputs(), 10000));
 
@@ -88,7 +90,8 @@ void MCDAQThread::selectFromAvailableDevices()
 	StringArray productNames;
 	for (int i = 0; i < getNumAvailableDevices(); i++)
 	{
-		ScopedPointer<MCDAQbd> n = new MCDAQbd(STR2CHR(dm->getDeviceFromIndex(i)));
+		//ScopedPointer<MCDAQbd> n = new MCDAQbd(STR2CHR(dm->getDeviceFromIndex(i)));
+		std::unique_ptr<MCDAQbd> n = std::make_unique<MCDAQbd>(dm->GetDeviceDescFromIndex(i), i);
 		if (!(n->getProductName() == getProductName()))
 		{
 			deviceSelect.addItem(productNames.size() + 1, "Swap to " + n->getProductName());
@@ -112,7 +115,8 @@ int MCDAQThread::swapConnection(String productName)
 
 	if (!dm->getDeviceFromProductName(productName).isEmpty())
 	{
-		mMCDAQ = new MCDAQbd(STR2CHR(dm->getDeviceFromProductName(productName)));
+		//mMCDAQ = new MCDAQbd(STR2CHR(dm->getDeviceFromProductName(productName)));
+		mMCDAQ = std::make_unique<MCDAQbd>(dm->GetDeviceDescProductName(productName), 0);
 
 		sourceBuffers.removeLast();
 		sourceBuffers.add(new DataBuffer(getNumAnalogInputs(), 10000));
@@ -137,7 +141,8 @@ void MCDAQThread::toggleSourceType(int id)
 
 SOURCE_TYPE MCDAQThread::getSourceTypeForInput(int index)
 {
-	return mMCDAQ->st[index];
+	//return mMCDAQ->st[index];
+	return SOURCE_TYPE::RSE1;
 }
 
 void MCDAQThread::closeConnection()

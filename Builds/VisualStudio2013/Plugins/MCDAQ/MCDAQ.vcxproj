@@ -95,7 +95,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(GUIDir);$(OutDir);../../../../Source/Plugins/MCDAQ/mc-api/mcclib32</AdditionalLibraryDirectories>
-      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);cbw32.lib;nisyscfg.lib</AdditionalDependencies>
+      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);cbw32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -106,7 +106,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(GUIDir);$(OutDir);../../../../Source/Plugins/MCDAQ/mc-api/mcclib64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);cbw64.lib;nisyscfg.lib</AdditionalDependencies>
+      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);cbw64.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -121,12 +121,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(GUIDir);$(OutDir);../../../../Source/Plugins/MCDAQ/mc-api/mcclib32</AdditionalLibraryDirectories>
-      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);cbw32.lib;nisyscfg.lib</AdditionalDependencies>
+      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);cbw32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -136,7 +136,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(GUIDir);../../../../Source/Plugins/MCDAQ/mc-api/mcclib64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);cbw64.lib;nisyscfg.lib</AdditionalDependencies>
+      <AdditionalDependencies>open-ephys.lib;setupapi.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies);cbw64.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

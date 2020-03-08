@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define NUM_SOURCE_TYPES 4
 #define CHANNEL_BUFFER_SIZE 1000
-#define MAX_ANALOG_CHANNELS 8
+#define MAX_ANALOG_CHANNELS 16
 #define NUM_SAMPLE_RATES 17
 #define MAX_DIGITAL_CHANNELS 8
 #define ERR_BUFF_SIZE 2048
@@ -80,7 +80,7 @@ public:
 	String getDeviceFromIndex(int deviceIndex);
 	String getDeviceFromProductName(String productName);
 	const MCDAQ::DaqDeviceDescriptor& GetDeviceDescFromIndex(int deviceIndex);
-	const MCDAQ::DaqDeviceDescriptor& GetDeviceDescProductName(int deviceIndex);
+	const MCDAQ::DaqDeviceDescriptor& GetDeviceDescProductName(String productName);
 
 	int getNumAvailableDevices();
 
@@ -102,25 +102,25 @@ struct VRange {
 };
 
 struct SRange {
-	MCDAQ::float64 smin, smaxs, smaxm;
+	unsigned int smin, smaxs, smaxm;
 	SRange() : smin(0), smaxs(0), smaxm(0) {}
-	SRange(MCDAQ::float64 smin, MCDAQ::float64 smaxs, MCDAQ::float64 smaxm)
+	SRange(unsigned int smin, unsigned int smaxs, unsigned int smaxm)
 		: smin(smin), smaxs(smaxs), smaxm(smaxm) {}
 };
 
 enum SOURCE_TYPE {
-	RSE = 0,
-	NRSE,
-	DIFF,
-	PSEUDO_DIFF
+	RSE1 = 0,
+	NRSE2,
+	DIFF3,
+	PSEUDO_DIFF4
 };
 
 class MCDAQbd : public Thread
 {
 public:
-
+	
 	MCDAQbd();
-	MCDAQbd(MCDAQ::DaqDeviceDescriptor DeviceInfo, int BoardNum);
+	MCDAQbd(const MCDAQ::DaqDeviceDescriptor& DeviceInfo, int BoardNum);
 	~MCDAQbd();
 
 	void connect(); 
@@ -143,6 +143,10 @@ public:
 
 private:
 
+	static void CALLBACK ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned EventData, void* UserData);
+
+private:
+
 	String							deviceName;
 	String							productName;
 	MCDAQ::DaqDeviceInterface		deviceCategory;
@@ -153,7 +157,7 @@ private:
 	bool							simAISamplingSupported;
 	int								ADCResolution;
 	bool							LowRes;
-	bool							DiffCh;
+	bool							SupportsDiff;
 	SRange 							sampleRateRange;
 
 	Array<VRange>					aiVRanges;
@@ -165,19 +169,24 @@ private:
 	Array<AnalogIn> 				ai;
 	//Array<MCDAQ::int32>				terminalConfig;
 	//Array<SOURCE_TYPE>				st;
+	bool							DiffOn;
 	Array<bool>						aiChannelEnabled;
 
 	Array<DigitalIn> 				di;
 	Array<bool>						diChannelEnabled;
 
-	MCDAQ::float64					ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
-	MCDAQ::uInt8					di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
-	MCDAQ::uInt32					di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
+	//MCDAQ::float64					ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	uint16_t					ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	uint16_t					ai_dataRaw[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	//MCDAQ::uInt8					di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
+	//MCDAQ::uInt32					di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
 
 	int64 ai_timestamp;
 	uint64 eventCode;
 
 	DataBuffer* aiBuffer;
+
+	bool ProcFinished = false;
 
 };
 
@@ -223,7 +232,7 @@ public:
 	Array<SOURCE_TYPE> getTerminalConfig();
 
 private:
-	MCDAQ::int32 terminalConfig;
+	//MCDAQ::int32 terminalConfig;
 };
 
 class DigitalIn : public InputChannel

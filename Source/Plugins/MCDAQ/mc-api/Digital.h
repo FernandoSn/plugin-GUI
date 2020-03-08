@@ -1,3 +1,4 @@
+#pragma once
 #ifndef DIGITAL_H
 #define DIGITAL_H
 
@@ -16,8 +17,8 @@
 #define PROGPORT	1
 #define PROGBIT		2
 
-int TestBoard;
-int ChansFound, IOType;
+int TestBoardDi;
+int ChansFoundDi, IOTypeDi;
 int digInScanOptions, digOutScanOptions;
 int daqOutScanOptions, daqInScanOptions;
 
@@ -41,7 +42,7 @@ int FindPortsOfType(int BoardNum, int PortType, int* ProgAbility, int* DefaultPo
 	ULStat = MCDAQ::cbErrHandling(DONTPRINT, DONTSTOP);
 
 	*DefaultPort = -1;
-	TestBoard = BoardNum;
+	TestBoardDi = BoardNum;
 	CurPort = 0;
 	PortsFound = 0;
 	*FirstBit = 0;

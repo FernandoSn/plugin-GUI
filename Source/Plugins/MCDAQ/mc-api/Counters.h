@@ -1,3 +1,4 @@
+#pragma once
 #ifndef COUNTERS_H
 #define COUNTERS_H
 
@@ -16,8 +17,8 @@
 #define BI_CTRSCANOPTIONS	369
 
 
-int TestBoard;
-int ChansFound, IOType;
+int TestBoard1;
+int ChansFound1, IOType1;
 
 int FindCountersOfType(int BoardNum, int CounterType, int* DefaultCtr)
 {
@@ -30,7 +31,7 @@ int FindCountersOfType(int BoardNum, int CounterType, int* DefaultCtr)
 	// and error with error handling disabled
 	ULStat = MCDAQ::cbErrHandling(DONTPRINT, DONTSTOP);
 
-	TestBoard = BoardNum;
+	TestBoard1 = BoardNum;
 	CtrsFound = 0;
 	ULStat = MCDAQ::cbGetConfig(BOARDINFO, BoardNum, 0, BICINUMDEVS, &NumCounters);
 	if (ULStat != NOERRORS) {
