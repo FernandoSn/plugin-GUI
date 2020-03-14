@@ -26,6 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "NIDAQComponents.h"
 
+#include <fstream>
+#include <string>
+
+std::ofstream DebugMCFile("DebugMCFile.txt");
+std::ofstream DebugMCFile2("DebugMCFile2.txt");
+std::ofstream DebugMCFile3("DebugMCFile3.txt");
+
+
 static int32 GetTerminalNameWithDevPrefix(NIDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[]);
 
 static int32 GetTerminalNameWithDevPrefix(NIDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[])
@@ -529,12 +537,12 @@ void NIDAQmx::run()
 
 
 
-	int Packet20Hz = 256 * 4;
+	int Packet20Hz = 256000;
 	int LowChan = 0;
 	int HighChan = 7;
-	long Rate = 2000;
-	int Gain = BIP5VOLTS;
-	unsigned Options = CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //CONVERTDATA
+	long Rate = 20000;
+	int Gain = BIP10VOLTS;
+	unsigned Options = SCALEDATA + CONVERTDATA + BACKGROUND + CONTINUOUS + SINGLEIO; //SCALEDATA OUTPUTS DOUBLE PREC.
 	int BoardNum = 0;
 	float     revision = (float)CURRENTREVNUM;
 
@@ -550,111 +558,153 @@ void NIDAQmx::run()
 
 	// Starting Scan.
 	MCDAQ::cbAInScan(BoardNum, LowChan, HighChan, Packet20Hz, &Rate, Gain,
-		reinterpret_cast<void*>(ai_dataRaw), Options);
+		reinterpret_cast<void*>(aiSamples), Options);
+
+
+	short Status;
+	long CurCount, CurIndex;
 
 
 
 
 
-
-
-
-
-
-
+	
 
 	ai_timestamp = 0;
 	eventCode = 0;
 
 	while (!threadShouldExit())
 	{
-		//-1 is passed to read all the samples currently available in the board buffer. 
-		//For buffer size look into the manual of your board.
-		DAQmxErrChk(NIDAQ::DAQmxReadAnalogF64(
-			taskHandleAI,
-			-1,
-			timeout,
-			DAQmx_Val_GroupByScanNumber, //DAQmx_Val_GroupByScanNumber
-			ai_data,
-			arraySizeInSamps,
-			&ai_read,
-			NULL));
 
-		int DigitalLines = getActiveDigitalLines();
-
-		if (DigitalLines)
+		for (double* i = aiSamples; i < aiSamples + 256 ; ++i)
 		{
-			if (isUSBDevice)
-				DAQmxErrChk(NIDAQ::DAQmxReadDigitalU32(
-					taskHandleDI,
-					-1,
-					timeout,
-					DAQmx_Val_GroupByScanNumber,
-					di_data_32,
-					numSampsPerChan,
-					&di_read,
-					NULL));
-			else 
-				DAQmxErrChk(NIDAQ::DAQmxReadDigitalU8(
-					taskHandleDI,
-					-1,
-					timeout,
-					DAQmx_Val_GroupByScanNumber,
-					di_data_8,
-					numSampsPerChan,
-					&di_read,
-					NULL));
+
+			DebugMCFile << *i << ",";
+
+
 		}
+		DebugMCFile << "\n";
 
-		/*
-		std::chrono::milliseconds last_time;
-		std::chrono::milliseconds t = std::chrono::duration_cast< std::chrono::milliseconds >(
-			std::chrono::system_clock::now().time_since_epoch());
-		long long t_ms = t.count()*std::chrono::milliseconds::period::num / std::chrono::milliseconds::period::den;
-		if (ai_read>0) {
-			printf("Read @ %i | ", t_ms);
-			printf("Acquired %d AI samples. Total %d | ", (int)ai_read, (int)(totalAIRead += ai_read));
-			printf("Acquired %d DI samples. Total %d\n", (int)di_read, (int)(totalDIRead += di_read));
-			fflush(stdout);
-		}
-		*/
+		MCDAQ::cbGetStatus(BoardNum, &Status, &CurCount, &CurIndex, AIFUNCTION);
 
-		//Loop to handle Digital inputs
-		int count = 0;
-		for (int i = 0; i < di_read; i++)
-		{
-				if (DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
-				{
-					//Bitwise operations to get the mask for the eventCode.
-					if (isUSBDevice)
-						eventCode = di_data_32[count++] & DigitalLines;
-					else
-						eventCode = di_data_8[count++] & DigitalLines;
-				}
-		}
+		//auto CurrentTime = timer.getMillisecondCounter();
 
-		//Loop to handle Analog inputs.
-		//Actually it seems that analog and digital are added to the same or different buffers with the same func call
-		//ie. addToBuffer.
+		DebugMCFile3 << CurCount << "\n";
+		DebugMCFile2 << CurIndex << "\n";
+		//if (ProcFinished)
+		//{
 
-		float aiSamples[MAX_ANALOG_CHANNELS];
-		for (int i = 0; i < TotalAnalogChans * ai_read; i++)
-		{
+		//	float aiSamples[MAX_ANALOG_CHANNELS];
+		//	for (int i = 0; i < Packet20Hz; i++)
+		//	{
+
+		//		int channel = i % MAX_ANALOG_CHANNELS;
+
+		//		aiSamples[channel] = 0;
+		//		if (aiChannelEnabled[channel])
+		//			aiSamples[channel] = (float)ai_dataMCC[i] * 0.00030517578125f - 10.0f;
+
+		//		if (i % MAX_ANALOG_CHANNELS == 0)
+		//		{
+		//			ai_timestamp++;
+		//			aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
+		//			//DebugMCFile << ai_data[channel] << "\n";
+		//		}
+
+		//	}
+		//	ProcFinished = false;
+		//	fflush(stdout);
+
+
+		//}
+
+
+		////-1 is passed to read all the samples currently available in the board buffer. 
+		////For buffer size look into the manual of your board.
+		//DAQmxErrChk(NIDAQ::DAQmxReadAnalogF64(
+		//	taskHandleAI,
+		//	-1,
+		//	timeout,
+		//	DAQmx_Val_GroupByScanNumber, //DAQmx_Val_GroupByScanNumber
+		//	ai_data,
+		//	arraySizeInSamps,
+		//	&ai_read,
+		//	NULL));
+
+		//int DigitalLines = getActiveDigitalLines();
+
+		//if (DigitalLines)
+		//{
+		//	if (isUSBDevice)
+		//		DAQmxErrChk(NIDAQ::DAQmxReadDigitalU32(
+		//			taskHandleDI,
+		//			-1,
+		//			timeout,
+		//			DAQmx_Val_GroupByScanNumber,
+		//			di_data_32,
+		//			numSampsPerChan,
+		//			&di_read,
+		//			NULL));
+		//	else 
+		//		DAQmxErrChk(NIDAQ::DAQmxReadDigitalU8(
+		//			taskHandleDI,
+		//			-1,
+		//			timeout,
+		//			DAQmx_Val_GroupByScanNumber,
+		//			di_data_8,
+		//			numSampsPerChan,
+		//			&di_read,
+		//			NULL));
+		//}
+
+		///*
+		//std::chrono::milliseconds last_time;
+		//std::chrono::milliseconds t = std::chrono::duration_cast< std::chrono::milliseconds >(
+		//	std::chrono::system_clock::now().time_since_epoch());
+		//long long t_ms = t.count()*std::chrono::milliseconds::period::num / std::chrono::milliseconds::period::den;
+		//if (ai_read>0) {
+		//	printf("Read @ %i | ", t_ms);
+		//	printf("Acquired %d AI samples. Total %d | ", (int)ai_read, (int)(totalAIRead += ai_read));
+		//	printf("Acquired %d DI samples. Total %d\n", (int)di_read, (int)(totalDIRead += di_read));
+		//	fflush(stdout);
+		//}
+		//*/
+
+		////Loop to handle Digital inputs
+		//int count = 0;
+		//for (int i = 0; i < di_read; i++)
+		//{
+		//		if (DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
+		//		{
+		//			//Bitwise operations to get the mask for the eventCode.
+		//			if (isUSBDevice)
+		//				eventCode = di_data_32[count++] & DigitalLines;
+		//			else
+		//				eventCode = di_data_8[count++] & DigitalLines;
+		//		}
+		//}
+
+		////Loop to handle Analog inputs.
+		////Actually it seems that analog and digital are added to the same or different buffers with the same func call
+		////ie. addToBuffer.
+
+		//float aiSamples[MAX_ANALOG_CHANNELS];
+		//for (int i = 0; i < TotalAnalogChans * ai_read; i++)
+		//{
 	
-			int channel = i % MAX_ANALOG_CHANNELS;
+		//	int channel = i % MAX_ANALOG_CHANNELS;
 
-			aiSamples[channel] = 0;
-			if (aiChannelEnabled[channel])
-				aiSamples[channel] = ai_data[i];
+		//	aiSamples[channel] = 0;
+		//	if (aiChannelEnabled[channel])
+		//		aiSamples[channel] = ai_data[i];
 
-			if (i % MAX_ANALOG_CHANNELS == 0)
-			{
-				ai_timestamp++;
-				aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
-			}
+		//	if (i % MAX_ANALOG_CHANNELS == 0)
+		//	{
+		//		ai_timestamp++;
+		//		aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
+		//	}
 
-		}
-		fflush(stdout);
+		//}
 	}
 
 	/*********************************************/
@@ -707,10 +757,47 @@ void NIDAQmx::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 
 	//DebugMCFile << EventData << "\n";
 	//Conteo = EventData;
+	//short Status;
+	//long CurCount, CurIndex;
 
-	std::memcpy(((NIDAQmx*)UserData)->ai_dataMCC, ((NIDAQmx*)UserData)->ai_dataRaw, 256 * 4 * 2);
+	////std::memcpy(((NIDAQmx*)UserData)->ai_dataMCC, ((NIDAQmx*)UserData)->ai_dataRaw, 256 * 2);
+	//MCDAQ::cbGetStatus(BoardNum, &Status, &CurCount, &CurIndex, AIFUNCTION);
 
-	((NIDAQmx*)UserData)->ProcFinished = true;
+	////auto CurrentTime = timer.getMillisecondCounter();
+
+	//DebugMCFile2 << CurIndex << "\n";
+	//DebugMCFile3 << CurCount << "\n";
+
+
+	//float aiSamples[MAX_ANALOG_CHANNELS];
+	//for (int i = 0; i < 256; i++)
+	//{
+
+	//	int channel = i % MAX_ANALOG_CHANNELS;
+
+	//	aiSamples[channel] = 0;
+	//	//if (aiChannelEnabled[channel])
+	//		aiSamples[channel] = ((float)(((NIDAQmx*)UserData)->ai_dataMCC[i])) * 0.00030517578125f - 10.0f;
+
+	//	if (i % MAX_ANALOG_CHANNELS == 0)
+	//	{
+	//		((NIDAQmx*)UserData)->ai_timestamp++;
+	//		int a = ((NIDAQmx*)UserData)->aiBuffer->addToBuffer(aiSamples, &((NIDAQmx*)UserData)->ai_timestamp, &((NIDAQmx*)UserData)->eventCode, 1);
+	//		//DebugMCFile << ai_data[channel] << "\n";
+	//	}
+
+	//}
+
+	//auto CurrentTime = ((NIDAQmx*)UserData)->timer.getMillisecondCounter();
+
+	//DebugMCFile << CurrentTime << "\n";
+
+	////ProcFinished = false;
+	//fflush(stdout);
+	//float aiSamples[MAX_ANALOG_CHANNELS] = {0};
+	//((NIDAQmx*)UserData)->aiBuffer->addToBuffer(aiSamples, &((NIDAQmx*)UserData)->ai_timestamp, &((NIDAQmx*)UserData)->eventCode, 1);
+
+	//((NIDAQmx*)UserData)->ProcFinished = true;
 }
 
 InputChannel::InputChannel()

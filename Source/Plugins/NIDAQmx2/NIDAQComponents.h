@@ -164,8 +164,13 @@ private:
 	Array<bool>			diChannelEnabled;
 
 	NIDAQ::float64		ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
-	NIDAQ::float64		ai_dataMCC[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
-	NIDAQ::float64		ai_dataRaw[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	/*NIDAQ::float64		ai_dataMCC[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	NIDAQ::float64		ai_dataRaw[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];*/
+	UINT16	ai_dataMCC[256];
+	UINT16		ai_dataRaw[256];
+	Time timer;
+
+	DOUBLE aiSamples[256000];
 	NIDAQ::uInt8		di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
 	NIDAQ::uInt32		di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
 
