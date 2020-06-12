@@ -537,10 +537,10 @@ void NIDAQmx::run()
 
 
 
-	int Packet20Hz = 256000;
+	int Packet20Hz = 256;
 	int LowChan = 0;
 	int HighChan = 7;
-	long Rate = 20000;
+	long Rate = 2000;
 	int Gain = BIP10VOLTS;
 	unsigned Options = SCALEDATA + CONVERTDATA + BACKGROUND + CONTINUOUS + SINGLEIO; //SCALEDATA OUTPUTS DOUBLE PREC.
 	int BoardNum = 0;
@@ -558,7 +558,7 @@ void NIDAQmx::run()
 
 	// Starting Scan.
 	MCDAQ::cbAInScan(BoardNum, LowChan, HighChan, Packet20Hz, &Rate, Gain,
-		reinterpret_cast<void*>(aiSamples), Options);
+		reinterpret_cast<void*>(ai_dataMCC), Options);
 
 
 	short Status;
@@ -619,58 +619,58 @@ void NIDAQmx::run()
 		//}
 
 
-		////-1 is passed to read all the samples currently available in the board buffer. 
-		////For buffer size look into the manual of your board.
-		//DAQmxErrChk(NIDAQ::DAQmxReadAnalogF64(
-		//	taskHandleAI,
-		//	-1,
-		//	timeout,
-		//	DAQmx_Val_GroupByScanNumber, //DAQmx_Val_GroupByScanNumber
-		//	ai_data,
-		//	arraySizeInSamps,
-		//	&ai_read,
-		//	NULL));
+		//-1 is passed to read all the samples currently available in the board buffer. 
+		//For buffer size look into the manual of your board.
+		DAQmxErrChk(NIDAQ::DAQmxReadAnalogF64(
+			taskHandleAI,
+			-1,
+			timeout,
+			DAQmx_Val_GroupByScanNumber, //DAQmx_Val_GroupByScanNumber
+			ai_data,
+			arraySizeInSamps,
+			&ai_read,
+			NULL));
 
-		//int DigitalLines = getActiveDigitalLines();
+		int DigitalLines = getActiveDigitalLines();
 
-		//if (DigitalLines)
-		//{
-		//	if (isUSBDevice)
-		//		DAQmxErrChk(NIDAQ::DAQmxReadDigitalU32(
-		//			taskHandleDI,
-		//			-1,
-		//			timeout,
-		//			DAQmx_Val_GroupByScanNumber,
-		//			di_data_32,
-		//			numSampsPerChan,
-		//			&di_read,
-		//			NULL));
-		//	else 
-		//		DAQmxErrChk(NIDAQ::DAQmxReadDigitalU8(
-		//			taskHandleDI,
-		//			-1,
-		//			timeout,
-		//			DAQmx_Val_GroupByScanNumber,
-		//			di_data_8,
-		//			numSampsPerChan,
-		//			&di_read,
-		//			NULL));
-		//}
+		if (DigitalLines)
+		{
+			if (isUSBDevice)
+				DAQmxErrChk(NIDAQ::DAQmxReadDigitalU32(
+					taskHandleDI,
+					-1,
+					timeout,
+					DAQmx_Val_GroupByScanNumber,
+					di_data_32,
+					numSampsPerChan,
+					&di_read,
+					NULL));
+			else 
+				DAQmxErrChk(NIDAQ::DAQmxReadDigitalU8(
+					taskHandleDI,
+					-1,
+					timeout,
+					DAQmx_Val_GroupByScanNumber,
+					di_data_8,
+					numSampsPerChan,
+					&di_read,
+					NULL));
+		}
 
-		///*
-		//std::chrono::milliseconds last_time;
-		//std::chrono::milliseconds t = std::chrono::duration_cast< std::chrono::milliseconds >(
-		//	std::chrono::system_clock::now().time_since_epoch());
-		//long long t_ms = t.count()*std::chrono::milliseconds::period::num / std::chrono::milliseconds::period::den;
-		//if (ai_read>0) {
-		//	printf("Read @ %i | ", t_ms);
-		//	printf("Acquired %d AI samples. Total %d | ", (int)ai_read, (int)(totalAIRead += ai_read));
-		//	printf("Acquired %d DI samples. Total %d\n", (int)di_read, (int)(totalDIRead += di_read));
-		//	fflush(stdout);
-		//}
-		//*/
+		/*
+		std::chrono::milliseconds last_time;
+		std::chrono::milliseconds t = std::chrono::duration_cast< std::chrono::milliseconds >(
+			std::chrono::system_clock::now().time_since_epoch());
+		long long t_ms = t.count()*std::chrono::milliseconds::period::num / std::chrono::milliseconds::period::den;
+		if (ai_read>0) {
+			printf("Read @ %i | ", t_ms);
+			printf("Acquired %d AI samples. Total %d | ", (int)ai_read, (int)(totalAIRead += ai_read));
+			printf("Acquired %d DI samples. Total %d\n", (int)di_read, (int)(totalDIRead += di_read));
+			fflush(stdout);
+		}
+		*/
 
-		////Loop to handle Digital inputs
+		//Loop to handle Digital inputs
 		//int count = 0;
 		//for (int i = 0; i < di_read; i++)
 		//{
@@ -684,27 +684,37 @@ void NIDAQmx::run()
 		//		}
 		//}
 
-		////Loop to handle Analog inputs.
-		////Actually it seems that analog and digital are added to the same or different buffers with the same func call
-		////ie. addToBuffer.
+		//Loop to handle Analog inputs.
+		//Actually it seems that analog and digital are added to the same or different buffers with the same func call
+		//ie. addToBuffer.
+		if (ProcFinished)
+		{
 
-		//float aiSamples[MAX_ANALOG_CHANNELS];
-		//for (int i = 0; i < TotalAnalogChans * ai_read; i++)
-		//{
+			float aiSamples[MAX_ANALOG_CHANNELS];
+			//for (int i = 0; i < TotalAnalogChans * ai_read; i++)
+			for (int i = 0; i < Packet20Hz; i++)
+			{
 	
-		//	int channel = i % MAX_ANALOG_CHANNELS;
+				int channel = i % MAX_ANALOG_CHANNELS;
 
-		//	aiSamples[channel] = 0;
-		//	if (aiChannelEnabled[channel])
-		//		aiSamples[channel] = ai_data[i];
+				aiSamples[channel] = 0;
+				if (aiChannelEnabled[channel])
+					aiSamples[channel] = (float)ai_dataMCCcopy[i];
 
-		//	if (i % MAX_ANALOG_CHANNELS == 0)
-		//	{
-		//		ai_timestamp++;
-		//		aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
-		//	}
+				if (i % MAX_ANALOG_CHANNELS == 0)
+				{
+					ai_timestamp++;
+					aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
+				}
 
-		//}
+			}
+
+			ProcFinished = false;
+
+		}
+
+
+
 	}
 
 	/*********************************************/
@@ -747,7 +757,8 @@ void NIDAQmx::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 	//NOTE: this Proc could be implemented passing a pointer to This Board on the UserData Param.
 	//However I found that it is a bit slower. Static variables do the work faster, however the code looks messier.
 	// Im gonna stick with static variables for now, but be aware that it is posible to use pure member variables.
-
+	std::memcpy(((NIDAQmx*)UserData)->ai_dataMCCcopy, ((NIDAQmx*)UserData)->ai_dataMCC, 256 * 8);
+	((NIDAQmx*)UserData)->ProcFinished = true;
 
 	//ftRec.StartFrame();
 	//std::memcpy(TempRecData, RecordingData, TempCpySize);

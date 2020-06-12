@@ -166,8 +166,8 @@ private:
 	NIDAQ::float64		ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
 	/*NIDAQ::float64		ai_dataMCC[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
 	NIDAQ::float64		ai_dataRaw[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];*/
-	UINT16	ai_dataMCC[256];
-	UINT16		ai_dataRaw[256];
+	DOUBLE	ai_dataMCC[256];
+	DOUBLE	ai_dataMCCcopy[256];
 	Time timer;
 
 	DOUBLE aiSamples[256000];
@@ -179,7 +179,7 @@ private:
 
 	DataBuffer* aiBuffer;
 
-	bool ProcFinished = false;
+	std::atomic<bool> ProcFinished = false;
 
 };
 
