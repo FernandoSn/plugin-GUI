@@ -176,10 +176,12 @@ private:
 	Array<bool>						diChannelEnabled;
 
 	//MCDAQ::float64					ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
-	uint16_t					ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
-	uint16_t					ai_dataRaw[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	//uint16_t					ai_data[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
+	//uint16_t					ai_dataRaw[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
 	//MCDAQ::uInt8					di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
 	//MCDAQ::uInt32					di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
+	DOUBLE						ai_data[256];
+	DOUBLE						ai_dataCopy[256];
 
 	int64 ai_timestamp;
 	uint64 eventCode;

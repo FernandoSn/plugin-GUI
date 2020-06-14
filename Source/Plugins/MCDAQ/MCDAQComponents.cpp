@@ -309,12 +309,13 @@ void MCDAQbd::toggleSourceType(int index)
 void MCDAQbd::run()
 {
 	
-	int Packet20Hz = 256 * 4;
+	int Packet20Hz = 256;
 	int LowChan = 0;
 	int HighChan = 15;
 	long Rate = 2000;
-	int Gain = BIP5VOLTS;
-	unsigned Options = CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //CONVERTDATA
+	int Gain = BIP10VOLTS;
+	//unsigned Options = CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //CONVERTDATA
+	unsigned Options = SCALEDATA + CONVERTDATA + BACKGROUND + CONTINUOUS + SINGLEIO; //SCALEDATA OUTPUTS DOUBLE PREC.
 
 
 
@@ -326,7 +327,7 @@ void MCDAQbd::run()
 
 	// Starting Scan.
 	MCDAQErrChk(MCDAQ::cbAInScan(BoardNum, LowChan, HighChan, Packet20Hz, &Rate, Gain,
-		reinterpret_cast<void*>(ai_dataRaw), Options));
+		reinterpret_cast<void*>(ai_data), Options));
 
 	ai_timestamp = 0;
 	eventCode = 0;
@@ -340,7 +341,7 @@ void MCDAQbd::run()
 		//ie. addToBuffer.
 		if (ProcFinished)
 		{
-
+			ProcFinished = false;
 			float aiSamples[MAX_ANALOG_CHANNELS];
 			for (int i = 0; i < Packet20Hz; i++)
 			{
@@ -349,17 +350,17 @@ void MCDAQbd::run()
 
 				aiSamples[channel] = 0;
 				if (aiChannelEnabled[channel])
-					aiSamples[channel] = ai_data[i];
+					aiSamples[channel] = (float)ai_dataCopy[i];
 
 				if (i % MAX_ANALOG_CHANNELS == 0)
 				{
 					ai_timestamp++;
 					aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
-					DebugMCFile << ai_data[channel] << "\n";
+					//DebugMCFile << ai_data[channel] << "\n";
 				}
 
 			}
-			ProcFinished = false;
+			
 			fflush(stdout);
 
 
@@ -395,8 +396,8 @@ void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 	//DebugMCFile << EventData << "\n";
 	//Conteo = EventData;
 
-	std::memcpy(((MCDAQbd*)UserData)->ai_data, ((MCDAQbd*)UserData)->ai_dataRaw, 256 * 4 * 2);
-
+	std::memcpy(((MCDAQbd*)UserData)->ai_dataCopy, ((MCDAQbd*)UserData)->ai_data, 256 * 8);
+	//std::memcpy(((NIDAQmx*)UserData)->ai_dataMCCcopy, ((NIDAQmx*)UserData)->ai_dataMCC, 256 * 8);
 	((MCDAQbd*)UserData)->ProcFinished = true;
 }
 
