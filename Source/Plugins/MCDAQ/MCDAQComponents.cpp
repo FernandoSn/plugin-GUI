@@ -232,8 +232,8 @@ void MCDAQbd::getAIChannels()
 
 	int NumberOfAIChannels;
 
-	MCDAQErrChk(MCDAQ::cbGetConfig(BOARDINFO, BoardNum, 0, DINUMBITS, &NumberOfAIChannels));
-
+	MCDAQErrChk(MCDAQ::cbGetConfig(BOARDINFO, BoardNum, 0, BINUMADCHANS, &NumberOfAIChannels));
+	//std::cout << "Channel MCC: " << NumberOfAIChannels << "\n";
 	int aiCount = 0;
 
 	//VRange vRange = aiVRanges[0];
