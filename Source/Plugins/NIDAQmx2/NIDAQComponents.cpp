@@ -87,6 +87,7 @@ void NIDAQmxDeviceManager::scanForDevices()
 		if (deviceList[i].length() > 0)
 			devices.add(deviceList[i].toUTF8());
 
+
 }
 
 String NIDAQmxDeviceManager::getDeviceFromIndex(int index)
@@ -576,21 +577,21 @@ void NIDAQmx::run()
 	while (!threadShouldExit())
 	{
 
-		for (double* i = aiSamples; i < aiSamples + 256 ; ++i)
-		{
+		//for (double* i = aiSamples; i < aiSamples + 256 ; ++i)
+		//{
 
-			DebugMCFile << *i << ",";
+		//	DebugMCFile << *i << ",";
 
 
-		}
-		DebugMCFile << "\n";
+		//}
+		//DebugMCFile << "\n";
 
-		MCDAQ::cbGetStatus(BoardNum, &Status, &CurCount, &CurIndex, AIFUNCTION);
+		//MCDAQ::cbGetStatus(BoardNum, &Status, &CurCount, &CurIndex, AIFUNCTION);
 
-		//auto CurrentTime = timer.getMillisecondCounter();
+		////auto CurrentTime = timer.getMillisecondCounter();
 
-		DebugMCFile3 << CurCount << "\n";
-		DebugMCFile2 << CurIndex << "\n";
+		//DebugMCFile3 << CurCount << "\n";
+		//DebugMCFile2 << CurIndex << "\n";
 		//if (ProcFinished)
 		//{
 
@@ -621,17 +622,17 @@ void NIDAQmx::run()
 
 		//-1 is passed to read all the samples currently available in the board buffer. 
 		//For buffer size look into the manual of your board.
-		DAQmxErrChk(NIDAQ::DAQmxReadAnalogF64(
-			taskHandleAI,
-			-1,
-			timeout,
-			DAQmx_Val_GroupByScanNumber, //DAQmx_Val_GroupByScanNumber
-			ai_data,
-			arraySizeInSamps,
-			&ai_read,
-			NULL));
+		//DAQmxErrChk(NIDAQ::DAQmxReadAnalogF64(
+		//	taskHandleAI,
+		//	-1,
+		//	timeout,
+		//	DAQmx_Val_GroupByScanNumber, //DAQmx_Val_GroupByScanNumber
+		//	ai_data,
+		//	arraySizeInSamps,
+		//	&ai_read,
+		//	NULL));
 
-		int DigitalLines = getActiveDigitalLines();
+		/*int DigitalLines = getActiveDigitalLines();
 
 		if (DigitalLines)
 		{
@@ -655,7 +656,7 @@ void NIDAQmx::run()
 					numSampsPerChan,
 					&di_read,
 					NULL));
-		}
+		}*/
 
 		/*
 		std::chrono::milliseconds last_time;
@@ -689,6 +690,7 @@ void NIDAQmx::run()
 		//ie. addToBuffer.
 		if (ProcFinished)
 		{
+			ProcFinished = false;
 
 			float aiSamples[MAX_ANALOG_CHANNELS];
 			//for (int i = 0; i < TotalAnalogChans * ai_read; i++)
@@ -709,7 +711,6 @@ void NIDAQmx::run()
 
 			}
 
-			ProcFinished = false;
 
 		}
 
