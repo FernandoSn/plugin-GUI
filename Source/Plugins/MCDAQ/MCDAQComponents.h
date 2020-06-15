@@ -96,9 +96,10 @@ private:
 
 struct VRange {
 	float vmin, vmax;
+	int MCCcode;
 	VRange() : vmin(0), vmax(0) {}
-	VRange(float rmin, float rmax)
-		: vmin(rmin), vmax(rmax) {}
+	VRange(float rmin, float rmax, int MCCcode)
+		: vmin(rmin), vmax(rmax), MCCcode(MCCcode) {}
 };
 
 struct SRange {

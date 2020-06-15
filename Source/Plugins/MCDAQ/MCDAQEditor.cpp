@@ -39,7 +39,7 @@ void EditorBackground::paint(Graphics& g)
 
 		float aiChanOffsetX = 15; //pixels
 		float aiChanOffsetY = 12; //pixels
-		float aiChanWidth = 70;   //pixels
+		float aiChanWidth = 40;   //pixels
 		float aiChanHeight = 22;  //pixels TODO: normalize
 		float paddingX = 1.07;
 		float paddingY = 1.18;
@@ -364,7 +364,7 @@ void MCDAQEditor::draw()
 
 		int colIndex = i / aiChannelsPerColumn;
 		int rowIndex = i % aiChannelsPerColumn + 1;
-		int xOffset = colIndex * 75 + 40;
+		int xOffset = colIndex * 45 + 40;
 		int y_pos = 5 + rowIndex * 26;
 
 		AIButton* a = new AIButton(i, thread);
@@ -373,14 +373,14 @@ void MCDAQEditor::draw()
 		addAndMakeVisible(a);
 		aiButtons.add(a);
 
-		SOURCE_TYPE sourceType = thread->getSourceTypeForInput(i);
+		/*SOURCE_TYPE sourceType = thread->getSourceTypeForInput(i);
 		printf("Got source type for input %d: %d\n", i, sourceType);
 
 		SourceTypeButton* b = new SourceTypeButton(i, thread, sourceType);
 		b->setBounds(xOffset+18, y_pos-2, 26, 17);
 		b->addListener(this);
 		addAndMakeVisible(b);
-		sourceTypeButtons.add(b);
+		sourceTypeButtons.add(b);*/
 
 	}
 

@@ -216,7 +216,7 @@ void MCDAQbd::getAIVoltageRanges()
 			if (!MCDAQ::cbAIn(BoardNum, 0, RangeCode, &dataValue))
 			{
 				GetRangeInfo(RangeCode, RangeString, &RangeVolts);
-				aiVRanges.add(VRange(0.0 - RangeVolts/2.0, RangeVolts/2.0));
+				aiVRanges.add(VRange(0.0 - RangeVolts/2.0, RangeVolts/2.0,RangeCode));
 			}
 		}
 	}
@@ -245,7 +245,7 @@ void MCDAQbd::getAIChannels()
 			std::string temp = std::to_string(i);
 
 			ai.add(AnalogIn(String(temp.c_str())));
-
+			//std::cout << "FEEEEr channel :" << ai[i].id.getIntValue() << "\n";
 			//terminalConfig.add(termCfgs);
 
 			aiChannelEnabled.add(true);
@@ -311,9 +311,18 @@ void MCDAQbd::run()
 	
 	int Packet20Hz = 256;
 	int LowChan = 0;
-	int HighChan = 15;
-	long Rate = 2000;
-	int Gain = BIP10VOLTS;
+	int HighChan;
+
+	if (DiffOn)
+		HighChan = 7;
+	else
+		HighChan = 15;
+
+	//long Rate = 2000;
+	long Rate = samplerate;
+	//std::cout << "Rate: " << Rate << "\n";
+
+	int Gain = voltageRange.MCCcode;
 	//unsigned Options = CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //CONVERTDATA
 	unsigned Options = SCALEDATA + CONVERTDATA + BACKGROUND + CONTINUOUS + SINGLEIO; //SCALEDATA OUTPUTS DOUBLE PREC.
 
