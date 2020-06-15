@@ -39,7 +39,7 @@ void EditorBackground::paint(Graphics& g)
 
 		float aiChanOffsetX = 15; //pixels
 		float aiChanOffsetY = 12; //pixels
-		float aiChanWidth = 40;   //pixels
+		float aiChanWidth = 44;   //pixels
 		float aiChanHeight = 22;  //pixels TODO: normalize
 		float paddingX = 1.07;
 		float paddingY = 1.18;
@@ -364,7 +364,7 @@ void MCDAQEditor::draw()
 
 		int colIndex = i / aiChannelsPerColumn;
 		int rowIndex = i % aiChannelsPerColumn + 1;
-		int xOffset = colIndex * 45 + 40;
+		int xOffset = colIndex * 47 + 41;
 		int y_pos = 5 + rowIndex * 26;
 
 		AIButton* a = new AIButton(i, thread);
@@ -392,7 +392,7 @@ void MCDAQEditor::draw()
 
 		int colIndex = i / diChannelsPerColumn;
 		int rowIndex = i % diChannelsPerColumn + 1;
-		xOffset = ((nAI % maxChannelsPerColumn == 0 ? 0 : 1) + nAI / aiChannelsPerColumn) * 75 + 38 + colIndex * 45;
+		xOffset = ((nAI % maxChannelsPerColumn == 0 ? 0 : 1) + nAI / aiChannelsPerColumn) * 47 + 39 + colIndex * 45;
 		int y_pos = 5 + rowIndex * 26;
 
 		DIButton* b = new DIButton(i, thread);
@@ -426,6 +426,16 @@ void MCDAQEditor::draw()
 	voltageRangeSelectBox->setSelectedItemIndex(t->getVoltageRangeIndex(), false);
 	voltageRangeSelectBox->addListener(this);
 	addAndMakeVisible(voltageRangeSelectBox);
+
+	//Soruce type button for all the channels.
+	SOURCE_TYPE sourceType = thread->getSourceTypeForInput(0);
+	printf("Got source type for input %d: %d\n", 0, sourceType);
+
+	SourceTypeButton* b = new SourceTypeButton(0, thread, sourceType);
+	b->setBounds(xOffset+25, 100, 26, 17);
+	b->addListener(this);
+	addAndMakeVisible(b);
+	sourceTypeButtons.add(b);
 
 	fifoMonitor = new FifoMonitor(thread);
 	fifoMonitor->setBounds(xOffset + 2, 105, 70, 12);
