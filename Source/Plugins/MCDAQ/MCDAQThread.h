@@ -89,8 +89,9 @@ public:
 	void toggleAIChannel(int channelIndex);
 	void toggleDIChannel(int channelIndex);
 
-	SOURCE_TYPE getSourceTypeForInput(int index);
-	void toggleSourceType(int id);
+	SOURCE_TYPE getSourceTypeForInput();
+	void toggleSourceType();
+	bool supportsDiffSourceType();
 
 	int getNumAvailableDevices();
 	void selectFromAvailableDevices();

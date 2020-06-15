@@ -226,9 +226,14 @@ void MCDAQbd::getAIVoltageRanges()
 void MCDAQbd::getAIChannels()
 {
 	//TODO: Toggle between SE or DIFF
+	if(MCDAQ::cbAInputMode(BoardNum, DIFFERENTIAL))
+		SupportsDiff = false;
+	else
+		SupportsDiff = true;
+	
 	MCDAQErrChk(MCDAQ::cbAInputMode(BoardNum, SINGLE_ENDED));
-	SupportsDiff = true;
 	DiffOn = false;
+	st = SOURCE_TYPE::RSE1;
 
 	int NumberOfAIChannels;
 
@@ -296,14 +301,20 @@ int MCDAQbd::getActiveDigitalLines()
 	return linesEnabled;
 }
 
-void MCDAQbd::toggleSourceType(int index)
+void MCDAQbd::toggleSourceType()
 {
 
 	if (DiffOn)
+	{
 		DiffOn = false;
+		st = SOURCE_TYPE::RSE1;
+	}
 	else
+	{
 		DiffOn = true;
-	
+		st = SOURCE_TYPE::DIFF3;
+	}
+
 }
 
 void MCDAQbd::run()
@@ -314,9 +325,12 @@ void MCDAQbd::run()
 	int HighChan;
 
 	if (DiffOn)
-		HighChan = 7;
+	{
+		HighChan = (ai.size()/2) - 1;
+		MCDAQErrChk(MCDAQ::cbAInputMode(BoardNum, DIFFERENTIAL));
+	}
 	else
-		HighChan = 15;
+		HighChan = ai.size()-1;
 
 	//long Rate = 2000;
 	long Rate = samplerate;

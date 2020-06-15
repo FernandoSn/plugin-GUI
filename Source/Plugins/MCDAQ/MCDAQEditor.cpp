@@ -373,15 +373,6 @@ void MCDAQEditor::draw()
 		addAndMakeVisible(a);
 		aiButtons.add(a);
 
-		/*SOURCE_TYPE sourceType = thread->getSourceTypeForInput(i);
-		printf("Got source type for input %d: %d\n", i, sourceType);
-
-		SourceTypeButton* b = new SourceTypeButton(i, thread, sourceType);
-		b->setBounds(xOffset+18, y_pos-2, 26, 17);
-		b->addListener(this);
-		addAndMakeVisible(b);
-		sourceTypeButtons.add(b);*/
-
 	}
 
 	diButtons.clear();
@@ -428,14 +419,17 @@ void MCDAQEditor::draw()
 	addAndMakeVisible(voltageRangeSelectBox);
 
 	//Soruce type button for all the channels.
-	SOURCE_TYPE sourceType = thread->getSourceTypeForInput(0);
-	printf("Got source type for input %d: %d\n", 0, sourceType);
+	if (thread->supportsDiffSourceType())
+	{
+		SOURCE_TYPE sourceType = thread->getSourceTypeForInput();
+		printf("Got source type for all inputs: %d\n", sourceType);
 
-	SourceTypeButton* b = new SourceTypeButton(0, thread, sourceType);
-	b->setBounds(xOffset+25, 100, 26, 17);
-	b->addListener(this);
-	addAndMakeVisible(b);
-	sourceTypeButtons.add(b);
+		SourceTypeButton* b = new SourceTypeButton(0, thread, sourceType);
+		b->setBounds(xOffset+25, 100, 26, 17);
+		b->addListener(this);
+		addAndMakeVisible(b);
+		sourceTypeButtons.add(b);
+	}
 
 	fifoMonitor = new FifoMonitor(thread);
 	fifoMonitor->setBounds(xOffset + 2, 105, 70, 12);
@@ -514,8 +508,8 @@ void MCDAQEditor::buttonEvent(Button* button)
 	}
 	else if (sourceTypeButtons.contains((SourceTypeButton*)button))
 	{
-		thread->toggleSourceType(((SourceTypeButton*)button)->getId());
-		((SourceTypeButton*)button)->update(thread->getSourceTypeForInput(((SourceTypeButton*)button)->getId()));
+		thread->toggleSourceType();
+		((SourceTypeButton*)button)->update(thread->getSourceTypeForInput());
 	}
 	else if (button == swapDeviceButton)
 	{

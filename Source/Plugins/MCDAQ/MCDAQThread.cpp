@@ -134,15 +134,20 @@ int MCDAQThread::swapConnection(String productName)
 
 }
 
-void MCDAQThread::toggleSourceType(int id)
+void MCDAQThread::toggleSourceType()
 {
-	mMCDAQ->toggleSourceType(id);
+	mMCDAQ->toggleSourceType();
 }
 
-SOURCE_TYPE MCDAQThread::getSourceTypeForInput(int index)
+bool MCDAQThread::supportsDiffSourceType()
 {
-	//return mMCDAQ->st[index];
-	return SOURCE_TYPE::RSE1;
+	return mMCDAQ->SupportsDiff;
+}
+
+SOURCE_TYPE MCDAQThread::getSourceTypeForInput()
+{
+	return mMCDAQ->st;
+	//return SOURCE_TYPE::RSE1;
 }
 
 void MCDAQThread::closeConnection()

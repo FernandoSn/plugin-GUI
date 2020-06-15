@@ -133,8 +133,8 @@ public:
 	void getAIVoltageRanges();
 	void getDIChannels();
 
-	SOURCE_TYPE getSourceTypeForInput(int index);
-	void toggleSourceType(int id);
+	//SOURCE_TYPE getSourceTypeForInput(int index);
+	void toggleSourceType();
 
 	int getActiveDigitalLines();
 
@@ -168,6 +168,7 @@ private:
 	float							samplerate;
 
 	Array<AnalogIn> 				ai;
+	SOURCE_TYPE						st;
 	//Array<MCDAQ::int32>				terminalConfig;
 	//Array<SOURCE_TYPE>				st;
 	bool							DiffOn;
