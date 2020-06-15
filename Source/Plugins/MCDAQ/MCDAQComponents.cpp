@@ -319,7 +319,7 @@ void MCDAQbd::toggleSourceType()
 
 void MCDAQbd::run()
 {
-	
+
 	int Packet20Hz = 256;
 	int LowChan = 0;
 	int HighChan;
@@ -354,17 +354,26 @@ void MCDAQbd::run()
 
 	ai_timestamp = 0;
 	eventCode = 0;
+	unsigned short DIDataValue = 0;
+	int DigitalLines = getActiveDigitalLines();
 
 	while (!threadShouldExit())
 	{
-		
-		
 		//Loop to handle Analog inputs.
 		//Actually it seems that analog and digital are added to the same or different buffers with the same func call
 		//ie. addToBuffer.
 		if (ProcFinished)
 		{
 			ProcFinished = false;
+
+			if (DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
+			{
+				MCDAQ::cbDIn(BoardNum, AUXPORT, &DIDataValue);
+				//Bitwise operations to get the mask for the eventCode.
+				eventCode = DIDataValue & DigitalLines;
+			}
+
+
 			float aiSamples[MAX_ANALOG_CHANNELS];
 			for (int i = 0; i < Packet20Hz; i++)
 			{
