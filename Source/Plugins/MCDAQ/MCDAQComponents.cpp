@@ -36,7 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 std::ofstream DebugMCFile("DebugMCFile.txt");
-
+std::ofstream logFile("LogMCFile.txt");
+std::ofstream logFile2("LogMCFile2.txt");
 
 MCDAQComponent::MCDAQComponent() : serial_number(0) {}
 MCDAQComponent::~MCDAQComponent() {}
@@ -49,7 +50,7 @@ void MCDAQAPI::getInfo()
 MCDAQbdDeviceManager::MCDAQbdDeviceManager() 
 {
 	//Disabling MCC error system so we can handle them ourselves.
-	MCDAQErrChk(MCDAQ::cbErrHandling(DONTPRINT, DONTSTOP));
+	MCDAQErrChk(MCDAQ::cbErrHandling(PRINTALL, DONTSTOP));
 	//Ignore instacall
 	MCDAQErrChk(MCDAQ::cbIgnoreInstaCal());
 	//Set the version of the api.
@@ -332,6 +333,7 @@ void MCDAQbd::run()
 	else
 		HighChan = ai.size()-1;
 
+	int TotalChannels = HighChan + 1;
 	//long Rate = 2000;
 	long Rate = samplerate;
 	//std::cout << "Rate: " << Rate << "\n";
@@ -364,6 +366,7 @@ void MCDAQbd::run()
 		//ie. addToBuffer.
 		if (ProcFinished)
 		{
+			std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 			ProcFinished = false;
 
 			if (DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
@@ -378,23 +381,29 @@ void MCDAQbd::run()
 			for (int i = 0; i < Packet20Hz; i++)
 			{
 	
-				int channel = i % MAX_ANALOG_CHANNELS;
+				int channel = i % TotalChannels;
 
 				aiSamples[channel] = 0;
 				if (aiChannelEnabled[channel])
 					aiSamples[channel] = (float)ai_dataCopy[i];
 
-				if (i % MAX_ANALOG_CHANNELS == 0)
+				if (i % TotalChannels == 0)
 				{
+					//Fernando: I don't really understand how aiBuffer works. it doesnt seems to be init in this class. Maybe in thread?
+					//Furthermore the number of chans (private var in aiBuffer) is 1 every time. Is not clear to me how aiBuffer knows
+					//how many bytes to read from aiSamples without accesing noninit memory.
 					ai_timestamp++;
 					aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
-					//DebugMCFile << ai_data[channel] << "\n";
+					//DebugMCFile << aiBuffer->numChans << "\n";
 				}
 
 			}
 			
 			fflush(stdout);
+			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			std::chrono::duration<float> duration = end - start;
 
+			logFile2 << duration.count() << "\n";
 
 		}
 
@@ -406,14 +415,28 @@ void MCDAQbd::run()
 
 	MCDAQErrChk(MCDAQ::cbStopBackground(BoardNum, AIFUNCTION));
 
+	MCDAQErrChk(MCDAQ::cbDisableEvent(BoardNum, ON_DATA_AVAILABLE));
+
 	fflush(stdout);
 
 	return;
 
 }
 
+
+std::chrono::steady_clock::time_point start;
+std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();;
+std::chrono::duration<float> duration;
+
 void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned EventData, void* UserData)
 {
+
+	start = std::chrono::steady_clock::now();
+
+	duration = start - end;
+
+	logFile << duration.count() << "\n";
+	
 	//NOTE: this Proc could be implemented passing a pointer to This Board on the UserData Param.
 	//However I found that it is a bit slower. Static variables do the work faster, however the code looks messier.
 	// Im gonna stick with static variables for now, but be aware that it is posible to use pure member variables.
@@ -425,12 +448,16 @@ void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 	//BoardGfxReady = true;
 	//ftRec.StopFrame(logfileRec);
 
-	//DebugMCFile << EventData << "\n";
+	DebugMCFile << EventData << "\n";
 	//Conteo = EventData;
 
 	std::memcpy(((MCDAQbd*)UserData)->ai_dataCopy, ((MCDAQbd*)UserData)->ai_data, 256 * 8);
 	//std::memcpy(((NIDAQmx*)UserData)->ai_dataMCCcopy, ((NIDAQmx*)UserData)->ai_dataMCC, 256 * 8);
 	((MCDAQbd*)UserData)->ProcFinished = true;
+
+	end = std::chrono::steady_clock::now();
+
+	
 }
 
 InputChannel::InputChannel()
