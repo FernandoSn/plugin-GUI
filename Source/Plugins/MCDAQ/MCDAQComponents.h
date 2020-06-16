@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_ANALOG_CHANNELS 16
 #define NUM_SAMPLE_RATES 17
 #define MAX_DIGITAL_CHANNELS 8
+#define MAX_PACKETSIZE 1600
 #define ERR_BUFF_SIZE 2048
 #define STR2CHR( jString ) ((jString).toUTF8())
 
@@ -182,8 +183,8 @@ private:
 	//uint16_t					ai_dataRaw[CHANNEL_BUFFER_SIZE * MAX_ANALOG_CHANNELS];
 	//MCDAQ::uInt8					di_data_8[CHANNEL_BUFFER_SIZE];  //PXI devices use 8-bit read
 	//MCDAQ::uInt32					di_data_32[CHANNEL_BUFFER_SIZE]; //USB devices use 32-bit read
-	DOUBLE						ai_data[256];
-	DOUBLE						ai_dataCopy[256];
+	DOUBLE						ai_data[MAX_PACKETSIZE];
+	DOUBLE						ai_dataCopy[MAX_PACKETSIZE];
 
 	int64 ai_timestamp;
 	uint64 eventCode;
@@ -193,7 +194,7 @@ private:
 
 	//Extra vars for ProcBackgroundBoard
 	bool ProcFinished = false;
-	int Packet20Hz;
+	int PacketSize;
 	int TotalChannels;
 	int DigitalLines;
 

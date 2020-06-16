@@ -324,7 +324,6 @@ void MCDAQbd::toggleSourceType()
 void MCDAQbd::run()
 {
 
-	Packet20Hz = 256;
 	int LowChan = 0;
 	int HighChan;
 
@@ -336,89 +335,89 @@ void MCDAQbd::run()
 	else
 		HighChan = ai.size()-1;
 
-	TotalChannels = 16;
-	//long Rate = 2000;
+	TotalChannels = HighChan + 1;
 	long Rate = samplerate;
-	//std::cout << "Rate: " << Rate << "\n";
-
 	int Gain = voltageRange.MCCcode;
-	//unsigned Options = CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //CONVERTDATA
-	unsigned Options = SCALEDATA + CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //SCALEDATA OUTPUTS DOUBLE PREC.
-
-
-
-	//Enable CALLBACK Board::ProcBackgroundBoard
-	MCDAQErrChk(MCDAQ::cbEnableEvent(BoardNum, ON_DATA_AVAILABLE, Packet20Hz, MCDAQbd::ProcBackgroundBoard, this));
-
-	// IMPORTANT : Putting this thread to sleep to get the correct Packets.
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-	// Starting Scan.
-	MCDAQErrChk(MCDAQ::cbAInScan(BoardNum, LowChan, HighChan, Packet20Hz, &Rate, Gain,
-		reinterpret_cast<void*>(ai_data), Options));
-
+	PacketSize = (samplerate / 1000.0f) * (float)TotalChannels; //Packet size of 1 ms.
+	//PacketSize = 256; //Packet size of 1 ms.
 	ai_timestamp = 0;
 	eventCode = 0;
-	unsigned short DIDataValue = 0;
 	DigitalLines = getActiveDigitalLines();
 
-	while (!threadShouldExit())
+	//unsigned Options = CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //CONVERTDATA
+	unsigned Options = SCALEDATA + CONVERTDATA + BACKGROUND + CONTINUOUS + SINGLEIO; //SCALEDATA OUTPUTS DOUBLE PREC.
+
+	MCDAQErrChk(MCDAQ::cbErrHandling(PRINTALL, DONTSTOP));
+	//Enable CALLBACK Board::ProcBackgroundBoard
+	MCDAQErrChk(MCDAQ::cbEnableEvent(BoardNum, ON_DATA_AVAILABLE, PacketSize, MCDAQbd::ProcBackgroundBoard, this));
+
+	// IMPORTANT : Putting this thread to sleep to get the correct Packets.
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	// Starting Scan.
+	if (!MCDAQ::cbAInScan(BoardNum, LowChan, HighChan, PacketSize, &Rate, Gain,
+		reinterpret_cast<void*>(ai_data), Options))
 	{
-		//Loop to handle Analog inputs.
-		//Actually it seems that analog and digital are added to the same or different buffers with the same func call
-		//ie. addToBuffer.
-		//if (ProcFinished)
-		//{
-		//	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-		//	ProcFinished = false;
+		while (!threadShouldExit())
+		{
+			//Loop to handle Analog inputs.
+			//Actually it seems that analog and digital are added to the same or different buffers with the same func call
+			//ie. addToBuffer.
+			//if (ProcFinished)
+			//{
+			//	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+			//	ProcFinished = false;
 
-		//	if (DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
-		//	{
-		//		MCDAQ::cbDIn(BoardNum, AUXPORT, &DIDataValue);
-		//		//Bitwise operations to get the mask for the eventCode.
-		//		eventCode = DIDataValue & DigitalLines;
-		//	}
+			//	if (DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
+			//	{
+			//		MCDAQ::cbDIn(BoardNum, AUXPORT, &DIDataValue);
+			//		//Bitwise operations to get the mask for the eventCode.
+			//		eventCode = DIDataValue & DigitalLines;
+			//	}
 
 
-		//	float aiSamples[MAX_ANALOG_CHANNELS];
-		//	for (int i = 0; i < Packet20Hz; i++)
-		//	{
-	
-		//		int channel = i % TotalChannels;
+			//	float aiSamples[MAX_ANALOG_CHANNELS];
+			//	for (int i = 0; i < PacketSize; i++)
+			//	{
 
-		//		aiSamples[channel] = 0;
-		//		if (aiChannelEnabled[channel])
-		//			aiSamples[channel] = (float)ai_dataCopy[i];
+			//		int channel = i % TotalChannels;
 
-		//		if (i % TotalChannels == 0)
-		//		{
-		//			//Fernando: I don't really understand how aiBuffer works. it doesnt seems to be init in this class. Maybe in thread?
-		//			//Furthermore the number of chans (private var in aiBuffer) is 1 every time. Is not clear to me how aiBuffer knows
-		//			//how many bytes to read from aiSamples without accesing noninit memory.
-		//			ai_timestamp++;
-		//			aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
-		//			//DebugMCFile << aiBuffer->numChans << "\n";
-		//		}
+			//		aiSamples[channel] = 0;
+			//		if (aiChannelEnabled[channel])
+			//			aiSamples[channel] = (float)ai_dataCopy[i];
 
-		//	}
-		//	
-		//	fflush(stdout);
-		//	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-		//	std::chrono::duration<float> duration = end - start;
+			//		if (i % TotalChannels == 0)
+			//		{
+			//			//Fernando: I don't really understand how aiBuffer works. it doesnt seems to be init in this class. Maybe in thread?
+			//			//Furthermore the number of chans (private var in aiBuffer) is 1 every time. Is not clear to me how aiBuffer knows
+			//			//how many bytes to read from aiSamples without accesing noninit memory.
+			//			ai_timestamp++;
+			//			aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
+			//			//DebugMCFile << aiBuffer->numChans << "\n";
+			//		}
 
-		//	logFile2 << duration.count() << "\n";
+			//	}
+			//	
+			//	fflush(stdout);
+			//	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			//	std::chrono::duration<float> duration = end - start;
 
-		//}
+			//	logFile2 << duration.count() << "\n";
 
+			//}
+
+		}
 	}
 
 	/*********************************************/
-	// DAQmx Stop Code
+	// MCC Stop Code
 	/*********************************************/
 
 	MCDAQErrChk(MCDAQ::cbStopBackground(BoardNum, AIFUNCTION));
 
 	MCDAQErrChk(MCDAQ::cbDisableEvent(BoardNum, ON_DATA_AVAILABLE));
+
+	MCDAQErrChk(MCDAQ::cbErrHandling(DONTPRINT, DONTSTOP));
 
 	fflush(stdout);
 
@@ -453,15 +452,16 @@ void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 	//BoardGfxReady = true;
 	//ftRec.StopFrame(logfileRec);
 
-	//DebugMCFile << EventData << "\n";
+	DebugMCFile << EventData << "\n";
 	//Conteo = EventData;
 
 	//MCDAQbdPTR->ProcFinished = true;
 
 	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 
-	std::memcpy(MCDAQbdPTR->ai_dataCopy, MCDAQbdPTR->ai_data, 256 * 8);
+	std::memcpy(MCDAQbdPTR->ai_dataCopy, MCDAQbdPTR->ai_data, (MCDAQbdPTR->PacketSize) * 8);
 	unsigned short DIDataValue = 0;
+
 	if (MCDAQbdPTR->DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
 	{
 		MCDAQ::cbDIn(BoardNum, AUXPORT, &DIDataValue);
@@ -471,7 +471,7 @@ void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 
 
 	float aiSamples[MAX_ANALOG_CHANNELS];
-	for (int i = 0; i < (MCDAQbdPTR->Packet20Hz); i++)
+	for (int i = 0; i < (MCDAQbdPTR->PacketSize); i++)
 	{
 
 		int channel = i % (MCDAQbdPTR->TotalChannels);
