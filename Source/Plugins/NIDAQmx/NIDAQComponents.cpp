@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <fstream>
 #include "NIDAQComponents.h"
-std::ofstream DebugMCFile("DebugMCFile.txt");
+//std::ofstream DebugMCFile("DebugMCFile.txt");
 static int32 GetTerminalNameWithDevPrefix(NIDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[]);
 
 static int32 GetTerminalNameWithDevPrefix(NIDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[])
@@ -611,7 +611,7 @@ void NIDAQmx::run()
 			{
 				ai_timestamp++;
 				int a = aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
-				DebugMCFile << a << "\n";
+				//DebugMCFile << a << "\n";
 			}
 
 		}
