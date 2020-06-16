@@ -190,7 +190,12 @@ private:
 
 	DataBuffer* aiBuffer;
 
+
+	//Extra vars for ProcBackgroundBoard
 	bool ProcFinished = false;
+	int Packet20Hz;
+	int TotalChannels;
+	int DigitalLines;
 
 };
 
