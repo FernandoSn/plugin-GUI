@@ -607,10 +607,10 @@ void NIDAQmx::run()
 			if (aiChannelEnabled[channel])
 				aiSamples[channel] = ai_data[i];
 
-			if (i % MAX_ANALOG_CHANNELS == 0)
+			if ((i+1) % MAX_ANALOG_CHANNELS == 0)
 			{
 				ai_timestamp++;
-				int a = aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
+				aiBuffer->addToBuffer(aiSamples, &ai_timestamp, &eventCode, 1);
 				//DebugMCFile << a << "\n";
 			}
 
