@@ -38,9 +38,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define MCDAQbdPTR ((MCDAQbd*)UserData)
 
-std::ofstream DebugMCFile("DebugMCFile.txt");
-std::ofstream logFile("LogMCFile.txt");
-std::ofstream logFile2("LogMCFile2.txt");
+//std::ofstream DebugMCFile("DebugMCFile.txt");
+//std::ofstream logFile("LogMCFile.txt");
+//std::ofstream logFile2("LogMCFile2.txt");
 
 MCDAQComponent::MCDAQComponent() : serial_number(0) {}
 MCDAQComponent::~MCDAQComponent() {}
@@ -338,8 +338,8 @@ void MCDAQbd::run()
 	TotalChannels = HighChan + 1;
 	long Rate = samplerate;
 	int Gain = voltageRange.MCCcode;
-	PacketSize = (samplerate / 1000.0f) * (float)TotalChannels; //Packet size of 1 ms.
-	//PacketSize = 256; //Packet size of 1 ms.
+	//PacketSize = (samplerate / 1000.0f) * (float)TotalChannels; //Packet size of 1 ms.
+	PacketSize = 256; //Packet size of 1 ms.
 	ai_timestamp = 0;
 	eventCode = 0;
 	DigitalLines = getActiveDigitalLines();
@@ -435,8 +435,8 @@ void MCDAQbd::run()
 //
 //logFile << duration.count() << "\n";
 //end = std::chrono::steady_clock::now();
-std::ofstream registroRawW("registroRawWrite.dat", std::ios::binary);
-std::ofstream registroRawW2("registroRawWrite2.dat", std::ios::binary);
+//std::ofstream registroRawW("registroRawWrite.dat", std::ios::binary);
+//std::ofstream registroRawW2("registroRawWrite2.dat", std::ios::binary);
 void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned EventData, void* UserData)
 {
 
@@ -452,12 +452,12 @@ void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 	//BoardGfxReady = true;
 	//ftRec.StopFrame(logfileRec);
 
-	DebugMCFile << EventData << "\n";
+	//DebugMCFile << EventData << "\n";
 	//Conteo = EventData;
 
 	//MCDAQbdPTR->ProcFinished = true;
 
-	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+	//std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 
 	std::memcpy(MCDAQbdPTR->ai_dataCopy, MCDAQbdPTR->ai_data, (MCDAQbdPTR->PacketSize) * 8);
 	unsigned short DIDataValue = 0;
