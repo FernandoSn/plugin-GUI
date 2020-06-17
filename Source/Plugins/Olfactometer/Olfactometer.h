@@ -85,7 +85,7 @@ public:
 private:
 
 
-    void RunOdorPres();
+    void RunOdorPres(); //deprecated
 
     bool ResetOlfactometer();
 

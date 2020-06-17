@@ -79,6 +79,7 @@ AudioProcessorEditor* Olfactometer::createEditor()
 
 bool Olfactometer::InitOlfactometer(const std::pair<std::string, std::string>& COMPair)
 {
+    //this func is based on ArduinoOutput::setDevice method, thus it has all the downsides and upsides of that method.
     if (!acquisitionIsActive)
     {
         if ((!OlfacArduino.connect(COMPair.first)) || (!OlfacSerial.setup(COMPair.second.c_str(), 9600)))
@@ -257,6 +258,7 @@ void Olfactometer::InitOdorPres()
 
     //editor->updateSettings();
 
+    //Select the odors. Numbers are pins in the Arduino mega. 
     OdorVec.push_back(5);
     OdorVec.push_back(6);
     OdorVec.push_back(7);
