@@ -338,12 +338,12 @@ void MCDAQbd::run()
 	TotalChannels = HighChan + 1;
 	long Rate = samplerate;
 	int Gain = voltageRange.MCCcode;
-	//PacketSize = (samplerate / 1000.0f) * (float)TotalChannels; //Packet size of 1 ms.
-	PacketSize = 256; //Packet size of 1 ms.
+	PacketSize = (samplerate / 1000.0f) * (float)TotalChannels; //Packet size of 1 ms.
+	//PacketSize = 256; //Packet size of 1 ms.
 	ai_timestamp = 0;
 	eventCode = 0;
 	DigitalLines = getActiveDigitalLines();
-
+	Count = 0;
 	//unsigned Options = CONVERTDATA + BACKGROUND + CONTINUOUS + BLOCKIO; //CONVERTDATA
 	unsigned Options = SCALEDATA + CONVERTDATA + BACKGROUND + CONTINUOUS + SINGLEIO; //SCALEDATA OUTPUTS DOUBLE PREC.
 
@@ -437,6 +437,7 @@ void MCDAQbd::run()
 //end = std::chrono::steady_clock::now();
 //std::ofstream registroRawW("registroRawWrite.dat", std::ios::binary);
 //std::ofstream registroRawW2("registroRawWrite2.dat", std::ios::binary);
+
 void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned EventData, void* UserData)
 {
 
@@ -459,7 +460,9 @@ void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 
 	//std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 
-	std::memcpy(MCDAQbdPTR->ai_dataCopy, MCDAQbdPTR->ai_data, (MCDAQbdPTR->PacketSize) * 8);
+	int BufferSize = EventData - (MCDAQbdPTR->Count);
+	//std::memcpy(MCDAQbdPTR->ai_dataCopy, MCDAQbdPTR->ai_data, (MCDAQbdPTR->PacketSize) * 8);
+	std::memcpy(MCDAQbdPTR->ai_dataCopy, MCDAQbdPTR->ai_data, BufferSize * 8);
 	unsigned short DIDataValue = 0;
 
 	if (MCDAQbdPTR->DigitalLines) //i% MAX_ANALOG_CHANNELS == 0 && //This gate could be added
@@ -471,7 +474,8 @@ void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 
 
 	float aiSamples[MAX_ANALOG_CHANNELS];
-	for (int i = 0; i < (MCDAQbdPTR->PacketSize); i++)
+	//for (int i = 0; i < (MCDAQbdPTR->PacketSize); i++)
+	for (int i = 0; i < BufferSize; i++)
 	{
 
 		int channel = i % (MCDAQbdPTR->TotalChannels);
@@ -492,7 +496,7 @@ void MCDAQbd::ProcBackgroundBoard(int BoardNum, unsigned EventType, unsigned Eve
 		}
 
 	}
-
+	(MCDAQbdPTR->Count) = EventData;
 	fflush(stdout);
 	//registroRawW2.write(reinterpret_cast<char*>(MCDAQbdPTR->ai_dataCopy), 8 * 256);
 	//std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();

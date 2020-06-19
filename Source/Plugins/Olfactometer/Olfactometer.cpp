@@ -324,7 +324,8 @@ void Olfactometer::RespProc(AudioSampleBuffer& buffer)
     if (CurrentTime <= TimeCounter + TargetTime)
     {
         //DebugOlfac2 << "DentroRespProcIF \n";
-        //Extracting data from NIDAQ and copying it into RespBuffer;
+
+        //Extracting data from NIDAQ(or any source) and copying it into RespBuffer;
 
         uint32_t SamNo = getNumSamples(RespChannel);
 

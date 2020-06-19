@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_ANALOG_CHANNELS 16
 #define NUM_SAMPLE_RATES 9
 #define MAX_DIGITAL_CHANNELS 8
-#define MAX_PACKETSIZE 1600
+#define MAX_PACKETSIZE 160000
 #define ERR_BUFF_SIZE 2048
 #define STR2CHR( jString ) ((jString).toUTF8())
 
@@ -197,6 +197,7 @@ private:
 	int PacketSize;
 	int TotalChannels;
 	int DigitalLines;
+	int Count;
 
 };
 
