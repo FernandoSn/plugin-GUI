@@ -24,11 +24,11 @@
 #ifndef __Olfactometer_H_F7BDA585__
 #define __Olfactometer_H_F7BDA585__
 
+#include <random>
 #include <SerialLib.h>
 #include <ProcessorHeaders.h>
 #include "serial/ofArduino.h"
 #include "FerTimer.h"
-
 
 
 /**
@@ -182,6 +182,11 @@ private:
 	static const uint32_t EquilibrationTime = 0;
 	static const uint32_t RespEpochTime = 0;
 	static const uint32_t RespToleranceTime = 0;
+
+
+
+    std::random_device Rd;
+    std::default_random_engine Generator;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);

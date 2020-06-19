@@ -38,7 +38,6 @@
 #include <thread>
 #include <array>
 #include <numeric>
-
 #include <fstream>
 
 //std::ofstream DebugOlfac1("DebugOlfac1.txt");
@@ -57,6 +56,7 @@ Olfactometer::Olfactometer()
     , OpenTime              (0)
     , timer                 ()
     , OlfactometerProc      (&Olfactometer::OdorValveOpener)
+    , Generator             (Rd())
 {
     setProcessorType (PROCESSOR_TYPE_SINK);
     //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
@@ -267,8 +267,12 @@ void Olfactometer::InitOdorPres()
     OdorVec.push_back(10);
     OdorVec.push_back(11);
 
+
     CurrentOdor = OdorVec.begin();
     PastLastOdor = OdorVec.end();
+
+    //Shuffle odors.
+    std::shuffle(CurrentOdor, PastLastOdor, Generator);
 
     SerialTime = timer.getMillisecondCounter();
 
@@ -297,7 +301,8 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
     //TimeCounter = CurrentTime;
     TargetTime = EquilibrationTime; //Equilibrate for...
 
-    CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)));
+    CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + "/"
+        + juce::String(SeriesNo) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)));
 
     OlfactometerProc = &Olfactometer::Equilibrate6Sec;
     //}
@@ -495,7 +500,7 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
 
         if (CurrentOdor < PastLastOdor)
         {
-
+            //Advance to the next odor in OdorVec
             OlfactometerProc = &Olfactometer::CheckSerialTime;
 
         }
@@ -505,11 +510,15 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
 
             if (CurrentSeries < SeriesNo)
             {
+                //Advance to the next trial
                 CurrentOdor = OdorVec.begin();
+                //Shuffle the odors for the next trial
+                std::shuffle(CurrentOdor, PastLastOdor, Generator);
                 OlfactometerProc = &Olfactometer::CheckSerialTime;
             }
             else
             {
+                //If all trials has passed, end the loop.
                 CoreServices::sendStatusMessage("Odor presentation finished");
                 OlfactometerProc = &Olfactometer::EmptyFunc;
             }
@@ -520,10 +529,13 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
 void Olfactometer::CheckSerialTime(AudioSampleBuffer& buffer)
 {
     //DebugOlfac1 << "FueraValveCloser \n";
+
+
     if (timer.getMillisecondCounter() > SerialTime + 3600000)
     {
+        //If one hour has passed, reset arduinos.
         ResetOlfactometer();
-
+        SerialTime = timer.getMillisecondCounter();
         OlfactometerProc = &Olfactometer::OdorValveOpener;
     }
     else 
