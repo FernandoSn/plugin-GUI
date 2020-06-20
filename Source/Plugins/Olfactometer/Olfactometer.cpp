@@ -57,11 +57,13 @@ Olfactometer::Olfactometer()
     , timer                 ()
     , OlfactometerProc      (&Olfactometer::OdorValveOpener)
     , Generator             (Rd())
+    //, Predictor             (0)
 {
     setProcessorType (PROCESSOR_TYPE_SINK);
     //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     //uint32 FT = timer.getMillisecondCounter();
     //timer.waitForMillisecondCounter(FT + 10000);
+    ToneGeneratorAudioSource a;
 }
 
 
@@ -754,3 +756,40 @@ void Olfactometer::process (AudioSampleBuffer& buffer)
     //chec
     //checkForEvents ();
 }
+
+//SimpleTone::SimpleTone(double ToneFreq)
+//    :
+//    ToneFrequency(ToneFreq)
+//{
+//
+//    setAudioChannels(0, 2);
+//
+//}
+//
+//SimpleTone::~SimpleTone()
+//{
+//    shutdownAudio();
+//}
+//
+//void SimpleTone::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
+//{
+//    SamplingRate = sampleRate;
+//    ToneBufferSize = samplesPerBlockExpected;
+//}
+//
+//void SimpleTone::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill)
+//{
+//    for (auto channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
+//    {
+//        // Get a pointer to the start sample in the buffer for this audio output channel
+//        auto* buffer = bufferToFill.buffer->getWritePointer(channel, bufferToFill.startSample);
+//
+//        // Fill the required number of samples with noise between -0.125 and +0.125
+//        for (auto sample = 0; sample < bufferToFill.numSamples; ++sample)
+//            buffer[sample] = random.nextFloat() * 0.25f - 0.125f;
+//    }
+//}
+//
+//void SimpleTone::releaseResources()
+//{ 
+//}

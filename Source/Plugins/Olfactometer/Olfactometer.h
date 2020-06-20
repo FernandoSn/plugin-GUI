@@ -30,6 +30,25 @@
 #include "serial/ofArduino.h"
 #include "FerTimer.h"
 
+//AudioAppComponent
+//It seems that the dll for this class is not linked.
+//class SimpleTone : AudioAppComponent
+//{
+//public:
+//    SimpleTone(double ToneFreq);
+//    ~SimpleTone();
+//    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+//    void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) override;
+//    void releaseResources() override;
+//
+//private:
+//    double ToneFrequency;
+//    double SamplingRate;
+//    int ToneBufferSize;
+//    Random random;
+//};
+
+
 
 /**
     *UNDER CONSTRUCTION*
@@ -187,6 +206,7 @@ private:
 
     std::random_device Rd;
     std::default_random_engine Generator;
+    //SimpleTone Predictor;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
