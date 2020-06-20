@@ -57,13 +57,15 @@ Olfactometer::Olfactometer()
     , timer                 ()
     , OlfactometerProc      (&Olfactometer::OdorValveOpener)
     , Generator             (Rd())
-    //, Predictor             (0)
+    , Predictor             ()
 {
     setProcessorType (PROCESSOR_TYPE_SINK);
-    //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+   /* std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    Predictor.setFrequency(1000.0);
+    Predictor.setAmplitude(0.5f);*/
     //uint32 FT = timer.getMillisecondCounter();
     //timer.waitForMillisecondCounter(FT + 10000);
-    ToneGeneratorAudioSource a;
+
 }
 
 
@@ -155,7 +157,6 @@ void Olfactometer::FinOlfactometer()
 
 void Olfactometer::RunOdorPres()
 {
-
     OlfacArduino.sendDigital(5, ARD_LOW); //Mineral Oil Valve always open.
 
     std::vector<int> OdorChannels = { 5,6,7 };
@@ -284,6 +285,22 @@ void Olfactometer::InitOdorPres()
     //TimeCounter = timer.getMillisecondCounter();
 }
 
+void Olfactometer::OpenFinalValve()
+{
+    //Sync TTL
+    OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
+    //OpenValve
+    OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
+
+    //Reset vars;
+    TestEpoch = 0;
+    TestBuffPtr = TestBuffer;
+
+    TimeCounter = CurrentTime;
+    TargetTime = (uint32_t)(OpenTime * 1000.0); //Open time of the final valve
+    OlfactometerProc = &Olfactometer::ValvesCloser;
+}
+
 void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
 {
     //DebugOlfac1 << "ODORValveOpener \n";
@@ -392,6 +409,7 @@ void Olfactometer::FinalValveOpener(AudioSampleBuffer& buffer)
         //DebugOlfac3 << "DentroFVOIF \n";
         if (TestEpoch < 200)
         {
+            //Filling the test Respirtion buffer up to 200 samples. to deliver odor
             uint32_t SamNo = getNumSamples(RespChannel);
 
             const float* RawRespPtr = buffer.getReadPointer(RespChannel);
@@ -427,17 +445,18 @@ void Olfactometer::FinalValveOpener(AudioSampleBuffer& buffer)
                 }) &&
                 (*(TestBuffPtr - 1) > RespMean))
             {
-                OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
-                OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
+                //OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
+                //OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
 
-                //Reset vars;
-                TestEpoch = 0;
-                TestBuffPtr = TestBuffer;
+                ////Reset vars;
+                //TestEpoch = 0;
+                //TestBuffPtr = TestBuffer;
 
-                TimeCounter = CurrentTime;
-                TargetTime = (uint32_t)(OpenTime * 1000.0); //Open time of the final valve
-                //DebugOlfac3 << " Test Crossed: " << Thresh << "\n";
-                OlfactometerProc = &Olfactometer::ValvesCloser;
+                //TimeCounter = CurrentTime;
+                //TargetTime = (uint32_t)(OpenTime * 1000.0); //Open time of the final valve
+                ////DebugOlfac3 << " Test Crossed: " << Thresh << "\n";
+                //OlfactometerProc = &Olfactometer::ValvesCloser;
+                OpenFinalValve();
             }
             else
             {
@@ -452,18 +471,20 @@ void Olfactometer::FinalValveOpener(AudioSampleBuffer& buffer)
     }
     else
     {
-        //DebugOlfac2 << "DentroFVOELSE \n";
-        OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
-        OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
+        ////DebugOlfac2 << "DentroFVOELSE \n";
+        //OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
+        //OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
 
-        //Reset vars;
-        TestEpoch = 0;
-        TestBuffPtr = TestBuffer;
+        ////Reset vars;
+        //TestEpoch = 0;
+        //TestBuffPtr = TestBuffer;
 
-        TimeCounter = CurrentTime;
-        TargetTime = (uint32_t)(OpenTime * 1000.0); //Open time of the final valve
-        //DebugOlfac3 << " No thresh cross final else \n";
-        OlfactometerProc = &Olfactometer::ValvesCloser;
+        //TimeCounter = CurrentTime;
+        //TargetTime = (uint32_t)(OpenTime * 1000.0); //Open time of the final valve
+        ////DebugOlfac3 << " No thresh cross final else \n";
+        //OlfactometerProc = &Olfactometer::ValvesCloser;
+
+        OpenFinalValve();
     }
 
 }
@@ -757,39 +778,92 @@ void Olfactometer::process (AudioSampleBuffer& buffer)
     //checkForEvents ();
 }
 
-//SimpleTone::SimpleTone(double ToneFreq)
-//    :
-//    ToneFrequency(ToneFreq)
-//{
-//
-//    setAudioChannels(0, 2);
-//
-//}
-//
-//SimpleTone::~SimpleTone()
-//{
-//    shutdownAudio();
-//}
-//
-//void SimpleTone::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
-//{
-//    SamplingRate = sampleRate;
-//    ToneBufferSize = samplesPerBlockExpected;
-//}
-//
-//void SimpleTone::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill)
-//{
-//    for (auto channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
-//    {
-//        // Get a pointer to the start sample in the buffer for this audio output channel
-//        auto* buffer = bufferToFill.buffer->getWritePointer(channel, bufferToFill.startSample);
-//
-//        // Fill the required number of samples with noise between -0.125 and +0.125
-//        for (auto sample = 0; sample < bufferToFill.numSamples; ++sample)
-//            buffer[sample] = random.nextFloat() * 0.25f - 0.125f;
-//    }
-//}
-//
-//void SimpleTone::releaseResources()
-//{ 
-//}
+SimpleTone::SimpleTone()
+    :
+    frequency(0.0),
+    sampleRate(44100.0),
+    currentPhase(0.0),
+    phasePerSample(0.0),
+    amplitude(0.0f)
+{
+
+    setAudioChannels(0, 2);
+
+}
+
+SimpleTone::~SimpleTone()
+{
+    shutdownAudio();
+}
+
+void SimpleTone::prepareToPlay(int samplesPerBlockExpected, double rate)
+{
+    currentPhase = 0.0;
+    phasePerSample = 0.0;
+    sampleRate = rate;
+}
+
+void SimpleTone::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill)
+{
+    if (frequency == 0)
+    {
+        //If frequency is set to 0 play some white noise.
+        for (auto channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
+        {
+            // Get a pointer to the start sample in the buffer for this audio output channel
+            auto* buffer = bufferToFill.buffer->getWritePointer(channel, bufferToFill.startSample);
+
+            // Fill the required number of samples with noise between -0.125 and +0.125
+            for (auto sample = 0; sample < bufferToFill.numSamples; ++sample)
+                  buffer[sample] = (random.nextFloat() * 2.0f - 1.0f) * amplitude;
+                //buffer[sample] = random.nextFloat() * 0.25f - 0.125f;
+        }
+    }
+    else
+    {
+        //Play a tone with the desired frequency.
+        if (phasePerSample == 0.0)
+            phasePerSample = double_Pi * 2.0 / (sampleRate / frequency);
+
+        for (int i = 0; i < bufferToFill.numSamples; ++i)
+        {
+            const float sample = amplitude * (float)std::sin(currentPhase);
+            //DebugOlfac1 << sample << "\n";
+            currentPhase += phasePerSample;
+
+            for (int j = bufferToFill.buffer->getNumChannels(); --j >= 0;)
+                bufferToFill.buffer->setSample(j, bufferToFill.startSample + i, sample);
+        }
+    }
+}
+
+void SimpleTone::releaseResources()
+{ 
+}
+
+void SimpleTone::setAudioChannels(int numInputChannels, int numOutputChannels)
+{
+    String audioError = deviceManager.initialise(numInputChannels, numOutputChannels, nullptr, true);
+    jassert(audioError.isEmpty());
+
+    deviceManager.addAudioCallback(&audioSourcePlayer);
+    audioSourcePlayer.setSource(this);
+}
+
+void SimpleTone::shutdownAudio()
+{
+    audioSourcePlayer.setSource(nullptr);
+    deviceManager.removeAudioCallback(&audioSourcePlayer);
+    deviceManager.closeAudioDevice();
+}
+
+void SimpleTone::setAmplitude(float newAmplitude)
+{
+    amplitude = newAmplitude;
+}
+
+void SimpleTone::setFrequency(double newFrequencyHz)
+{
+    frequency = newFrequencyHz;
+    phasePerSample = 0.0;
+}

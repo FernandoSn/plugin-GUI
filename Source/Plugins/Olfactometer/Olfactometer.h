@@ -32,21 +32,33 @@
 
 //AudioAppComponent
 //It seems that the dll for this class is not linked.
-//class SimpleTone : AudioAppComponent
-//{
-//public:
-//    SimpleTone(double ToneFreq);
-//    ~SimpleTone();
-//    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
-//    void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) override;
-//    void releaseResources() override;
-//
-//private:
-//    double ToneFrequency;
-//    double SamplingRate;
-//    int ToneBufferSize;
-//    Random random;
-//};
+//ToneGeneratorAudioSource
+class SimpleTone : AudioSource
+{
+public:
+    SimpleTone();
+    ~SimpleTone();
+    void prepareToPlay(int samplesPerBlockExpected, double rate) override;
+    void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) override;
+    void releaseResources() override;
+    void setAudioChannels(int numInputChannels, int numOutputChannels);
+    void shutdownAudio();
+    void setAmplitude(float newAmplitude);
+    void setFrequency(double newFrequencyHz);
+
+
+    AudioDeviceManager deviceManager;
+
+private:
+
+    AudioSourcePlayer audioSourcePlayer;
+    double frequency, sampleRate;
+    double currentPhase, phasePerSample;
+    float amplitude;
+    Random random;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleTone)
+};
 
 
 
@@ -109,6 +121,8 @@ private:
     bool ResetOlfactometer();
 
     void InitOdorPres();
+
+    void OpenFinalValve(); //code to open Final Valve.
 
     //Rotating functions for the Process Loop
 
@@ -206,7 +220,7 @@ private:
 
     std::random_device Rd;
     std::default_random_engine Generator;
-    //SimpleTone Predictor;
+    SimpleTone Predictor;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
