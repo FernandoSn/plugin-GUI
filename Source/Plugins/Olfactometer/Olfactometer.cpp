@@ -57,7 +57,7 @@ Olfactometer::Olfactometer()
     , timer                 ()
     , OlfactometerProc      (&Olfactometer::OdorValveOpener)
     , Generator             (Rd())
-    , Predictor             ()
+    , Tone             ()
 {
     setProcessorType (PROCESSOR_TYPE_SINK);
    /* std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -280,6 +280,14 @@ void Olfactometer::InitOdorPres()
     SerialTime = timer.getMillisecondCounter();
 
 
+    //for (int i = 0; i < 22; i++)
+    //{
+    //    //OlfacArduino.sendDigitalPinMode(22, ARD_OUTPUT);
+    //    ARD_INPUT, ARD_OUTPUT, ARD_PWM, ARD_SERVO, ARD_ANALOG;
+    //    ARD_ON, ARD_OFF;
+    //}
+
+    OlfacArduino.sendDigitalPinMode(BruceToneSyncPin, ARD_OUTPUT);
     //TargetTime = (uint32_t)(TrialLength * 1000.0);
 
     //TimeCounter = timer.getMillisecondCounter();
@@ -287,6 +295,7 @@ void Olfactometer::InitOdorPres()
 
 void Olfactometer::OpenFinalValve()
 {
+    ToneOff();
     //Sync TTL
     OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
     //OpenValve
@@ -299,6 +308,19 @@ void Olfactometer::OpenFinalValve()
     TimeCounter = CurrentTime;
     TargetTime = (uint32_t)(OpenTime * 1000.0); //Open time of the final valve
     OlfactometerProc = &Olfactometer::ValvesCloser;
+}
+
+void Olfactometer::ToneOn(float newAmplitude, double newFrequency)
+{
+    OlfacArduino.sendDigital(BruceToneSyncPin, ARD_HIGH);
+    Tone.setAmplitude(newAmplitude);
+    Tone.setFrequency(newFrequency);
+}
+
+void Olfactometer::ToneOff()
+{
+    Tone.setAmplitude(0.0f);
+    OlfacArduino.sendDigital(BruceToneSyncPin, ARD_LOW);
 }
 
 void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
@@ -344,6 +366,8 @@ void Olfactometer::RespProc(AudioSampleBuffer& buffer)
 {
     //DebugOlfac1 << "FueraRespProc \n";
     CurrentTime = timer.getMillisecondCounter();
+
+    ToneOn(0.5f,1000.0);
 
     if (CurrentTime <= TimeCounter + TargetTime)
     {

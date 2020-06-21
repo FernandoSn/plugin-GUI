@@ -124,6 +124,10 @@ private:
 
     void OpenFinalValve(); //code to open Final Valve.
 
+    void ToneOn(float newAmplitude, double newFrequency);
+
+    void ToneOff();
+
     //Rotating functions for the Process Loop
 
     void OdorValveOpener(AudioSampleBuffer& buffer);
@@ -164,7 +168,8 @@ public:
     static const uint8_t BruceA2SOdorPin = 13;
     static const uint8_t BruceA2SFVPin = 3;
     static const uint8_t BruceMO = 5;
-    static const uint8_t BruceSynchPin = 4;
+    static const uint8_t BruceSynchPin = 4;//4
+    static const uint8_t BruceToneSyncPin = 16;
 
 
 private:
@@ -208,19 +213,19 @@ private:
 
 	//Statics for vars inside the func loop
 
-	/*static const uint32_t EquilibrationTime = 6000;
+	static const uint32_t EquilibrationTime = 6000;
 	static const uint32_t RespEpochTime = 2000;
-	static const uint32_t RespToleranceTime = 5000;*/
+	//static const uint32_t RespToleranceTime = 5000;
 
-	static const uint32_t EquilibrationTime = 0;
-	static const uint32_t RespEpochTime = 0;
+	//static const uint32_t EquilibrationTime = 0;
+	//static const uint32_t RespEpochTime = 0;
 	static const uint32_t RespToleranceTime = 0;
 
 
 
     std::random_device Rd;
     std::default_random_engine Generator;
-    SimpleTone Predictor;
+    SimpleTone Tone;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
