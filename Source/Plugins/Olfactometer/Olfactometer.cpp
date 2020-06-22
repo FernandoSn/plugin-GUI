@@ -295,7 +295,8 @@ void Olfactometer::InitOdorPres()
 
 void Olfactometer::OpenFinalValve()
 {
-    ToneOff();
+    if(ToneOn)
+        setToneOff();
     //Sync TTL
     OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
     //OpenValve
@@ -310,17 +311,19 @@ void Olfactometer::OpenFinalValve()
     OlfactometerProc = &Olfactometer::ValvesCloser;
 }
 
-void Olfactometer::ToneOn(float newAmplitude, double newFrequency)
+void Olfactometer::setToneOn(float newAmplitude, double newFrequency)
 {
     OlfacArduino.sendDigital(BruceToneSyncPin, ARD_HIGH);
     Tone.setAmplitude(newAmplitude);
     Tone.setFrequency(newFrequency);
+    ToneOn = true;
 }
 
-void Olfactometer::ToneOff()
+void Olfactometer::setToneOff()
 {
     Tone.setAmplitude(0.0f);
     OlfacArduino.sendDigital(BruceToneSyncPin, ARD_LOW);
+    ToneOn = false;
 }
 
 void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
@@ -367,7 +370,8 @@ void Olfactometer::RespProc(AudioSampleBuffer& buffer)
     //DebugOlfac1 << "FueraRespProc \n";
     CurrentTime = timer.getMillisecondCounter();
 
-    ToneOn(0.5f,1000.0);
+    if(!ToneOn)
+        setToneOn(0.5f,1000.0);
 
     if (CurrentTime <= TimeCounter + TargetTime)
     {

@@ -124,9 +124,9 @@ private:
 
     void OpenFinalValve(); //code to open Final Valve.
 
-    void ToneOn(float newAmplitude, double newFrequency);
+    void setToneOn(float newAmplitude, double newFrequency);
 
-    void ToneOff();
+    void setToneOff();
 
     //Rotating functions for the Process Loop
 
@@ -227,6 +227,7 @@ private:
     std::default_random_engine Generator;
     SimpleTone Tone;
 
+    bool ToneOn = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
 };
