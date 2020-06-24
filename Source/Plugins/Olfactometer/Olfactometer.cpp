@@ -30,6 +30,8 @@
 //Add advance section to modify Arduino pins functions.
 //Test if a filled buffer is bad for the arduinos.
 
+//Modify ofArduino and Standard firmata to use all the digital pins in Arduino mega
+
 #include "Olfactometer.h"
 #include "OlfactometerEditor.h"
 
@@ -57,8 +59,15 @@ Olfactometer::Olfactometer()
     , timer                 ()
     , OlfactometerProc      (&Olfactometer::OdorValveOpener)
     , Generator             (Rd())
-    , Tone             ()
+    , Tone                  ()
+    //, OlfacFile             ()
 {
+    OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
+    /*OlfacFile = std::ofstream("Olfactometer" + std::to_string(timer.getMonth()) + "-" + 
+        std::to_string(timer.getDayOfMonth()) + "-" + std::to_string(timer.getYear()) + "_" + 
+        std::to_string(timer.getHours()) + "-" + std::to_string(timer.getMinutes()) + "-" + 
+        std::to_string(timer.getSeconds()));*/
+
     setProcessorType (PROCESSOR_TYPE_SINK);
    /* std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     Predictor.setFrequency(1000.0);
@@ -287,7 +296,7 @@ void Olfactometer::InitOdorPres()
     //    ARD_ON, ARD_OFF;
     //}
 
-    OlfacArduino.sendDigitalPinMode(BruceToneSyncPin, ARD_OUTPUT);
+    //OlfacArduino.sendDigitalPinMode(BruceToneSyncPin, ARD_OUTPUT);
     //TargetTime = (uint32_t)(TrialLength * 1000.0);
 
     //TimeCounter = timer.getMillisecondCounter();
@@ -313,7 +322,7 @@ void Olfactometer::OpenFinalValve()
 
 void Olfactometer::setToneOn(float newAmplitude, double newFrequency)
 {
-    OlfacArduino.sendDigital(BruceToneSyncPin, ARD_HIGH);
+    OlfacArduino.sendDigital(BruceToneSyncPin, ARD_LOW);
     Tone.setAmplitude(newAmplitude);
     Tone.setFrequency(newFrequency);
     ToneOn = true;
@@ -322,7 +331,7 @@ void Olfactometer::setToneOn(float newAmplitude, double newFrequency)
 void Olfactometer::setToneOff()
 {
     Tone.setAmplitude(0.0f);
-    OlfacArduino.sendDigital(BruceToneSyncPin, ARD_LOW);
+    OlfacArduino.sendDigital(BruceToneSyncPin, ARD_HIGH);
     ToneOn = false;
 }
 
@@ -345,8 +354,14 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
     //TimeCounter = CurrentTime;
     TargetTime = EquilibrationTime; //Equilibrate for...
 
+    //Print to GUI
     CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + "/"
         + juce::String(SeriesNo) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)));
+
+    OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "\n";
+
+    //Save this in a txt file.
+
 
     OlfactometerProc = &Olfactometer::Equilibrate6Sec;
     //}

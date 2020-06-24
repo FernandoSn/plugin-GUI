@@ -166,10 +166,10 @@ public:
     static const uint8_t BruceChNo = 11;
     static const uint8_t BruceFirstChan = 2;
     static const uint8_t BruceA2SOdorPin = 13;
-    static const uint8_t BruceA2SFVPin = 3;
+    static const uint8_t BruceA2SFVPin = 3;//3
     static const uint8_t BruceMO = 5;
     static const uint8_t BruceSynchPin = 4;//4
-    static const uint8_t BruceToneSyncPin = 16;
+    static const uint8_t BruceToneSyncPin = 2;
 
 
 private:
@@ -228,6 +228,7 @@ private:
     SimpleTone Tone;
 
     bool ToneOn = false;
+    std::ofstream OlfacFile;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
 };
