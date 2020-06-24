@@ -187,6 +187,8 @@ private:
     double TrialLength;
     double OpenTime;
     std::vector<uint8_t> OdorVec;
+    int OdorCount;
+    int TotalOdors;
 
     
     int CurrentSeries = 0;
@@ -213,7 +215,7 @@ private:
 
 	//Statics for vars inside the func loop
 
-	static const uint32_t EquilibrationTime = 6000;
+	static const uint32_t EquilibrationTime = 6000; //Do not change this vars
 	static const uint32_t RespEpochTime = 2000;
 	//static const uint32_t RespToleranceTime = 5000;
 

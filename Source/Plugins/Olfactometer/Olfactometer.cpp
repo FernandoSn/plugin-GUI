@@ -31,6 +31,7 @@
 //Test if a filled buffer is bad for the arduinos.
 
 //Modify ofArduino and Standard firmata to use all the digital pins in Arduino mega
+//IMPORTANT LIMITATION. olfactometer only works with data sampled at 2KHz.
 
 #include "Olfactometer.h"
 #include "OlfactometerEditor.h"
@@ -272,7 +273,7 @@ void Olfactometer::InitOdorPres()
 
     //Select the odors. Numbers are pins in the Arduino mega. 
     OdorVec.push_back(5);
-    OdorVec.push_back(6);
+    //OdorVec.push_back(6);
     OdorVec.push_back(7);
     OdorVec.push_back(8);
     OdorVec.push_back(9);
@@ -285,6 +286,9 @@ void Olfactometer::InitOdorPres()
 
     //Shuffle odors.
     std::shuffle(CurrentOdor, PastLastOdor, Generator);
+
+    OdorCount = 1;
+    TotalOdors = OdorVec.size();
 
     SerialTime = timer.getMillisecondCounter();
 
@@ -356,7 +360,8 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
 
     //Print to GUI
     CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + "/"
-        + juce::String(SeriesNo) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)));
+        + juce::String(SeriesNo) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)) 
+        + " (" + juce::String(OdorCount) +"/"+ juce::String(TotalOdors) +")");
 
     OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "\n";
 
@@ -369,6 +374,8 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
 
 void Olfactometer::Equilibrate6Sec(AudioSampleBuffer& buffer)
 {
+    //Period for equilibrate odor and presenting Tone!!
+
     CurrentTime = timer.getMillisecondCounter();
     //DebugOlfac1 << "Fuera6sec \n";
     if (CurrentTime >= TimeCounter + TargetTime)
@@ -378,15 +385,16 @@ void Olfactometer::Equilibrate6Sec(AudioSampleBuffer& buffer)
         TargetTime = RespEpochTime; //Set baseline respiration epoch
         OlfactometerProc = &Olfactometer::RespProc;
     }
+    else if ((CurrentTime >= TimeCounter + 4000) && !ToneOn)
+    {
+            setToneOn(0.5f, 4500.0);
+    }
 }
 
 void Olfactometer::RespProc(AudioSampleBuffer& buffer)
 {
     //DebugOlfac1 << "FueraRespProc \n";
     CurrentTime = timer.getMillisecondCounter();
-
-    if(!ToneOn)
-        setToneOn(0.5f,1000.0);
 
     if (CurrentTime <= TimeCounter + TargetTime)
     {
@@ -563,6 +571,7 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
     {
         //DebugOlfac2 << "DentroREstLoop \n";
         ++CurrentOdor;
+        OdorCount++;
 
         if (CurrentOdor < PastLastOdor)
         {
@@ -580,6 +589,8 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
                 CurrentOdor = OdorVec.begin();
                 //Shuffle the odors for the next trial
                 std::shuffle(CurrentOdor, PastLastOdor, Generator);
+                //Reset counter.
+                OdorCount = 1;
                 OlfactometerProc = &Olfactometer::CheckSerialTime;
             }
             else
