@@ -32,6 +32,7 @@
 
 //Modify ofArduino and Standard firmata to use all the digital pins in Arduino mega
 //IMPORTANT LIMITATION. olfactometer only works with data sampled at 2KHz.
+//Randomization of ITI only works with a 20s ITI. to turn off set RandomITI to false in ctor.
 
 #include "Olfactometer.h"
 #include "OlfactometerEditor.h"
@@ -43,7 +44,7 @@
 #include <numeric>
 #include <fstream>
 
-//std::ofstream DebugOlfac1("DebugOlfac1.txt");
+std::ofstream DebugOlfac1("DebugOlfac1.txt");
 //std::ofstream DebugOlfac2("DebugOlfac2.txt");
 //std::ofstream DebugOlfac3("DebugOlfac3.txt");
 //std::ofstream DebugOlfac4("DebugOlfac4.txt");
@@ -61,14 +62,13 @@ Olfactometer::Olfactometer()
     , OlfactometerProc      (&Olfactometer::OdorValveOpener)
     , Generator             (Rd())
     , Tone                  ()
-    //, OlfacFile             ()
+    , RandomITI             (true)
 {
     OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
     /*OlfacFile = std::ofstream("Olfactometer" + std::to_string(timer.getMonth()) + "-" + 
         std::to_string(timer.getDayOfMonth()) + "-" + std::to_string(timer.getYear()) + "_" + 
         std::to_string(timer.getHours()) + "-" + std::to_string(timer.getMinutes()) + "-" + 
         std::to_string(timer.getSeconds()));*/
-
     setProcessorType (PROCESSOR_TYPE_SINK);
    /* std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     Predictor.setFrequency(1000.0);
@@ -274,11 +274,11 @@ void Olfactometer::InitOdorPres()
     //Select the odors. Numbers are pins in the Arduino mega. 
     OdorVec.push_back(5);
     //OdorVec.push_back(6);
-    OdorVec.push_back(7);
-    OdorVec.push_back(8);
-    OdorVec.push_back(9);
-    OdorVec.push_back(10);
-    OdorVec.push_back(11);
+    //OdorVec.push_back(7);
+    //OdorVec.push_back(8);
+    //OdorVec.push_back(9);
+    //OdorVec.push_back(10);
+    //OdorVec.push_back(11);
 
 
     CurrentOdor = OdorVec.begin();
@@ -292,7 +292,7 @@ void Olfactometer::InitOdorPres()
 
     SerialTime = timer.getMillisecondCounter();
 
-
+    Distr4TrialLength = std::uniform_int_distribution<>(TrialLength - 10, TrialLength + 10);
     //for (int i = 0; i < 22; i++)
     //{
     //    //OlfacArduino.sendDigitalPinMode(22, ARD_OUTPUT);
@@ -557,7 +557,15 @@ void Olfactometer::ValvesCloser(AudioSampleBuffer& buffer)
             OlfacArduino.sendDigital(*CurrentOdor, ARD_LOW);
         }
         TimeCounter = CurrentTime;
-        TargetTime = (uint32_t)(TrialLength * 1000.0);
+        if (RandomITI)
+        {
+            TargetTime = (uint32_t)(Distr4TrialLength(Generator) * 1000.0);
+            DebugOlfac1 << TargetTime << "\n";
+        }
+        else
+        {
+            TargetTime = (uint32_t)(TrialLength * 1000.0);
+        }
         OlfactometerProc = &Olfactometer::RestartFuncLoop;
     }
 

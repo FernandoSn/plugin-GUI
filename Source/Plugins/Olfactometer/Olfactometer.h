@@ -227,9 +227,11 @@ private:
 
     std::random_device Rd;
     std::default_random_engine Generator;
+    std::uniform_int_distribution<> Distr4TrialLength;
     SimpleTone Tone;
 
     bool ToneOn = false;
+    bool RandomITI;
     std::ofstream OlfacFile;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
