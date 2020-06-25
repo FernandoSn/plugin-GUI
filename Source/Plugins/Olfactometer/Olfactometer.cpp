@@ -62,7 +62,8 @@ Olfactometer::Olfactometer()
     , OlfactometerProc      (&Olfactometer::OdorValveOpener)
     , Generator             (Rd())
     , Tone                  ()
-    , RandomITI             (true)
+    , RandomITI             (false)
+    , TonePres              (false)
 {
     OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
     /*OlfacFile = std::ofstream("Olfactometer" + std::to_string(timer.getMonth()) + "-" + 
@@ -227,7 +228,7 @@ bool Olfactometer::ResetOlfactometer()
         //timer.waitForMillisecondCounter(currentTime + 4000);
     }
 
-    OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
+    //OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
 
     OlfacArduino.sendDigital(2, ARD_HIGH);
     OlfacArduino.sendDigital(3, ARD_HIGH);
@@ -273,7 +274,7 @@ void Olfactometer::InitOdorPres()
 
     //Select the odors. Numbers are pins in the Arduino mega. 
     OdorVec.push_back(5);
-    //OdorVec.push_back(6);
+    OdorVec.push_back(6);
     //OdorVec.push_back(7);
     //OdorVec.push_back(8);
     //OdorVec.push_back(9);
@@ -311,7 +312,7 @@ void Olfactometer::OpenFinalValve()
     if(ToneOn)
         setToneOff();
     //Sync TTL
-    OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
+    //OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
     //OpenValve
     OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
 
@@ -326,7 +327,7 @@ void Olfactometer::OpenFinalValve()
 
 void Olfactometer::setToneOn(float newAmplitude, double newFrequency)
 {
-    OlfacArduino.sendDigital(BruceToneSyncPin, ARD_LOW);
+    OlfacArduino.sendDigital(BruceTonePin, ARD_LOW);
     Tone.setAmplitude(newAmplitude);
     Tone.setFrequency(newFrequency);
     ToneOn = true;
@@ -335,7 +336,7 @@ void Olfactometer::setToneOn(float newAmplitude, double newFrequency)
 void Olfactometer::setToneOff()
 {
     Tone.setAmplitude(0.0f);
-    OlfacArduino.sendDigital(BruceToneSyncPin, ARD_HIGH);
+    OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH);
     ToneOn = false;
 }
 
@@ -378,16 +379,18 @@ void Olfactometer::Equilibrate6Sec(AudioSampleBuffer& buffer)
 
     CurrentTime = timer.getMillisecondCounter();
     //DebugOlfac1 << "Fuera6sec \n";
+    if ((CurrentTime >= TimeCounter + 4000) && TonePres && !ToneOn)
+    {
+            setToneOn(0.5f, 4500.0);
+    }
+
+
     if (CurrentTime >= TimeCounter + TargetTime)
     {
         //DebugOlfac2 << "Dentro6sec \n";
         TimeCounter = CurrentTime;
         TargetTime = RespEpochTime; //Set baseline respiration epoch
         OlfactometerProc = &Olfactometer::RespProc;
-    }
-    else if ((CurrentTime >= TimeCounter + 4000) && !ToneOn)
-    {
-            setToneOn(0.5f, 4500.0);
     }
 }
 
@@ -549,7 +552,7 @@ void Olfactometer::ValvesCloser(AudioSampleBuffer& buffer)
         //DebugOlfac2 << "DentroValveCloser \n";
         OlfacArduino.sendDigital(BruceA2SFVPin, ARD_HIGH);
         OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_LOW);
-        OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
+        //OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
 
         if (*CurrentOdor != BruceMO)
         {
