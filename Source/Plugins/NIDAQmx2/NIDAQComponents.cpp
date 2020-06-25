@@ -29,9 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <string>
 
-std::ofstream DebugMCFile("DebugMCFile.txt");
-std::ofstream DebugMCFile2("DebugMCFile2.txt");
-std::ofstream DebugMCFile3("DebugMCFile3.txt");
+//std::ofstream DebugMCFile("DebugMCFile.txt");
+//std::ofstream DebugMCFile2("DebugMCFile2.txt");
+//std::ofstream DebugMCFile3("DebugMCFile3.txt");
 
 
 static int32 GetTerminalNameWithDevPrefix(NIDAQ::TaskHandle taskHandle, const char terminalName[], char triggerName[]);

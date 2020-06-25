@@ -44,7 +44,7 @@
 #include <numeric>
 #include <fstream>
 
-std::ofstream DebugOlfac1("DebugOlfac1.txt");
+//std::ofstream DebugOlfac1("DebugOlfac1.txt");
 //std::ofstream DebugOlfac2("DebugOlfac2.txt");
 //std::ofstream DebugOlfac3("DebugOlfac3.txt");
 //std::ofstream DebugOlfac4("DebugOlfac4.txt");
@@ -560,7 +560,7 @@ void Olfactometer::ValvesCloser(AudioSampleBuffer& buffer)
         if (RandomITI)
         {
             TargetTime = (uint32_t)(Distr4TrialLength(Generator) * 1000.0);
-            DebugOlfac1 << TargetTime << "\n";
+            //DebugOlfac1 << TargetTime << "\n";
         }
         else
         {
