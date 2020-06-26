@@ -217,11 +217,11 @@ private:
 
 	static const uint32_t EquilibrationTime = 6000; //Do not change this vars
 	static const uint32_t RespEpochTime = 2000;
-	//static const uint32_t RespToleranceTime = 5000;
+	static const uint32_t RespToleranceTime = 5000;
 
 	//static const uint32_t EquilibrationTime = 0;
 	//static const uint32_t RespEpochTime = 0;
-	static const uint32_t RespToleranceTime = 0;
+	//static const uint32_t RespToleranceTime = 0;
 
 
 
