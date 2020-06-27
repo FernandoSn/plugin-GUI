@@ -186,7 +186,8 @@ private:
     int SeriesNo;
     double TrialLength;
     double OpenTime;
-    std::vector<uint8_t> OdorVec;
+    std::vector<uint8_t> OdorVec; //Up to 256 odor channels. Want more? What kind fo olfactomer are you building!!!!???????
+    std::vector<bool> ToneBoolVec;
     int OdorCount;
     int TotalOdors;
 
@@ -199,6 +200,8 @@ private:
     uint32_t SerialTime;
     std::vector<uint8_t>::iterator CurrentOdor;
     std::vector<uint8_t>::iterator PastLastOdor;
+    std::vector<bool>::iterator CurrentToneBool;
+    std::vector<bool>::iterator PastLastToneBool;
     float RespBuffer[2000 * 3]; //2000 Sampling Rate. 3 secs. I actually using 2 sec but some extra memory to avoid any unwanted leaks.
     float* RespBuffPtr = RespBuffer;
     float RespMean;
@@ -232,8 +235,32 @@ private:
 
     bool ToneOn = false;
     bool RandomITI;
-    bool TonePres;
+    //bool TonePres;
     std::ofstream OlfacFile;
+
+
+    //This tempalte is based on std::shuffle C++17.
+    //CAUTION!!!! THIS IS NOT A SAFE TEMPLATE. If one of the two containers contains more elements than the other, this template method will have undefined behavior.
+    // We cannot have different types of container ie. vector and map; however, we can have differnt types data of the same container. ie, vector<int> and vector<bool>,
+    //This is because iterators for the same container require the same amount of memory.
+    //Since this is not safe this should only be used with vector<int>,vector<bool> (I have only tested with these vector types).
+    //The intended purpose is to shuffle two vectors with the same random distribution.
+    template<class RandomIt1, class RandomIt2, class URBG>
+    void shuffle(RandomIt1 first, RandomIt1 last, RandomIt2 first2, URBG&& g)
+    {
+        typedef typename std::iterator_traits<RandomIt1>::difference_type diff_t;
+        typedef std::uniform_int_distribution<diff_t> distr_t;
+        typedef typename distr_t::param_type param_t;
+
+        distr_t D;
+        diff_t n = last - first;
+        for (diff_t i = n - 1; i > 0; --i) {
+            using std::swap;
+            auto randIdx = D(g, param_t(0, i));
+            swap(first[i], first[randIdx]);
+            swap(first2[i], first2[randIdx]);
+        }
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Olfactometer);
 };

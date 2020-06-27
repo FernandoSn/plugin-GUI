@@ -63,7 +63,7 @@ Olfactometer::Olfactometer()
     , Generator             (Rd())
     , Tone                  ()
     , RandomITI             (true)
-    , TonePres              (true)
+    //, TonePres              (true)
 {
     OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
     /*OlfacFile = std::ofstream("Olfactometer" + std::to_string(timer.getMonth()) + "-" + 
@@ -79,12 +79,10 @@ Olfactometer::Olfactometer()
 
 }
 
-
 Olfactometer::~Olfactometer()
 {
     FinOlfactometer();
 }
-
 
 AudioProcessorEditor* Olfactometer::createEditor()
 {
@@ -270,7 +268,6 @@ void Olfactometer::InitOdorPres()
 {
     OlfacArduino.sendDigital(BruceMO, ARD_LOW); //Mineral Oil Valve always open.
 
-    //editor->updateSettings();
 
     //Select the odors. Numbers are pins in the Arduino mega. 
     //OdorVec.push_back(5);
@@ -281,12 +278,20 @@ void Olfactometer::InitOdorPres()
     //OdorVec.push_back(10);
     //OdorVec.push_back(11);
 
+    //ToneVec.push_back(true);
+    //ToneVec.push_back(true);
+    //ToneVec.push_back(false);
+    ToneBoolVec.push_back(false);
+
 
     CurrentOdor = OdorVec.begin();
     PastLastOdor = OdorVec.end();
 
+    CurrentToneBool = ToneBoolVec.begin();
+    PastLastToneBool = ToneBoolVec.end();
+
     //Shuffle odors.
-    std::shuffle(CurrentOdor, PastLastOdor, Generator);
+    Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentToneBool, Generator);
 
     OdorCount = 1;
     TotalOdors = OdorVec.size();
@@ -364,7 +369,7 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
         + juce::String(SeriesNo) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)) 
         + " (" + juce::String(OdorCount) +"/"+ juce::String(TotalOdors) +")");
 
-    OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "\n";
+    OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "," << (int)(*CurrentToneBool) << "\n";
 
     //Save this in a txt file.
 
@@ -379,7 +384,7 @@ void Olfactometer::Equilibrate6Sec(AudioSampleBuffer& buffer)
 
     CurrentTime = timer.getMillisecondCounter();
     //DebugOlfac1 << "Fuera6sec \n";
-    if ((CurrentTime >= TimeCounter + 4000) && TonePres && !ToneOn)
+    if ((CurrentTime >= TimeCounter + 4000) && (*CurrentToneBool) && !ToneOn)
     {
             setToneOn(0.5f, 4500.0);
     }
@@ -582,6 +587,7 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
     {
         //DebugOlfac2 << "DentroREstLoop \n";
         ++CurrentOdor;
+        ++CurrentToneBool;
         OdorCount++;
 
         if (CurrentOdor < PastLastOdor)
@@ -598,8 +604,9 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
             {
                 //Advance to the next trial
                 CurrentOdor = OdorVec.begin();
+                CurrentToneBool = ToneBoolVec.begin();
                 //Shuffle the odors for the next trial
-                std::shuffle(CurrentOdor, PastLastOdor, Generator);
+                Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentToneBool, Generator);
                 //Reset counter.
                 OdorCount = 1;
                 OlfactometerProc = &Olfactometer::CheckSerialTime;
