@@ -62,8 +62,8 @@ Olfactometer::Olfactometer()
     , OlfactometerProc      (&Olfactometer::OdorValveOpener)
     , Generator             (Rd())
     , Tone                  ()
-    , RandomITI             (false)
-    , TonePres              (false)
+    , RandomITI             (true)
+    , TonePres              (true)
 {
     OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
     /*OlfacFile = std::ofstream("Olfactometer" + std::to_string(timer.getMonth()) + "-" + 
@@ -273,7 +273,7 @@ void Olfactometer::InitOdorPres()
     //editor->updateSettings();
 
     //Select the odors. Numbers are pins in the Arduino mega. 
-    OdorVec.push_back(5);
+    //OdorVec.push_back(5);
     OdorVec.push_back(6);
     //OdorVec.push_back(7);
     //OdorVec.push_back(8);
