@@ -62,7 +62,7 @@ Olfactometer::Olfactometer()
     , OlfactometerProc      (&Olfactometer::OdorValveOpener)
     , Generator             (Rd())
     , Tone                  ()
-    , RandomITI             (true)
+    , RandomITI             (false)
     //, TonePres              (true)
 {
     OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
@@ -268,20 +268,27 @@ void Olfactometer::InitOdorPres()
 {
     OlfacArduino.sendDigital(BruceMO, ARD_LOW); //Mineral Oil Valve always open.
 
+    if(!ToneOn)
+        setToneOn(0.0, 0.0);
 
     //Select the odors. Numbers are pins in the Arduino mega. 
     OdorVec.push_back(5);
-    OdorVec.push_back(6);
-    OdorVec.push_back(5);
-    OdorVec.push_back(6);
+    //OdorVec.push_back(6);
+    //OdorVec.push_back(7);
+    //OdorVec.push_back(8);
     //OdorVec.push_back(9);
     //OdorVec.push_back(10);
     //OdorVec.push_back(11);
+    //OdorVec.push_back(12);
 
-    ToneBoolVec.push_back(true);
-    ToneBoolVec.push_back(true);
+    //ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
+    //ToneBoolVec.push_back(false);
+    //ToneBoolVec.push_back(false);
+    //ToneBoolVec.push_back(false);
+    //ToneBoolVec.push_back(false);
+    //ToneBoolVec.push_back(false);
+    //ToneBoolVec.push_back(false);
 
 
     CurrentOdor = OdorVec.begin();
@@ -314,7 +321,7 @@ void Olfactometer::InitOdorPres()
 
 void Olfactometer::OpenFinalValve()
 {
-    if(ToneOn)
+   if((*CurrentToneBool) && !ToneOn)
         setToneOff();
     //Sync TTL
     //OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
@@ -332,7 +339,7 @@ void Olfactometer::OpenFinalValve()
 
 void Olfactometer::setToneOn(float newAmplitude, double newFrequency)
 {
-    OlfacArduino.sendDigital(BruceTonePin, ARD_LOW);
+    //OlfacArduino.sendDigital(BruceTonePin, ARD_LOW);
     Tone.setAmplitude(newAmplitude);
     Tone.setFrequency(newFrequency);
     ToneOn = true;
@@ -341,7 +348,7 @@ void Olfactometer::setToneOn(float newAmplitude, double newFrequency)
 void Olfactometer::setToneOff()
 {
     Tone.setAmplitude(0.0f);
-    OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH);
+    //OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH);
     ToneOn = false;
 }
 
@@ -644,6 +651,8 @@ void Olfactometer::CheckSerialTime(AudioSampleBuffer& buffer)
 
 void Olfactometer::EmptyFunc(AudioSampleBuffer& buffer)
 {
+    if (ToneOn)
+        setToneOff();
 }
 
 void Olfactometer::SetSeriesNo(int SN)
