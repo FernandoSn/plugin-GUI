@@ -90,13 +90,13 @@ void ofArduino::initPins()
     // to previous protocol versions
     if (_firmwareVersionSum >= FIRMWARE2_3)
     {
-        _totalDigitalPins = 20;
-        firstAnalogPin = 14;
+        _totalDigitalPins = ARD_TOTAL_DIGITAL_PINS;
+        firstAnalogPin = ARD_TOTAL_DIGITAL_PINS;
     }
     else
     {
         _totalDigitalPins = ARD_TOTAL_DIGITAL_PINS;
-        firstAnalogPin = 16;
+        firstAnalogPin = ARD_TOTAL_DIGITAL_PINS;
     }
 
     // ports
@@ -260,7 +260,7 @@ void ofArduino::sendDigital(int pin, int value, bool force)
 
         // support Firmata 2.3/Arduino 1.0 with backwards compatibility
         // to previous protocol versions
-        if (_firmwareVersionSum >= FIRMWARE2_3)
+        /*if (_firmwareVersionSum >= FIRMWARE2_3)
         {
             port1Offset = 16;
             port2Offset = 20;
@@ -285,7 +285,19 @@ void ofArduino::sendDigital(int pin, int value, bool force)
         {
             port = 2;
             bit = pin-16;
+        }*/
+
+        if (pin < 54 && pin > 1)
+        {
+            port = pin / 8;
+            bit = pin % 8;
         }
+
+
+
+
+
+
 
         // set the bit
         if (value==1)

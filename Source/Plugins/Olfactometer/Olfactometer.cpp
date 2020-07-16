@@ -128,7 +128,13 @@ bool Olfactometer::InitOlfactometer(const std::pair<std::string, std::string>& C
 
                 return false;
             }
-
+            /*OlfacArduino.sendDigital(53, ARD_HIGH);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            OlfacArduino.sendDigital(53, ARD_LOW);
+            for (int i = 0; i < 22; i++)
+            {
+                DebugOlfac1 << i << ", " << OlfacArduino.getDigitalPinMode(i) << "\n";
+            }*/
         }
 
         if (OlfacArduino.isInitialized())

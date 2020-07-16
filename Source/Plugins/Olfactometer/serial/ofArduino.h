@@ -94,9 +94,16 @@
 // ---- arduino constants (for Arduino NG and Diecimila)
 
 // board settings
-#define ARD_TOTAL_DIGITAL_PINS							22 // total number of pins currently supported
-#define ARD_TOTAL_ANALOG_PINS							6
-#define ARD_TOTAL_PORTS                                 3 // total number of ports for the board
+//#define ARD_TOTAL_DIGITAL_PINS							22 // total number of pins currently supported
+//#define ARD_TOTAL_ANALOG_PINS							6
+//#define ARD_TOTAL_PORTS                                 3 // total number of ports for the board
+
+//Arduino mega 2560
+#define ARD_TOTAL_DIGITAL_PINS							54 // total number of pins currently supported
+#define ARD_TOTAL_ANALOG_PINS							16
+#define ARD_TOTAL_PORTS                                 7 // total number of ports for the board
+
+
 // pin modes
 #define ARD_INPUT                                       0x00
 #define ARD_OUTPUT                                      0x01
