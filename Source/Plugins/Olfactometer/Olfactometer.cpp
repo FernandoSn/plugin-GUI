@@ -63,6 +63,7 @@ Olfactometer::Olfactometer()
     , Generator             (Rd())
     , Tone                  ()
     , RandomITI             (false)
+    , RandomOdors           (false)
     //, TonePres              (true)
 {
     OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
@@ -288,11 +289,11 @@ void Olfactometer::InitOdorPres()
     OdorVec.push_back(12);
 
     ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(true);
     ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(true);
     ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(true);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
 
@@ -304,7 +305,8 @@ void Olfactometer::InitOdorPres()
     PastLastToneBool = ToneBoolVec.end();
 
     //Shuffle odors.
-    Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentToneBool, Generator);
+    if(RandomOdors)
+        Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentToneBool, Generator);
 
     OdorCount = 1;
     TotalOdors = OdorVec.size();
@@ -619,7 +621,8 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
                 CurrentOdor = OdorVec.begin();
                 CurrentToneBool = ToneBoolVec.begin();
                 //Shuffle the odors for the next trial
-                Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentToneBool, Generator);
+                if (RandomOdors)
+                    Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentToneBool, Generator);
                 //Reset counter.
                 OdorCount = 1;
                 OlfactometerProc = &Olfactometer::CheckSerialTime;

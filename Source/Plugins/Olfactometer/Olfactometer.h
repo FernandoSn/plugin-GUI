@@ -235,6 +235,7 @@ private:
 
     bool ToneOn = false;
     bool RandomITI;
+    bool RandomOdors;
     //bool TonePres;
     std::ofstream OlfacFile;
 
