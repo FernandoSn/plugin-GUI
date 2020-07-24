@@ -165,9 +165,13 @@ public:
 
     static const uint8_t BruceChNo = 11;
     static const uint8_t BruceFirstChan = 2;
+
+
+
     static const uint8_t BruceA2SOdorPin = 13;
     static const uint8_t BruceA2SFVPin = 3;//3
-    static const uint8_t BruceMO = 5;
+    //static const uint8_t BruceMO = 5;
+    uint8_t BruceBlanks[2];
     //static const uint8_t BruceSynchPin = 4;//4
     static const uint8_t BruceTonePin = 2;
 

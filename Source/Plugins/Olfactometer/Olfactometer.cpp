@@ -66,6 +66,9 @@ Olfactometer::Olfactometer()
     , RandomOdors           (false)
     //, TonePres              (true)
 {
+    BruceBlanks[0] = 5;
+    BruceBlanks[1] = 14;
+
     OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
     /*OlfacFile = std::ofstream("Olfactometer" + std::to_string(timer.getMonth()) + "-" + 
         std::to_string(timer.getDayOfMonth()) + "-" + std::to_string(timer.getYear()) + "_" + 
@@ -225,12 +228,18 @@ bool Olfactometer::ResetOlfactometer()
     //Flush serial arduino.
     OlfacSerial.flush(true, true);
 
-    //Set all pins to zero.
+    //Set all pins to zero. 1st bank
     for (int i = 5; i < 13; i++)
     {
         OlfacArduino.sendDigital(i, ARD_LOW);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         //timer.waitForMillisecondCounter(currentTime + 4000);
+    }
+    //Set all pins to zero. 2nd bank
+    for (int i = 14; i < 22; i++)
+    {
+        OlfacArduino.sendDigital(i, ARD_LOW);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
     //OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
@@ -273,7 +282,8 @@ bool Olfactometer::ResetOlfactometer()
 
 void Olfactometer::InitOdorPres()
 {
-    OlfacArduino.sendDigital(BruceMO, ARD_LOW); //Mineral Oil Valve always open.
+    OlfacArduino.sendDigital(BruceBlanks[0], ARD_LOW); //Mineral Oil Valve always open.
+    OlfacArduino.sendDigital(BruceBlanks[1], ARD_LOW); //Mineral Oil Valve always open.
 
     //if(!ToneOn)
       //  setToneOn(0.0, 0.0);
@@ -287,6 +297,24 @@ void Olfactometer::InitOdorPres()
     OdorVec.push_back(10);
     OdorVec.push_back(11);
     OdorVec.push_back(12);
+
+    OdorVec.push_back(14);
+    OdorVec.push_back(15);
+    OdorVec.push_back(16);
+    OdorVec.push_back(17);
+    OdorVec.push_back(18);
+    OdorVec.push_back(19);
+    OdorVec.push_back(20);
+    OdorVec.push_back(21);
+
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
 
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
@@ -369,10 +397,14 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
     //{
 
     OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_HIGH);
-    if (*CurrentOdor != BruceMO)
+    if ( (*CurrentOdor != BruceBlanks[0]) && (*CurrentOdor != BruceBlanks[1]) )
     {
         OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
-        OlfacArduino.sendDigital(BruceMO, ARD_HIGH);
+
+        if (*CurrentOdor>13)
+            OlfacArduino.sendDigital(BruceBlanks[1], ARD_HIGH);
+        else
+            OlfacArduino.sendDigital(BruceBlanks[0], ARD_HIGH);
     }
 
     TimeCounter = timer.getMillisecondCounter();
@@ -574,11 +606,17 @@ void Olfactometer::ValvesCloser(AudioSampleBuffer& buffer)
         OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_LOW);
         //OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
 
-        if (*CurrentOdor != BruceMO)
+        if ((*CurrentOdor != BruceBlanks[0]) && (*CurrentOdor != BruceBlanks[1]))
         {
-            OlfacArduino.sendDigital(BruceMO, ARD_LOW);
+
+            if (*CurrentOdor > 13)
+                OlfacArduino.sendDigital(BruceBlanks[1], ARD_LOW);
+            else
+                OlfacArduino.sendDigital(BruceBlanks[0], ARD_LOW);
+
             OlfacArduino.sendDigital(*CurrentOdor, ARD_LOW);
         }
+
         TimeCounter = CurrentTime;
         if (RandomITI)
         {
