@@ -128,6 +128,8 @@ private:
 
     void setToneOff();
 
+    void SetContext();
+
     //Rotating functions for the Process Loop
 
     void OdorValveOpener(AudioSampleBuffer& buffer);
@@ -238,6 +240,8 @@ private:
     SimpleTone Tone;
 
     bool ToneOn = false;
+    bool LightOn = false;
+    bool ContextReady = false; //Var for mycontext experiments
     bool RandomITI;
     bool RandomOdors;
     //bool TonePres;

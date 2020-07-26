@@ -352,7 +352,7 @@ void Olfactometer::InitOdorPres()
     //OlfacArduino.sendDigitalPinMode(BruceToneSyncPin, ARD_OUTPUT);
     //TargetTime = (uint32_t)(TrialLength * 1000.0);
 
-    //TimeCounter = timer.getMillisecondCounter();
+    TimeCounter = timer.getMillisecondCounter();
 }
 
 void Olfactometer::OpenFinalValve()
@@ -375,7 +375,7 @@ void Olfactometer::OpenFinalValve()
 
 void Olfactometer::setToneOn(float newAmplitude, double newFrequency)
 {
-    OlfacArduino.sendDigital(BruceTonePin, ARD_LOW);
+    //OlfacArduino.sendDigital(BruceTonePin, ARD_LOW);
     Tone.setAmplitude(newAmplitude);
     Tone.setFrequency(newFrequency);
     ToneOn = true;
@@ -384,45 +384,106 @@ void Olfactometer::setToneOn(float newAmplitude, double newFrequency)
 void Olfactometer::setToneOff()
 {
     Tone.setAmplitude(0.0f);
-    OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH);
+    //OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH);
     ToneOn = false;
+}
+
+void Olfactometer::SetContext()
+{
+    switch (OdorCount)
+    {
+    case 1:
+
+        if (LightOn)
+        {
+            OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH); //Light on
+            CoreServices::sendStatusMessage("Updating context...");
+            LightOn = false;
+        }
+        
+        CurrentTime = timer.getMillisecondCounter();
+
+        if ((CurrentTime >= TimeCounter + 10000))
+        {
+            if (!ToneOn)
+                setToneOn(0.5f, 0.0);
+
+            ContextReady = true;
+        }
+        break;
+
+    case 4:
+
+        if (ToneOn)
+        {
+            setToneOff(); 
+            CoreServices::sendStatusMessage("Updating context...");
+
+        }
+
+        CurrentTime = timer.getMillisecondCounter();
+
+        if ((CurrentTime >= TimeCounter + 10000))
+        {
+            if (!LightOn)
+            {
+                OlfacArduino.sendDigital(BruceTonePin, ARD_LOW); //Light on
+                LightOn = true;
+            }
+            ContextReady = true; 
+        }
+
+        break;
+
+    }
+
+
 }
 
 void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
 {
-    //DebugOlfac1 << "ODORValveOpener \n";
-    LoopTime = timer.getMillisecondCounter();
-    ////DebugOlfac3 << LoopTime <<"\n";
-    //if (CurrentTime >= TimeCounter + TargetTime)
-    //{
-
-    OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_HIGH);
-    if ( (*CurrentOdor != BruceBlanks[0]) && (*CurrentOdor != BruceBlanks[1]) )
+    if (ContextReady)
     {
-        OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
+        ContextReady = false;
+        //DebugOlfac1 << "ODORValveOpener \n";
+        LoopTime = timer.getMillisecondCounter();
+        ////DebugOlfac3 << LoopTime <<"\n";
+        //if (CurrentTime >= TimeCounter + TargetTime)
+        //{
 
-        if (*CurrentOdor>13)
-            OlfacArduino.sendDigital(BruceBlanks[1], ARD_HIGH);
-        else
-            OlfacArduino.sendDigital(BruceBlanks[0], ARD_HIGH);
+        OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_HIGH);
+        if ( (*CurrentOdor != BruceBlanks[0]) && (*CurrentOdor != BruceBlanks[1]) )
+        {
+            OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
+
+            if (*CurrentOdor>13)
+                OlfacArduino.sendDigital(BruceBlanks[1], ARD_HIGH);
+            else
+                OlfacArduino.sendDigital(BruceBlanks[0], ARD_HIGH);
+        }
+
+        TimeCounter = timer.getMillisecondCounter();
+        //TimeCounter = CurrentTime;
+        TargetTime = EquilibrationTime; //Equilibrate for...
+
+        //Print to GUI
+        CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + "/"
+            + juce::String(SeriesNo) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)) 
+            + " (" + juce::String(OdorCount) +"/"+ juce::String(TotalOdors) +")");
+
+        OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "," << (int)(*CurrentToneBool) << "\n";
+
+        //Save this in a txt file.
+
+
+        OlfactometerProc = &Olfactometer::Equilibrate6Sec;
+        //}
     }
+    else
+    {
+        SetContext();
 
-    TimeCounter = timer.getMillisecondCounter();
-    //TimeCounter = CurrentTime;
-    TargetTime = EquilibrationTime; //Equilibrate for...
-
-    //Print to GUI
-    CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + "/"
-        + juce::String(SeriesNo) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)) 
-        + " (" + juce::String(OdorCount) +"/"+ juce::String(TotalOdors) +")");
-
-    OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "," << (int)(*CurrentToneBool) << "\n";
-
-    //Save this in a txt file.
-
-
-    OlfactometerProc = &Olfactometer::Equilibrate6Sec;
-    //}
+    }
 }
 
 void Olfactometer::Equilibrate6Sec(AudioSampleBuffer& buffer)
