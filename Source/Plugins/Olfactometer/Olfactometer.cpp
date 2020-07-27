@@ -63,7 +63,8 @@ Olfactometer::Olfactometer()
     , Generator             (Rd())
     , Tone                  ()
     , RandomITI             (false)
-    , RandomOdors           (false)
+    , RandomOdors           (true)
+    , ContextExperiment     (true)
     //, TonePres              (true)
 {
     BruceBlanks[0] = 5;
@@ -286,44 +287,45 @@ void Olfactometer::InitOdorPres()
     OlfacArduino.sendDigital(BruceBlanks[1], ARD_LOW); //Mineral Oil Valve always open.
 
     //if(!ToneOn)
-      //  setToneOn(0.0, 0.0);
+        //setToneOn(0.0, 0.0);
 
     //Select the odors. Numbers are pins in the Arduino mega. 
     OdorVec.push_back(5);
-    OdorVec.push_back(6);
+    OdorVec.push_back(12);
     OdorVec.push_back(7);
     OdorVec.push_back(8);
+    OdorVec.push_back(5);
     OdorVec.push_back(9);
     OdorVec.push_back(10);
     OdorVec.push_back(11);
-    OdorVec.push_back(12);
+    //OdorVec.push_back(12);
 
-    OdorVec.push_back(14);
-    OdorVec.push_back(15);
+    //OdorVec.push_back(14);
+    /*OdorVec.push_back(15);
     OdorVec.push_back(16);
     OdorVec.push_back(17);
     OdorVec.push_back(18);
     OdorVec.push_back(19);
     OdorVec.push_back(20);
-    OdorVec.push_back(21);
+    OdorVec.push_back(21);*/
 
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(true);
+    ToneBoolVec.push_back(true);
+    ToneBoolVec.push_back(true);
+    ToneBoolVec.push_back(true);
 
+    //ToneBoolVec.push_back(false);
+    /*ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);*/
 
 
     CurrentOdor = OdorVec.begin();
@@ -331,13 +333,23 @@ void Olfactometer::InitOdorPres()
 
     CurrentToneBool = ToneBoolVec.begin();
     PastLastToneBool = ToneBoolVec.end();
+    TotalOdors = OdorVec.size();
 
     //Shuffle odors.
-    if(RandomOdors)
+    if (ContextExperiment && RandomOdors)
+    {
+        auto MidOdor = CurrentOdor + (TotalOdors / 2);
+        auto MidToneBool = CurrentToneBool + (TotalOdors / 2);
+        Olfactometer::shuffle(CurrentOdor, MidOdor-1, CurrentToneBool, Generator);
+        Olfactometer::shuffle(MidOdor, PastLastOdor, MidToneBool, Generator);
+
+    }
+    else if (RandomOdors)
+    {
         Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentToneBool, Generator);
+    }
 
     OdorCount = 1;
-    TotalOdors = OdorVec.size();
 
     SerialTime = timer.getMillisecondCounter();
 
@@ -357,8 +369,8 @@ void Olfactometer::InitOdorPres()
 
 void Olfactometer::OpenFinalValve()
 {
-   if((*CurrentToneBool) && ToneOn)
-        setToneOff();
+   /*if((*CurrentToneBool) && ToneOn)
+        setToneOff();*/
     //Sync TTL
     //OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
     //OpenValve
@@ -390,17 +402,15 @@ void Olfactometer::setToneOff()
 
 void Olfactometer::SetContext()
 {
-    switch (OdorCount)
+    if (OdorCount == 1)
     {
-    case 1:
-
         if (LightOn)
         {
-            OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH); //Light on
+            OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH); //Light off
             CoreServices::sendStatusMessage("Updating context...");
             LightOn = false;
         }
-        
+
         CurrentTime = timer.getMillisecondCounter();
 
         if ((CurrentTime >= TimeCounter + 10000))
@@ -410,10 +420,9 @@ void Olfactometer::SetContext()
 
             ContextReady = true;
         }
-        break;
-
-    case 4:
-
+    }
+    else if (OdorCount == ((TotalOdors / 2) + 1)) //split odor vec int two contexts
+    {
         if (ToneOn)
         {
             setToneOff(); 
@@ -432,17 +441,22 @@ void Olfactometer::SetContext()
             }
             ContextReady = true; 
         }
-
-        break;
+    }
+    else
+    {
+        ContextReady = true;
 
     }
-
 
 }
 
 void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
 {
-    if (ContextReady)
+    if ( ContextExperiment && !ContextReady)
+    {
+        SetContext();
+    }
+    else
     {
         ContextReady = false;
         //DebugOlfac1 << "ODORValveOpener \n";
@@ -478,10 +492,6 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
 
         OlfactometerProc = &Olfactometer::Equilibrate6Sec;
         //}
-    }
-    else
-    {
-        SetContext();
 
     }
 }
@@ -492,10 +502,10 @@ void Olfactometer::Equilibrate6Sec(AudioSampleBuffer& buffer)
 
     CurrentTime = timer.getMillisecondCounter();
     //DebugOlfac1 << "Fuera6sec \n";
-    if ((CurrentTime >= TimeCounter + 4000) && (*CurrentToneBool) && !ToneOn)
+    /*if ((CurrentTime >= TimeCounter + 4000) && (*CurrentToneBool) && !ToneOn)
     {
             setToneOn(0.5f, 4500.0);
-    }
+    }*/
 
 
     if (CurrentTime >= TimeCounter + TargetTime)
@@ -720,8 +730,18 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
                 CurrentOdor = OdorVec.begin();
                 CurrentToneBool = ToneBoolVec.begin();
                 //Shuffle the odors for the next trial
-                if (RandomOdors)
+                if (ContextExperiment && RandomOdors)
+                {
+                    auto MidOdor = CurrentOdor + (TotalOdors / 2);
+                    auto MidToneBool = CurrentToneBool + (TotalOdors / 2);
+                    Olfactometer::shuffle(CurrentOdor, MidOdor, CurrentToneBool, Generator);
+                    Olfactometer::shuffle(MidOdor, PastLastOdor, MidToneBool, Generator);
+
+                }
+                else if (RandomOdors)
+                {
                     Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentToneBool, Generator);
+                }
                 //Reset counter.
                 OdorCount = 1;
                 OlfactometerProc = &Olfactometer::CheckSerialTime;
@@ -760,7 +780,16 @@ void Olfactometer::CheckSerialTime(AudioSampleBuffer& buffer)
 void Olfactometer::EmptyFunc(AudioSampleBuffer& buffer)
 {
     if (ToneOn)
+    {
         setToneOff();
+
+    }
+
+    if (LightOn)
+    {
+        OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH); //Light off
+        LightOn = false;
+    }
 }
 
 void Olfactometer::SetSeriesNo(int SN)

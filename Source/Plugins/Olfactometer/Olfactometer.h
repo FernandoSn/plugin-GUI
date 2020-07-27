@@ -244,6 +244,7 @@ private:
     bool ContextReady = false; //Var for mycontext experiments
     bool RandomITI;
     bool RandomOdors;
+    bool ContextExperiment;
     //bool TonePres;
     std::ofstream OlfacFile;
 
