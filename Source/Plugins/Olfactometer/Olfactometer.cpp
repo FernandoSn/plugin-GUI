@@ -65,6 +65,7 @@ Olfactometer::Olfactometer()
     , RandomITI             (false)
     , RandomOdors           (true)
     , ContextExperiment     (true)
+    , ContextTime           (15 * 60 * 1000)
     //, TonePres              (true)
 {
     BruceBlanks[0] = 5;
@@ -413,8 +414,10 @@ void Olfactometer::SetContext()
 
         CurrentTime = timer.getMillisecondCounter();
 
-        if ((CurrentTime >= TimeCounter + 10000))
+        if ((CurrentTime >= TimeCounter + ContextTime))
         {
+            ContextTime = 10000;
+
             if (!ToneOn)
                 setToneOn(0.5f, 0.0);
 
@@ -432,7 +435,7 @@ void Olfactometer::SetContext()
 
         CurrentTime = timer.getMillisecondCounter();
 
-        if ((CurrentTime >= TimeCounter + 10000))
+        if ((CurrentTime >= TimeCounter + ContextTime))
         {
             if (!LightOn)
             {
