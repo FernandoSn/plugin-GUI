@@ -227,7 +227,9 @@ private:
 	static const uint32_t EquilibrationTime = 6000; //Do not change this vars
 	static const uint32_t RespEpochTime = 2000;
 	static const uint32_t RespToleranceTime = 5000;
-    uint32_t ContextTime;
+    static const uint32_t ContextTime = 10000;
+    static const uint32_t BaselineTime = 15 * 60 * 1000;
+    //uint32_t ContextTime;
 
 	//static const uint32_t EquilibrationTime = 0;
 	//static const uint32_t RespEpochTime = 0;
@@ -243,6 +245,7 @@ private:
     bool ToneOn = false;
     bool LightOn = false;
     bool ContextReady = false; //Var for mycontext experiments
+    bool BaselineOn;
     bool RandomITI;
     bool RandomOdors;
     bool ContextExperiment;

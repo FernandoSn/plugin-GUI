@@ -64,8 +64,9 @@ Olfactometer::Olfactometer()
     , Tone                  ()
     , RandomITI             (false)
     , RandomOdors           (true)
-    , ContextExperiment     (true)
-    , ContextTime           (15 * 60 * 1000)
+    , ContextExperiment     (false)
+    , BaselineOn            (true)
+    //, BaselineTime          (15 * 60 * 1000)
     //, TonePres              (true)
 {
     BruceBlanks[0] = 5;
@@ -291,42 +292,41 @@ void Olfactometer::InitOdorPres()
         //setToneOn(0.0, 0.0);
 
     //Select the odors. Numbers are pins in the Arduino mega. 
-    OdorVec.push_back(5);
-    OdorVec.push_back(12);
-    OdorVec.push_back(7);
-    OdorVec.push_back(8);
-    OdorVec.push_back(5);
-    OdorVec.push_back(9);
-    OdorVec.push_back(10);
-    OdorVec.push_back(11);
+    //OdorVec.push_back(5);
+    //OdorVec.push_back(6);
+    //OdorVec.push_back(7);
+    //OdorVec.push_back(8);
+    //OdorVec.push_back(9);
+    //OdorVec.push_back(10);
+    //OdorVec.push_back(11);
     //OdorVec.push_back(12);
 
-    //OdorVec.push_back(14);
-    /*OdorVec.push_back(15);
+    OdorVec.push_back(14);
+    OdorVec.push_back(15);
     OdorVec.push_back(16);
     OdorVec.push_back(17);
     OdorVec.push_back(18);
     OdorVec.push_back(19);
     OdorVec.push_back(20);
-    OdorVec.push_back(21);*/
+    OdorVec.push_back(21);
 
-    ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(false);
-    ToneBoolVec.push_back(true);
-    ToneBoolVec.push_back(true);
-    ToneBoolVec.push_back(true);
-    ToneBoolVec.push_back(true);
-
-    //ToneBoolVec.push_back(false);
     /*ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);*/
+
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
+    ToneBoolVec.push_back(false);
 
 
     CurrentOdor = OdorVec.begin();
@@ -370,8 +370,8 @@ void Olfactometer::InitOdorPres()
 
 void Olfactometer::OpenFinalValve()
 {
-   /*if((*CurrentToneBool) && ToneOn)
-        setToneOff();*/
+   if((*CurrentToneBool) && ToneOn)
+        setToneOff();
     //Sync TTL
     //OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
     //OpenValve
@@ -416,7 +416,7 @@ void Olfactometer::SetContext()
 
         if ((CurrentTime >= TimeCounter + ContextTime))
         {
-            ContextTime = 10000;
+            //ContextTime = 10000;
 
             if (!ToneOn)
                 setToneOn(0.5f, 0.0);
@@ -455,7 +455,16 @@ void Olfactometer::SetContext()
 
 void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
 {
-    if ( ContextExperiment && !ContextReady)
+    if (BaselineOn)
+    {
+        CurrentTime = timer.getMillisecondCounter();
+
+        if ((CurrentTime >= TimeCounter + BaselineTime))
+        {
+            BaselineOn = false;
+        }
+    }
+    else if ( ContextExperiment && !ContextReady)
     {
         SetContext();
     }
@@ -505,10 +514,10 @@ void Olfactometer::Equilibrate6Sec(AudioSampleBuffer& buffer)
 
     CurrentTime = timer.getMillisecondCounter();
     //DebugOlfac1 << "Fuera6sec \n";
-    /*if ((CurrentTime >= TimeCounter + 4000) && (*CurrentToneBool) && !ToneOn)
+    if ((CurrentTime >= TimeCounter + 4000) && (*CurrentToneBool) && !ToneOn)
     {
             setToneOn(0.5f, 4500.0);
-    }*/
+    }
 
 
     if (CurrentTime >= TimeCounter + TargetTime)
