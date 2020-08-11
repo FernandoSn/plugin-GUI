@@ -617,13 +617,13 @@ void Olfactometer::FinalValveOpener(AudioSampleBuffer& buffer)
 
             //DebugOlfac3 << " Test Thresh: " << Thresh << "\n";
             /////
-            float* temp = TestBuffer;
+            //float* temp = TestBuffer;
 
-            for (; temp<TestBuffPtr ; ++temp)
-            {
-                //DebugOlfac4 << *temp << "\n";
+            //for (; temp<TestBuffPtr ; ++temp)
+            //{
+            //    //DebugOlfac4 << *temp << "\n";
 
-            }
+            //}
 
             //DebugOlfac3 << " Test Thresh: " << Thresh << "\n";
             ////
