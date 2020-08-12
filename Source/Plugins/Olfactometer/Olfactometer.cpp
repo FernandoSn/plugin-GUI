@@ -627,12 +627,20 @@ void Olfactometer::FinalValveOpener(AudioSampleBuffer& buffer)
 
             //DebugOlfac3 << " Test Thresh: " << Thresh << "\n";
             ////
-            if (std::any_of(TestBuffer, TestBuffPtr, [&Thresh](float& Sample) 
+            if (
+                std::any_of(TestBuffer, TestBuffPtr, [&Thresh](float& Sample) 
                 {
                     return Sample < Thresh;
 
-                }) &&
-                (*(TestBuffPtr - 1) > RespMean))
+                }) 
+                &&
+                //(*(TestBuffPtr - 1) > RespMean)
+                std::any_of(TestBuffer+199, TestBuffPtr, [this](float& Sample)
+                    {
+                        return Sample > RespMean;
+
+                    })
+                    )
             {
                 //OlfacArduino.sendDigital(BruceSynchPin, ARD_HIGH);
                 //OlfacArduino.sendDigital(BruceA2SFVPin, ARD_LOW);
