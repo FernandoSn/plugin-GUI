@@ -303,11 +303,11 @@ void Olfactometer::InitOdorPres()
 
     OdorVec.push_back(14);
     OdorVec.push_back(15);
-    OdorVec.push_back(16);
-    OdorVec.push_back(17);
-    OdorVec.push_back(18);
-    OdorVec.push_back(19);
-    OdorVec.push_back(20);
+    //OdorVec.push_back(16);
+    //OdorVec.push_back(17);
+    //OdorVec.push_back(18);
+    //OdorVec.push_back(19);
+    //OdorVec.push_back(20);
     OdorVec.push_back(21);
 
     /*ToneBoolVec.push_back(false);
@@ -335,6 +335,8 @@ void Olfactometer::InitOdorPres()
     CurrentToneBool = ToneBoolVec.begin();
     PastLastToneBool = ToneBoolVec.end();
     TotalOdors = OdorVec.size();
+
+    SeriesNo = 100;
 
     //Shuffle odors.
     if (ContextExperiment && RandomOdors)
@@ -747,8 +749,25 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
             if (CurrentSeries < SeriesNo)
             {
                 //Advance to the next trial
+
+                if (CurrentSeries == 90)
+                {
+                    OdorVec.push_back(16);
+                    OdorVec.push_back(17);
+                    OdorVec.push_back(18);
+                    OdorVec.push_back(19);
+                    OdorVec.push_back(20);
+                }
+
                 CurrentOdor = OdorVec.begin();
                 CurrentToneBool = ToneBoolVec.begin();
+                PastLastOdor = OdorVec.end();
+
+
+                TotalOdors = OdorVec.size();
+
+
+
                 //Shuffle the odors for the next trial
                 if (ContextExperiment && RandomOdors)
                 {
@@ -781,7 +800,8 @@ void Olfactometer::CheckSerialTime(AudioSampleBuffer& buffer)
     //DebugOlfac1 << "FueraValveCloser \n";
 
 
-    if (timer.getMillisecondCounter() > SerialTime + 3600000)
+    //if (timer.getMillisecondCounter() > SerialTime + 3600000)
+    if(false)
     {
         //If one hour has passed, reset arduinos.
         ResetOlfactometer();
