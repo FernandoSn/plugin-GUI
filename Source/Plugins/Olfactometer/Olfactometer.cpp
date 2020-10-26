@@ -292,23 +292,23 @@ void Olfactometer::InitOdorPres()
         //setToneOn(0.0, 0.0);
 
     //Select the odors. Numbers are pins in the Arduino mega. 
-    //OdorVec.push_back(5);
-    //OdorVec.push_back(6);
+    OdorVec.push_back(5);
+    OdorVec.push_back(6);
     //OdorVec.push_back(7);
     //OdorVec.push_back(8);
     //OdorVec.push_back(9);
     //OdorVec.push_back(10);
     //OdorVec.push_back(11);
-    //OdorVec.push_back(12);
+    OdorVec.push_back(12);
 
-    OdorVec.push_back(14);
+    /*OdorVec.push_back(14);
     OdorVec.push_back(15);
-    //OdorVec.push_back(16);
-    //OdorVec.push_back(17);
-    //OdorVec.push_back(18);
-    //OdorVec.push_back(19);
-    //OdorVec.push_back(20);
-    OdorVec.push_back(21);
+    OdorVec.push_back(16);
+    OdorVec.push_back(17);
+    OdorVec.push_back(18);
+    OdorVec.push_back(19);
+    OdorVec.push_back(20);
+    OdorVec.push_back(21);*/
 
     /*ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
