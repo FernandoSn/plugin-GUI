@@ -44,7 +44,7 @@
 #include <numeric>
 #include <fstream>
 
-//std::ofstream DebugOlfac1("DebugOlfac1.txt");
+std::ofstream DebugOlfac1("DebugOlfac1.txt");
 //std::ofstream DebugOlfac2("DebugOlfac2.txt");
 //std::ofstream DebugOlfac3("DebugOlfac3.txt");
 //std::ofstream DebugOlfac4("DebugOlfac4.txt");
@@ -63,14 +63,18 @@ Olfactometer::Olfactometer()
     , Generator             (Rd())
     , Tone                  ()
     , RandomITI             (false)
-    , RandomOdors           (true)
+    , RandomOdors           (false)
     , ContextExperiment     (false)
-    , BaselineOn            (true)
+    , BaselineOn            (false)
+    , MorphingExperiment    (true)
     //, BaselineTime          (15 * 60 * 1000)
     //, TonePres              (true)
 {
     BruceBlanks[0] = 5;
     BruceBlanks[1] = 14;
+    BruceMFCs[0] = 44;
+    BruceMFCs[1] = 45;
+    BruceMFCs[2] = 46;
 
     OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
     /*OlfacFile = std::ofstream("Olfactometer" + std::to_string(timer.getMonth()) + "-" + 
@@ -288,18 +292,25 @@ void Olfactometer::InitOdorPres()
     OlfacArduino.sendDigital(BruceBlanks[0], ARD_LOW); //Mineral Oil Valve always open.
     OlfacArduino.sendDigital(BruceBlanks[1], ARD_LOW); //Mineral Oil Valve always open.
 
+    OlfacArduino.sendDigitalPinMode(BruceMFCs[0], ARD_PWM);
+    OlfacArduino.sendDigitalPinMode(BruceMFCs[1], ARD_PWM);
+    OlfacArduino.sendDigitalPinMode(BruceMFCs[2], ARD_PWM);
+    OlfacArduino.sendPwm(BruceMFCs[0], 127);
+    OlfacArduino.sendPwm(BruceMFCs[1], 127);
+    OlfacArduino.sendPwm(BruceMFCs[2], 255);
+
     //if(!ToneOn)
         //setToneOn(0.0, 0.0);
 
     //Select the odors. Numbers are pins in the Arduino mega. 
-    OdorVec.push_back(5);
-    OdorVec.push_back(6);
+    //OdorVec.push_back(5);
+    //OdorVec.push_back(6);
     //OdorVec.push_back(7);
     //OdorVec.push_back(8);
     //OdorVec.push_back(9);
     //OdorVec.push_back(10);
     //OdorVec.push_back(11);
-    OdorVec.push_back(12);
+    //OdorVec.push_back(12);
 
     /*OdorVec.push_back(14);
     OdorVec.push_back(15);
@@ -309,6 +320,24 @@ void Olfactometer::InitOdorPres()
     OdorVec.push_back(19);
     OdorVec.push_back(20);
     OdorVec.push_back(21);*/
+
+
+    OdorVec.push_back(5);
+    OdorVec.push_back(5);
+    OdorVec.push_back(5);
+
+    OdorVec1.push_back(14);
+    OdorVec1.push_back(14);
+    OdorVec1.push_back(14);
+
+
+
+    MFC0Vec.push_back(127);
+    MFC0Vec.push_back(0);
+    MFC0Vec.push_back(255);
+    
+
+
 
     /*ToneBoolVec.push_back(false);
     ToneBoolVec.push_back(false);
@@ -332,11 +361,18 @@ void Olfactometer::InitOdorPres()
     CurrentOdor = OdorVec.begin();
     PastLastOdor = OdorVec.end();
 
+    CurrentMFC0 = MFC0Vec.begin();
+    PastLastMFC0 = MFC0Vec.end();
+
+    CurrentOdor1 = OdorVec1.begin();
+    PastLastOdor1 = OdorVec1.end();
+
     CurrentToneBool = ToneBoolVec.begin();
     PastLastToneBool = ToneBoolVec.end();
+
     TotalOdors = OdorVec.size();
 
-    SeriesNo = 100;
+    //SeriesNo = 100;
 
     //Shuffle odors.
     if (ContextExperiment && RandomOdors)
@@ -347,22 +383,36 @@ void Olfactometer::InitOdorPres()
         Olfactometer::shuffle(MidOdor, PastLastOdor, MidToneBool, Generator);
 
     }
+    else if (MorphingExperiment && RandomOdors)
+    {
+        Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentMFC0, Generator);
+
+    }
     else if (RandomOdors)
     {
         Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentToneBool, Generator);
     }
+
+
+
+
 
     OdorCount = 1;
 
     SerialTime = timer.getMillisecondCounter();
 
     Distr4TrialLength = std::uniform_int_distribution<>(TrialLength - 10, TrialLength + 10);
-    //for (int i = 0; i < 22; i++)
+
+
+
+    //for (int i = 0; i < 54; i++)
     //{
     //    //OlfacArduino.sendDigitalPinMode(22, ARD_OUTPUT);
-    //    ARD_INPUT, ARD_OUTPUT, ARD_PWM, ARD_SERVO, ARD_ANALOG;
-    //    ARD_ON, ARD_OFF;
+    //    /*ARD_INPUT, ARD_OUTPUT, ARD_PWM, ARD_SERVO, ARD_ANALOG;
+    //    ARD_ON, ARD_OFF;*/
+    //    DebugOlfac1 << OlfacArduino.getDigitalPinMode(i) << "\n";
     //}
+    
 
     //OlfacArduino.sendDigitalPinMode(BruceToneSyncPin, ARD_OUTPUT);
     //TargetTime = (uint32_t)(TrialLength * 1000.0);
@@ -479,27 +529,87 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
         //if (CurrentTime >= TimeCounter + TargetTime)
         //{
 
-        OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_HIGH);
-        if ( (*CurrentOdor != BruceBlanks[0]) && (*CurrentOdor != BruceBlanks[1]) )
-        {
-            OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
 
-            if (*CurrentOdor>13)
-                OlfacArduino.sendDigital(BruceBlanks[1], ARD_HIGH);
-            else
+
+        if (MorphingExperiment)
+        {
+
+            OlfacArduino.sendPwm(BruceMFCs[0], *CurrentMFC0);
+            OlfacArduino.sendPwm(BruceMFCs[1], 255 - (*CurrentMFC0));
+
+
+            OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_HIGH);
+
+            if (*CurrentOdor != BruceBlanks[0])
+            {
+                OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
                 OlfacArduino.sendDigital(BruceBlanks[0], ARD_HIGH);
+            }
+            if (*CurrentOdor1 != BruceBlanks[1])
+            {
+                OlfacArduino.sendDigital(*CurrentOdor1, ARD_HIGH);
+                OlfacArduino.sendDigital(BruceBlanks[1], ARD_HIGH);
+            }
+
+
+
+            CoreServices::sendStatusMessage("Series: " + juce::String(CurrentSeries + 1) + "/"
+                + juce::String(SeriesNo) + ", Morphing Chans: " + juce::String((int)(*CurrentOdor)) +"(" + juce::String(float(*CurrentMFC0) / 255.0f) + ")"
+                + " - " + juce::String((int)(*CurrentOdor1)) + "(" + juce::String(float(255-(*CurrentMFC0)) / 255.0f) + ")"
+                + " (" + juce::String(OdorCount) + "/" + juce::String(TotalOdors) + ")");
+
+            OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "," << (int)(*CurrentOdor1) << "," << *CurrentMFC0 << "," << 255 - (*CurrentMFC0) << "\n";
+
         }
+        else
+        {
+
+            OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_HIGH);
+            if ((*CurrentOdor != BruceBlanks[0]) && (*CurrentOdor != BruceBlanks[1]))
+            {
+
+                OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
+                if (*CurrentOdor > 13)
+                {
+                    OlfacArduino.sendPwm(BruceMFCs[0], 255 - (*CurrentMFC0));
+                    OlfacArduino.sendPwm(BruceMFCs[1], *CurrentMFC0);
+                    OlfacArduino.sendDigital(BruceBlanks[1], ARD_HIGH);
+                }
+                else
+                {
+                    OlfacArduino.sendPwm(BruceMFCs[0], *CurrentMFC0);
+                    OlfacArduino.sendPwm(BruceMFCs[1], 255 - (*CurrentMFC0));
+                    OlfacArduino.sendDigital(BruceBlanks[0], ARD_HIGH);
+                }
+            }
+
+
+
+
+            CoreServices::sendStatusMessage("Series: " + juce::String(CurrentSeries + 1) + "/"
+                + juce::String(SeriesNo) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)) + "(" + juce::String(float(*CurrentMFC0) / 255.0f) + ")"
+                + " (" + juce::String(OdorCount) + "/" + juce::String(TotalOdors) + ")");
+
+            OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "," << *CurrentMFC0 << "\n";
+
+
+        }
+
+
+        
+
+        
 
         TimeCounter = timer.getMillisecondCounter();
         //TimeCounter = CurrentTime;
         TargetTime = EquilibrationTime; //Equilibrate for...
 
         //Print to GUI
-        CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + "/"
+        /*CoreServices::sendStatusMessage( "Series: " + juce::String(CurrentSeries+1) + "/"
             + juce::String(SeriesNo) + ", Odor Chan: " + juce::String((int)(*CurrentOdor)) 
             + " (" + juce::String(OdorCount) +"/"+ juce::String(TotalOdors) +")");
 
-        OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "," << (int)(*CurrentToneBool) << "\n";
+        OlfacFile << CurrentSeries + 1 << "," << (int)(*CurrentOdor) << "," << (int)(*CurrentToneBool) << "\n";*/
 
         //Save this in a txt file.
 
@@ -699,16 +809,42 @@ void Olfactometer::ValvesCloser(AudioSampleBuffer& buffer)
         OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_LOW);
         //OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
 
-        if ((*CurrentOdor != BruceBlanks[0]) && (*CurrentOdor != BruceBlanks[1]))
+        OlfacArduino.sendPwm(BruceMFCs[0], 127);
+        OlfacArduino.sendPwm(BruceMFCs[1], 127);
+
+        if (MorphingExperiment)
         {
 
-            if (*CurrentOdor > 13)
-                OlfacArduino.sendDigital(BruceBlanks[1], ARD_LOW);
-            else
+            if (*CurrentOdor != BruceBlanks[0])
+            {
                 OlfacArduino.sendDigital(BruceBlanks[0], ARD_LOW);
+                OlfacArduino.sendDigital(*CurrentOdor, ARD_LOW);
+            }
+            if (*CurrentOdor1 != BruceBlanks[1])
+            { 
+                OlfacArduino.sendDigital(BruceBlanks[1], ARD_LOW);
+                OlfacArduino.sendDigital(*CurrentOdor1, ARD_LOW);
+            }
 
-            OlfacArduino.sendDigital(*CurrentOdor, ARD_LOW);
         }
+        else 
+        {
+
+            if ((*CurrentOdor != BruceBlanks[0]) && (*CurrentOdor != BruceBlanks[1]))
+            {
+
+                if (*CurrentOdor > 13)
+                    OlfacArduino.sendDigital(BruceBlanks[1], ARD_LOW);
+                else
+                    OlfacArduino.sendDigital(BruceBlanks[0], ARD_LOW);
+
+                OlfacArduino.sendDigital(*CurrentOdor, ARD_LOW);
+
+            }
+        }
+
+
+
 
         TimeCounter = CurrentTime;
         if (RandomITI)
@@ -734,7 +870,11 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
         //DebugOlfac2 << "DentroREstLoop \n";
         ++CurrentOdor;
         ++CurrentToneBool;
+        ++CurrentMFC0;
         OdorCount++;
+
+        if (MorphingExperiment)
+            ++CurrentOdor1;
 
         if (CurrentOdor < PastLastOdor)
         {
@@ -750,15 +890,36 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
             {
                 //Advance to the next trial
 
-                if (CurrentSeries == 90)
+                if (MorphingExperiment)
                 {
-                    OdorVec.push_back(16);
-                    OdorVec.push_back(17);
-                    OdorVec.push_back(18);
-                    OdorVec.push_back(19);
-                    OdorVec.push_back(20);
+
+                    if (CurrentSeries == 85)
+                    {
+                        OdorVec.push_back(6);
+                        OdorVec.push_back(6);
+                        OdorVec.push_back(6);
+                        OdorVec.push_back(6);
+                        OdorVec.push_back(6);
+
+                        OdorVec1.push_back(15);
+                        OdorVec1.push_back(15);
+                        OdorVec1.push_back(15);
+                        OdorVec1.push_back(15);
+                        OdorVec1.push_back(15);
+
+                        MFC0Vec.push_back(26);
+                        MFC0Vec.push_back(77);
+                        MFC0Vec.push_back(128);
+                        MFC0Vec.push_back(179);
+                        MFC0Vec.push_back(230);
+                    }
+
+                    CurrentOdor1 = OdorVec1.begin();
+
+
                 }
 
+                CurrentMFC0 = MFC0Vec.begin();
                 CurrentOdor = OdorVec.begin();
                 CurrentToneBool = ToneBoolVec.begin();
                 PastLastOdor = OdorVec.end();
@@ -775,6 +936,11 @@ void Olfactometer::RestartFuncLoop(AudioSampleBuffer& buffer)
                     auto MidToneBool = CurrentToneBool + (TotalOdors / 2);
                     Olfactometer::shuffle(CurrentOdor, MidOdor, CurrentToneBool, Generator);
                     Olfactometer::shuffle(MidOdor, PastLastOdor, MidToneBool, Generator);
+
+                }
+                else if (MorphingExperiment && RandomOdors)
+                {
+                    Olfactometer::shuffle(CurrentOdor, PastLastOdor, CurrentMFC0, Generator);
 
                 }
                 else if (RandomOdors)

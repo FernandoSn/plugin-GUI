@@ -174,6 +174,7 @@ public:
     static const uint8_t BruceA2SFVPin = 3;//3
     //static const uint8_t BruceMO = 5;
     uint8_t BruceBlanks[2];
+    uint8_t BruceMFCs[3];
     //static const uint8_t BruceSynchPin = 4;//4
     static const uint8_t BruceTonePin = 2;
 
@@ -194,6 +195,8 @@ private:
     double OpenTime;
     std::vector<uint8_t> OdorVec; //Up to 256 odor channels. Want more? What kind fo olfactomer are you building!!!!???????
     std::vector<bool> ToneBoolVec;
+    std::vector<int> MFC0Vec;
+    std::vector<uint8_t> OdorVec1;
     int OdorCount;
     int TotalOdors;
 
@@ -206,6 +209,10 @@ private:
     uint32_t SerialTime;
     std::vector<uint8_t>::iterator CurrentOdor;
     std::vector<uint8_t>::iterator PastLastOdor;
+    std::vector<uint8_t>::iterator CurrentOdor1;
+    std::vector<uint8_t>::iterator PastLastOdor1;
+    std::vector<int>::iterator CurrentMFC0;
+    std::vector<int>::iterator PastLastMFC0;
     std::vector<bool>::iterator CurrentToneBool;
     std::vector<bool>::iterator PastLastToneBool;
     float RespBuffer[2000 * 3]; //2000 Sampling Rate. 3 secs. I actually using 2 sec but some extra memory to avoid any unwanted leaks.
@@ -249,6 +256,7 @@ private:
     bool RandomITI;
     bool RandomOdors;
     bool ContextExperiment;
+    bool MorphingExperiment;
     //bool TonePres;
     std::ofstream OlfacFile;
 
