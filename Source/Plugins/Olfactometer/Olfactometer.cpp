@@ -44,7 +44,7 @@
 #include <numeric>
 #include <fstream>
 
-std::ofstream DebugOlfac1("DebugOlfac1.txt");
+//std::ofstream DebugOlfac1("DebugOlfac1.txt");
 //std::ofstream DebugOlfac2("DebugOlfac2.txt");
 //std::ofstream DebugOlfac3("DebugOlfac3.txt");
 //std::ofstream DebugOlfac4("DebugOlfac4.txt");
@@ -72,9 +72,9 @@ Olfactometer::Olfactometer()
 {
     BruceBlanks[0] = 5;
     BruceBlanks[1] = 14;
-    BruceMFCs[0] = 44;
-    BruceMFCs[1] = 45;
-    BruceMFCs[2] = 46;
+    BruceMFCs[0] = 2;
+    BruceMFCs[1] = 3;
+    BruceMFCs[2] = 4;
 
     OlfacFile = std::ofstream("Olfactometer"+ std::to_string(timer.getMillisecondCounter()));
     /*OlfacFile = std::ofstream("Olfactometer" + std::to_string(timer.getMonth()) + "-" + 
@@ -251,8 +251,8 @@ bool Olfactometer::ResetOlfactometer()
 
     //OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
 
-    OlfacArduino.sendDigital(2, ARD_HIGH);
-    OlfacArduino.sendDigital(3, ARD_HIGH);
+    OlfacArduino.sendDigital(BruceA2SFVPin, ARD_HIGH);
+    OlfacArduino.sendDigital(BruceTonePin, ARD_HIGH);
     std::this_thread::sleep_for(std::chrono::milliseconds(4000));
 
 
@@ -332,7 +332,7 @@ void Olfactometer::InitOdorPres()
 
 
 
-    MFC0Vec.push_back(127);
+    MFC0Vec.push_back(255);
     MFC0Vec.push_back(0);
     MFC0Vec.push_back(255);
     
@@ -568,17 +568,18 @@ void Olfactometer::OdorValveOpener(AudioSampleBuffer& buffer)
             if ((*CurrentOdor != BruceBlanks[0]) && (*CurrentOdor != BruceBlanks[1]))
             {
 
-                OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
                 if (*CurrentOdor > 13)
                 {
                     OlfacArduino.sendPwm(BruceMFCs[0], 255 - (*CurrentMFC0));
                     OlfacArduino.sendPwm(BruceMFCs[1], *CurrentMFC0);
+                    OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
                     OlfacArduino.sendDigital(BruceBlanks[1], ARD_HIGH);
                 }
                 else
                 {
                     OlfacArduino.sendPwm(BruceMFCs[0], *CurrentMFC0);
                     OlfacArduino.sendPwm(BruceMFCs[1], 255 - (*CurrentMFC0));
+                    OlfacArduino.sendDigital(*CurrentOdor, ARD_HIGH);
                     OlfacArduino.sendDigital(BruceBlanks[0], ARD_HIGH);
                 }
             }
@@ -809,9 +810,6 @@ void Olfactometer::ValvesCloser(AudioSampleBuffer& buffer)
         OlfacArduino.sendDigital(BruceA2SOdorPin, ARD_LOW);
         //OlfacArduino.sendDigital(BruceSynchPin, ARD_LOW);
 
-        OlfacArduino.sendPwm(BruceMFCs[0], 127);
-        OlfacArduino.sendPwm(BruceMFCs[1], 127);
-
         if (MorphingExperiment)
         {
 
@@ -844,7 +842,8 @@ void Olfactometer::ValvesCloser(AudioSampleBuffer& buffer)
         }
 
 
-
+        OlfacArduino.sendPwm(BruceMFCs[0], 127);
+        OlfacArduino.sendPwm(BruceMFCs[1], 127);
 
         TimeCounter = CurrentTime;
         if (RandomITI)

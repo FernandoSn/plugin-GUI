@@ -385,11 +385,13 @@ void ofArduino::sendAnalogPinReporting(int pin, int mode)
     // to previous protocol versions
     if (_firmwareVersionSum >= FIRMWARE2_3)
     {
-        firstAnalogPin = 14;
+        //firstAnalogPin = 14;
+        firstAnalogPin = ARD_TOTAL_DIGITAL_PINS;
     }
     else
     {
-        firstAnalogPin = 16;
+        //firstAnalogPin = 16;
+        firstAnalogPin = ARD_TOTAL_DIGITAL_PINS;
     }
 
     // if this analog pin is set as a digital input, disable digital pin reporting
@@ -796,12 +798,12 @@ void ofArduino::sendDigitalPortReporting(int port, int mode)
 
 void ofArduino::sendDigitalPinReporting(int pin, int mode)
 {
-    _digitalPinReporting[pin] = mode;
-    int port1Offset;
-    int port2Offset;
+
+    /*int port1Offset;
+    int port2Offset;*/
 
     // Firmata backwards compatibility mess
-    if (_firmwareVersionSum >= FIRMWARE2_3)
+    /*if (_firmwareVersionSum >= FIRMWARE2_3)
     {
         port1Offset = 15;
         port2Offset = 19;
@@ -810,53 +812,86 @@ void ofArduino::sendDigitalPinReporting(int pin, int mode)
     {
         port1Offset = 13;
         port2Offset = 21;
+    }*/
+
+    int port = 0;
+    int bit = 0;
+
+    if (pin < 54 && pin > 1)
+    {
+        port = pin / 8;
     }
+
+
+    _digitalPinReporting[pin] = mode;
+
+
 
     if (mode==ARD_ON) 	// enable reporting for the port
     {
-        if (pin<=7 && pin>=2)
-            sendDigitalPortReporting(0, ARD_ON);
-        // Firmata backwards compatibility mess
-        if (pin<=port1Offset && pin>=8)
-            sendDigitalPortReporting(1, ARD_ON);
-        if (pin<=port2Offset && pin>=16)
-            sendDigitalPortReporting(2, ARD_ON);
+        //if (pin<=7 && pin>=2)
+        //    sendDigitalPortReporting(0, ARD_ON);
+        //// Firmata backwards compatibility mess
+        //if (pin<=port1Offset && pin>=8)
+        //    sendDigitalPortReporting(1, ARD_ON);
+        //if (pin<=port2Offset && pin>=16)
+        //    sendDigitalPortReporting(2, ARD_ON);
+
+
+        sendDigitalPortReporting(port, ARD_ON);
     }
     else if (mode==ARD_OFF)
     {
         int i;
         bool send=true;
-        if (pin<=7 && pin>=2)    // check if all pins on the port are off, if so set port reporting to off..
+
+        if (port == 0)
+            i = 2;
+        else
+            i = port * 8;
+
+        for (; i < (port + 1) * 8; ++i)
         {
-            for (i=2; i<8; ++i)
-            {
-                if (_digitalPinReporting[i]==ARD_ON)
-                    send=false;
-            }
-            if (send)
-                sendDigitalPortReporting(0, ARD_OFF);
+            if (_digitalPinReporting[i] == ARD_ON)
+                send = false;
         }
-        // Firmata backwards compatibility mess
-        if (pin<=port1Offset && pin>=8)
-        {
-            for (i=8; i<=port1Offset; ++i)
-            {
-                if (_digitalPinReporting[i]==ARD_ON)
-                    send=false;
-            }
-            if (send)
-                sendDigitalPortReporting(1, ARD_OFF);
-        }
-        if (pin<=port2Offset && pin>=16)
-        {
-            for (i=16; i<=port2Offset; ++i)
-            {
-                if (_digitalPinReporting[i]==ARD_ON)
-                    send=false;
-            }
-            if (send)
-                sendDigitalPortReporting(2, ARD_OFF);
-        }
+        if (send)
+            sendDigitalPortReporting(port, ARD_OFF);
+
+
+
+
+        //if (pin<=7 && pin>=2)    // check if all pins on the port are off, if so set port reporting to off..
+        //{
+        //    for (i=2; i<8; ++i)
+        //    {
+        //        if (_digitalPinReporting[i]==ARD_ON)
+        //            send=false;
+        //    }
+        //    if (send)
+        //        sendDigitalPortReporting(0, ARD_OFF);
+        //}
+        //// Firmata backwards compatibility mess
+        //if (pin<=port1Offset && pin>=8)
+        //{
+        //    for (i=8; i<=port1Offset; ++i)
+        //    {
+        //        if (_digitalPinReporting[i]==ARD_ON)
+        //            send=false;
+        //    }
+        //    if (send)
+        //        sendDigitalPortReporting(1, ARD_OFF);
+        //}
+        //if (pin<=port2Offset && pin>=16)
+        //{
+        //    for (i=16; i<=port2Offset; ++i)
+        //    {
+        //        if (_digitalPinReporting[i]==ARD_ON)
+        //            send=false;
+        //    }
+        //    if (send)
+        //        sendDigitalPortReporting(2, ARD_OFF);
+        //}
     }
 }
 

@@ -171,12 +171,12 @@ public:
 
 
     static const uint8_t BruceA2SOdorPin = 13;
-    static const uint8_t BruceA2SFVPin = 3;//3
+    static const uint8_t BruceA2SFVPin = 22;//3
     //static const uint8_t BruceMO = 5;
     uint8_t BruceBlanks[2];
     uint8_t BruceMFCs[3];
     //static const uint8_t BruceSynchPin = 4;//4
-    static const uint8_t BruceTonePin = 2;
+    static const uint8_t BruceTonePin = 23;
 
 
 private:
