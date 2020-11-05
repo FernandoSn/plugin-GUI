@@ -297,7 +297,7 @@ void Olfactometer::InitOdorPres()
     OlfacArduino.sendDigitalPinMode(BruceMFCs[2], ARD_PWM);
     OlfacArduino.sendPwm(BruceMFCs[0], 127);
     OlfacArduino.sendPwm(BruceMFCs[1], 127);
-    OlfacArduino.sendPwm(BruceMFCs[2], 255);
+    OlfacArduino.sendPwm(BruceMFCs[2], 0);
 
     //if(!ToneOn)
         //setToneOn(0.0, 0.0);
